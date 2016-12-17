@@ -1,3 +1,3 @@
-from config import *
-from algebra.algebra import *
-from algebra.differential import *
+from .config import *
+from .algebra.algebra import *
+from .algebra.differential import *

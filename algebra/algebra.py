@@ -38,7 +38,7 @@ repeat the process until we are done.
 NOTE:: I proved this by brute force. (i.e. listing all options and
 showing that the proposition holds...!)
 '''
-from .config import ALLOWED, ALLOWED_GROUPS, METRIC, DIVISION_TYPE
+from ..config import ALLOWED, ALLOWED_GROUPS, METRIC, DIVISION_TYPE
 
 
 class α():
