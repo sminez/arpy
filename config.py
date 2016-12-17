@@ -28,7 +28,7 @@ DIVISION_TYPE = 'by'
 
 
 ##############################################################################
-def build_α_to_group():
+def build_alpha_to_group():
     # Scalars are grouped individually
     _pairs = [('p', 'p'), ('0', '0'), ('123', '123'), ('0123', '0123')]
     # 3-vector components are grouped under the vector name
@@ -38,4 +38,4 @@ def build_α_to_group():
 ##############################################################################
 
 # For a given alpha, find the group it should be assigned to
-α_TO_GROUP = build_α_to_group()
+α_TO_GROUP = build_alpha_to_group()

@@ -28,17 +28,47 @@ def partial(vec, wrt):
     return [_partial(comp, wrt) for comp in vec]
 
 
-def Dμ(vec):
+def _differential(vec, wrt=None):
     '''
-    Compute the result of [Dμ vec] under the algebra. this result is a
+    Compute the result of Differentiating a xi vector with respect to a given
+    list of unit elements under the algebra. This result is a
     single list of terms which almost always will get passed through
     `by_α` or `by_vec_notation` to make it more readable.
+
+    This is used as base to build other differential operators.
     '''
-    grouped = [partial(vec, α(a)) for a in ['0', '1', '2', '3']]
+    grouped = [partial(vec, α(a)) for a in wrt]
     output = []
     for g in grouped:
         output += g
     return output
+
+
+def del_i(vec):
+    '''The 3D gradient of a vector'''
+    return _differential(vec, ['1', '2', '3'])
+
+
+def Dmu(vec):
+    '''The main operator from the paper'''
+    return _differential(vec, ['0', '1', '2', '3'])
+
+
+def DG(vec):
+    '''A full derivative with respect to all components'''
+    return _differential(vec, ALLOWED)
+
+
+def DM(vec):
+    '''Differentiate with respect to the magnetic field'''
+    M = ['p'] + [a for a in ALLOWED if len(a) == 2 and '0' not in a]
+    return _differential(vec, M)
+
+
+def DE(vec):
+    '''Differentiate with respect to the electric field'''
+    E = ['0123'] + [a for a in ALLOWED if len(a) == 2 and '0' in a]
+    return _differential(vec, E)
 
 
 ##############################################################################
@@ -55,3 +85,10 @@ def by_α(vec, vector_groups=False):
         return groupby(vec, lambda x: α_TO_GROUP[x.alpha.index])
     else:
         return groupby(vec, key=lambda x: x.alpha.index)
+
+
+def show(vec, vector_groups=False):
+    '''Display a result and optionally group to scalars and 3-vectors'''
+    for alpha, group in by_α(vec, vector_groups):
+        xis = [('-' if g.alpha.sign == -1 else '+') + str(g.xi) for g in group]
+        print('α{} ['.format(alpha), ' '.join(xis), ']')

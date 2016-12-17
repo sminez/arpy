@@ -174,16 +174,15 @@ def AR_pair(alpha, xi=None):
 
 
 # Prebuild vectors to work with based on the 4-vector components
-ΞM = [ξα('p')] + [ξα(a) for a in ALLOWED if len(a) == 2 and '0' not in a]
-ΞT = [ξα('0')] + [ξα(a) for a in ALLOWED if len(a) == 3 and '0' in a]
-ΞA = [ξα('123')] + [ξα(a) for a in ALLOWED if len(a) == 1 and '0' not in a]
-ΞE = [ξα('0123')] + [ξα(a) for a in ALLOWED if len(a) == 2 and '0' in a]
+XiM = [ξα('p')] + [ξα(a) for a in ALLOWED if len(a) == 2 and '0' not in a]
+XiT = [ξα('0')] + [ξα(a) for a in ALLOWED if len(a) == 3 and '0' in a]
+XiA = [ξα('123')] + [ξα(a) for a in ALLOWED if len(a) == 1 and '0' not in a]
+XiE = [ξα('0123')] + [ξα(a) for a in ALLOWED if len(a) == 2 and '0' in a]
+XiG = [ξα(a) for a in ALLOWED]
 # Prebuild vectors based on length of index
-Ξp = [ξα('p')]
-Ξμ = [ξα(a) for a in ALLOWED if len(a) == 1]
-Ξμν = [ξα(a) for a in ALLOWED if len(a) == 2]
-Ξμνρ = [ξα(a) for a in ALLOWED if len(a) == 3]
-ΞG = [ξα(a) for a in ALLOWED]
+Xi1 = [ξα(a) for a in ALLOWED if len(a) == 1]
+Xi2 = [ξα(a) for a in ALLOWED if len(a) == 2]
+Xi3 = [ξα(a) for a in ALLOWED if len(a) == 3]
 
 
 ##############################################################################
