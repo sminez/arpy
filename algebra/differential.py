@@ -7,8 +7,8 @@ In Cartesian coordinates this is:
 '''
 from itertools import groupby
 
-from ..config import ALLOWED, α_TO_GROUP
-from .algebra import α, ξ, ξα
+from ..config import ALLOWED, ALPHA_TO_GROUP
+from .algebra import a, xi, Pair
 
 
 def _partial(component, wrt):
@@ -18,7 +18,7 @@ def _partial(component, wrt):
     '''
     alpha = component.alpha / wrt
     partials = component.xi.partials + [wrt]
-    return ξα(alpha, ξ(component.xi.val, component.xi.unit, partials))
+    return Pair(alpha, xi(component.xi.val, component.xi.unit, partials))
 
 
 def partial(vec, wrt):
@@ -37,7 +37,7 @@ def _differential(vec, wrt=None):
 
     This is used as base to build other differential operators.
     '''
-    grouped = [partial(vec, α(a)) for a in wrt]
+    grouped = [partial(vec, a(comp)) for comp in wrt]
     output = []
     for g in grouped:
         output += g
@@ -74,7 +74,7 @@ def DE(vec):
 ##############################################################################
 
 
-def by_α(vec, vector_groups=False):
+def by_alpha(vec, vector_groups=False):
     '''
     Group results of a derivative operation together in order to form the
     resulting coupled differential equations.
@@ -82,13 +82,13 @@ def by_α(vec, vector_groups=False):
     vec = sorted(vec, key=lambda a: ALLOWED.index(a.alpha.index))
 
     if vector_groups:
-        return groupby(vec, lambda x: α_TO_GROUP[x.alpha.index])
+        return groupby(vec, lambda x: ALPHA_TO_GROUP[x.alpha.index])
     else:
         return groupby(vec, key=lambda x: x.alpha.index)
 
 
 def show(vec, vector_groups=False):
     '''Display a result and optionally group to scalars and 3-vectors'''
-    for alpha, group in by_α(vec, vector_groups):
+    for alpha, group in by_alpha(vec, vector_groups):
         xis = [('-' if g.alpha.sign == -1 else '+') + str(g.xi) for g in group]
         print('α{} ['.format(alpha), ' '.join(xis), ']')

@@ -41,7 +41,7 @@ showing that the proposition holds...!)
 from ..config import ALLOWED, ALLOWED_GROUPS, METRIC, DIVISION_TYPE
 
 
-class α():
+class Alpha():
     '''Unit elements in the algebra'''
     def __init__(self, index, sign=None):
         '''
@@ -62,46 +62,47 @@ class α():
         self.index = index
         self.sign = sign
 
-    def __eq__(self, other):
-        return (self.index == other.index) and (self.sign == other.sign)
-
     def __repr__(self):
         neg = '-' if self.sign == -1 else ''
         return '{}α{}'.format(neg, self.index)
 
+    def __eq__(self, other):
+        return (self.index == other.index) and (self.sign == other.sign)
+
     def __mul__(self, other):
-        if isinstance(other, α):
+        if isinstance(other, Alpha):
             return find_prod(self, other)
-        if isinstance(other, ξα):
+        if isinstance(other, Pair):
             alpha = self * other.alpha
-            return ξα(alpha, other.xi)
+            return Pair(alpha, other.xi)
 
     def __neg__(self):
         self.sign *= -1
         return self
 
-    def invert(self):
-        return α(self.index, ((self * self).sign * self.sign))
+    def inverse(self):
+        return Alpha(self.index, ((self * self).sign * self.sign))
 
     def __truediv__(self, other):
         if DIVISION_TYPE == 'by':
-            if isinstance(other, α):
-                return self * other.invert()
-            elif isinstance(other, ξα):
+            if isinstance(other, Alpha):
+                return self * other.inverse()
+            elif isinstance(other, Pair):
                 raise TypeError('undefined division')
         elif DIVISION_TYPE == 'into':
-            if isinstance(other, α):
-                return self.invert() * other
-            elif isinstance(other, ξα):
-                alpha = self.invert() * other.alpha
-                return ξα(alpha, other.xi)
+            if isinstance(other, Alpha):
+                return self.inverse() * other
+            elif isinstance(other, Pair):
+                alpha = self.inverse() * other.alpha
+                return Pair(alpha, other.xi)
         else:
             raise ValueError('Invalid division type: ' + DIVISION_TYPE)
 
 
-class ξ():
+class Xi():
+    '''A symbolic Real value'''
     def __init__(self, val, unit=None, partials=[]):
-        if isinstance(val, α):
+        if isinstance(val, Alpha):
             val = val.index
 
         if unit is None:
@@ -119,15 +120,15 @@ class ξ():
         return '{}ξ{}'.format(''.join(partials), self.val)
 
 
-class ξα():
-    def __init__(self, alpha, xi=None):
+class Pair:
+    def __init__(self, a, xi=None):
         if xi is None:
-            xi = ξ(alpha)
+            xi = Xi(a)
 
-        if isinstance(alpha, α):
-            self.alpha = alpha
+        if isinstance(a, Alpha):
+            self.alpha = a
         else:
-            self.alpha = α(alpha)
+            self.alpha = Alpha(a)
         self.xi = xi
 
     def __eq__(self, other):
@@ -137,10 +138,10 @@ class ξα():
         return '{} {}'.format(self.alpha, self.xi)
 
     def __mul__(self, other):
-        if isinstance(other, α):
+        if isinstance(other, Alpha):
             alpha = self.alpha * other
-            return ξα(alpha, self.xi)
-        elif isinstance(other, ξα):
+            return Pair(alpha, self.xi)
+        elif isinstance(other, Pair):
             raise NotImplemented
             # alpha = self.alpha * other.alpha
             # xi = self.xi * other.xi
@@ -148,10 +149,10 @@ class ξα():
 
     def __truediv__(self, other):
         if DIVISION_TYPE == 'by':
-            if isinstance(other, α):
+            if isinstance(other, Alpha):
                 alpha = self.alpha * other.invert()
-                return ξα(alpha, self.xi)
-            elif isinstance(other, ξα):
+                return Pair(alpha, self.xi)
+            elif isinstance(other, Pair):
                 raise TypeError('undefined division')
         elif DIVISION_TYPE == 'into':
             raise TypeError('undefined division')
@@ -160,29 +161,24 @@ class ξα():
 
 
 ##############################################################################
-# Non-unicode constructors
-def alpha(index, sign=None):
-    return α(sign, index)
+def a(index, sign=None):
+    return Alpha(index, sign)
 
 
-def component(val, unit=None, partials=[]):
-    return ξ(val, unit, partials)
-
-
-def AR_pair(alpha, xi=None):
-    return ξα(alpha, xi)
+def xi(val, unit=None, partials=[]):
+    return Xi(val, unit, partials)
 
 
 # Prebuild vectors to work with based on the 4-vector components
-XiM = [ξα('p')] + [ξα(a) for a in ALLOWED if len(a) == 2 and '0' not in a]
-XiT = [ξα('0')] + [ξα(a) for a in ALLOWED if len(a) == 3 and '0' in a]
-XiA = [ξα('123')] + [ξα(a) for a in ALLOWED if len(a) == 1 and '0' not in a]
-XiE = [ξα('0123')] + [ξα(a) for a in ALLOWED if len(a) == 2 and '0' in a]
-XiG = [ξα(a) for a in ALLOWED]
+XiM = [Pair('p')] + [Pair(a) for a in ALLOWED if len(a) == 2 and '0' not in a]
+XiT = [Pair('0')] + [Pair(a) for a in ALLOWED if len(a) == 3 and '0' in a]
+XiA = [Pair('123')] + [Pair(a) for a in ALLOWED if len(a) == 1 and a != '0']
+XiE = [Pair('0123')] + [Pair(a) for a in ALLOWED if len(a) == 2 and '0' in a]
+XiG = [Pair(a) for a in ALLOWED]
 # Prebuild vectors based on length of index
-Xi1 = [ξα(a) for a in ALLOWED if len(a) == 1]
-Xi2 = [ξα(a) for a in ALLOWED if len(a) == 2]
-Xi3 = [ξα(a) for a in ALLOWED if len(a) == 3]
+Xi1 = [Pair(a) for a in ALLOWED if len(a) == 1]
+Xi2 = [Pair(a) for a in ALLOWED if len(a) == 2]
+Xi3 = [Pair(a) for a in ALLOWED if len(a) == 3]
 
 
 ##############################################################################
@@ -201,9 +197,9 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
 
     # Rule (1) :: Multiplication by αp is idempotent
     if i.index == 'p':
-        return α(j.index, (i.sign * j.sign))
+        return a(j.index, (i.sign * j.sign))
     elif j.index == 'p':
-        return α(i.index, (i.sign * j.sign))
+        return a(i.index, (i.sign * j.sign))
 
     # Rule (2) :: Squaring and popping
     sign = i.sign * j.sign
@@ -220,13 +216,13 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
 
     # If everything cancelled then i == j and we are left with αp (r-point)
     if len(components) == 0:
-        return α('p', sign)
+        return a('p', sign)
 
     # Rule (3) :: Popping to the correct order
     target = targets[frozenset(components)]
 
     if target == components:
-        return α(target, sign)
+        return a(target, sign)
 
     ordering = {c: i for i, c in enumerate(target)}
     current = [ordering[c] for c in components]
@@ -237,4 +233,4 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
         new_order = {j: i for i, j in enumerate(sorted(current))}
         current = [new_order[k] for k in current]
 
-    return α(target, sign)
+    return a(target, sign)
