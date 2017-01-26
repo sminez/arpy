@@ -7,8 +7,8 @@ In Cartesian coordinates this is:
 '''
 from itertools import groupby
 
-from ..config import ALLOWED, ALPHA_TO_GROUP
-from .algebra import a, xi, Pair
+from .config import ALLOWED, ALPHA_TO_GROUP
+from .ar_types import a, xi, Pair
 
 
 def _partial(component, wrt):
