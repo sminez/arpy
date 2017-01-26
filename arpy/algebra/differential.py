@@ -7,25 +7,33 @@ In Cartesian coordinates this is:
 '''
 from itertools import groupby
 
-from .config import ALLOWED, ALPHA_TO_GROUP
-from .ar_types import a, xi, Pair
+from .config import ALLOWED, ALPHA_TO_GROUP, DIVISION_TYPE
+from .ar_types import Alpha, Xi, Pair
+from .operations import div_by, div_into
 
 
-def _partial(component, wrt):
+def pair_partial(component, wrt):
     '''
     Symbolically differentiate a component by storing the partials and
     converting the alpha value using the correct division type.
     '''
-    alpha = component.alpha / wrt
+    if DIVISION_TYPE == 'by':
+        alpha = div_by(component.alpha, wrt)
+    elif DIVISION_TYPE == 'into':
+        alpha = div_into(component.alpha, wrt)
+    else:
+        raise ValueError(
+            "invalid division specification: {}".format(DIVISION_TYPE)
+        )
     partials = component.xi.partials + [wrt]
-    return Pair(alpha, xi(component.xi.val, component.xi.unit, partials))
+    return Pair(alpha, Xi(component.xi.val, component.xi.unit, partials))
 
 
-def partial(vec, wrt):
+def vec_partial(vec, wrt):
     '''
     Symbolically differentiate a whole vector of ξα pairs
     '''
-    return [_partial(comp, wrt) for comp in vec]
+    return [pair_partial(comp, wrt) for comp in vec]
 
 
 def _differential(vec, wrt=None):
@@ -37,7 +45,7 @@ def _differential(vec, wrt=None):
 
     This is used as base to build other differential operators.
     '''
-    grouped = [partial(vec, a(comp)) for comp in wrt]
+    grouped = [vec_partial(vec, Alpha(comp)) for comp in wrt]
     output = []
     for g in grouped:
         output += g

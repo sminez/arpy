@@ -20,15 +20,19 @@ TODO::
 from sly import Lexer, Parser
 from algebra.ar_types import Alpha, Pair, Xi_vecs
 from algebra.operations import wedge, div_by, div_into
+from algebra.differential import Dmu, show
 
 
 class ArpyLexer(Lexer):
-    tokens = {'NAME', 'ALPHA', 'PAIR'}
+    tokens = {'NAME', 'ALPHA', 'PAIR', 'DMU', 'SHOW', 'VECSHOW'}
     ignore = ' \t'
     literals = set(r'= + ^ . * / \ ( ) < > { } [ ]'.split())
 
     # Token regex definitions
-    NAME = r'[A-Z_][a-zA-Z0-9_]*'
+    DMU = r'Dmu'
+    SHOW = r'show'
+    VECSHOW = r'vshow'
+    NAME = r'[A-Z][a-zA-Z0-9_]*'
 
     @_(r'-a[0123]{1,4}', r'a[0123]{1,4}', r'-?ap')
     def ALPHA(self, t):
@@ -55,6 +59,7 @@ class ArpyLexer(Lexer):
     @_(r'\n+')
     def newline(self, t):
         self.lineno += t.value.count('\n')
+        return ""
 
     def error(self, value):
         pass
@@ -66,6 +71,7 @@ class ArpyParser(Parser):
     precedence = (
         ('left', '=', '^'),
         ('left', '/', '\\'),
+        ('left', 'NAME', 'DMU'),
     )
 
     def __init__(self):
@@ -75,6 +81,27 @@ class ArpyParser(Parser):
     def statement(self, p):
         self.names[p.NAME] = p.expr
         print('{} -> {}'.format(p.NAME, p.expr))
+
+    @_('DMU expr')
+    def expr(self, p):
+        try:
+            return Dmu(p.expr)
+        except:
+            print("Invalid differential")
+
+    @_('SHOW DMU expr')
+    def statement(self, p):
+        try:
+            show(Dmu(p.expr), False)
+        except:
+            print("Invalid differential")
+
+    @_('VECSHOW DMU expr')
+    def statement(self, p):
+        try:
+            show(Dmu(p.expr), True)
+        except:
+            print("Invalid differential")
 
     @_('expr')
     def statement(self, p):

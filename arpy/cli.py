@@ -55,6 +55,7 @@ def run(argv=""):
                 lines = user_input.split('\n')
                 expression = ' '.join([l.strip() for l in lines])
                 parser.parse(lexer.tokenize(expression))
+                print("")
         except (EOFError, KeyboardInterrupt):
             # User hit Ctrl+d / Ctrl+c
             break
