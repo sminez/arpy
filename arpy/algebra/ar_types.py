@@ -1,6 +1,7 @@
 '''
 Classes, functions and default representations of Ξ vectors in the algebra.
 '''
+import collections.abc
 from .config import ALLOWED, ALLOWED_GROUPS
 
 
@@ -35,6 +36,9 @@ class Alpha():
     def __neg__(self):
         self.sign *= -1
         return self
+
+    def __hash__(self):
+        return hash((self.index, self.sign))
 
 
 class Xi():
@@ -74,6 +78,59 @@ class Pair:
 
     def __repr__(self):
         return '({},{})'.format(self.alpha, self.xi)
+
+
+class MultiVector(collections.abc.Set):
+    '''A custom container type for working efficiently with multivectors'''
+    def __init__(self, components=[]):
+        '''
+        Given a list of pairs, build the mulitvector by binding the ξ values
+        '''
+        self.basis_blades = {Alpha(a): None for a in ALLOWED}
+
+        if not all([isinstance(comp, Pair) for comp in components]):
+            raise ValueError("Multivectors can only contain Xi/Alpha pairs")
+
+        for comp in components:
+            self.basis_blades[comp.alpha] = comp.xi
+
+    def __len__(self):
+        '''
+        Only initialised blades count towards the length of a multivector
+        '''
+        return len([blade for blade in self.basis_blades if blade is not None])
+
+    def __contains__(self, alpha):
+        '''Return True if the requested alpha value has been initialised'''
+        if not isinstance(alpha, Alpha):
+            raise ValueError("Multivectors can only contain Xi/Alpha pairs")
+        else:
+            return self.basis_blades[alpha] is not None
+
+    def __getitem__(self, key):
+        '''mvec[alpha] returns a pair'''
+        if isinstance(key, str):
+            # Allow retreval by bare string as well as Alpha
+            key = Alpha(key)
+        if not isinstance(key, Alpha):
+            raise KeyError
+
+        xi = self.basis_blades[key]
+        if xi is not None:
+            return Pair(key, xi)
+        else:
+            raise KeyError
+
+    def __iter__(self):
+        '''Iteration over a multivector always gives all 16 elements'''
+        for a in ALLOWED:
+            blade = Alpha(a)
+            yield Pair(blade, self.basis_blades[blade])
+
+    def __repr__(self):
+        comps = ['α{}{}'.format(a, self.basis_blades[Alpha(a)])
+                 for a in ALLOWED if self.basis_blades[Alpha(a)]]
+        return '{' + ', '.join(comps) + '}'
 
 
 ##############################################################################
