@@ -2,7 +2,7 @@
 Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 import collections.abc
-from .config import ALLOWED, ALLOWED_GROUPS
+from .config import ALLOWED, ALLOWED_GROUPS, XI_GROUPS
 
 
 class Alpha():
@@ -122,10 +122,11 @@ class MultiVector(collections.abc.Set):
             raise KeyError
 
     def __iter__(self):
-        '''Iteration over a multivector always gives all 16 elements'''
+        # '''Iteration over a multivector always gives all 16 elements'''
         for a in ALLOWED:
             blade = Alpha(a)
-            yield Pair(blade, self.basis_blades[blade])
+            if self.basis_blades[blade] is not None:
+                yield Pair(blade, self.basis_blades[blade])
 
     def __repr__(self):
         comps = ['α{}{}'.format(a, self.basis_blades[Alpha(a)])
@@ -135,15 +136,15 @@ class MultiVector(collections.abc.Set):
 
 ##############################################################################
 # vectors to work with based on the 4-vector components
-XiM = [Pair('p')] + [Pair(a) for a in ALLOWED if len(a) == 2 and '0' not in a]
-XiT = [Pair('0')] + [Pair(a) for a in ALLOWED if len(a) == 3 and '0' in a]
-XiA = [Pair('123')] + [Pair(a) for a in ALLOWED if len(a) == 1 and a != '0']
-XiE = [Pair('0123')] + [Pair(a) for a in ALLOWED if len(a) == 2 and '0' in a]
-XiG = [Pair(a) for a in ALLOWED]
+XiM = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
+XiT = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
+XiA = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
+XiE = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
+XiG = MultiVector([Pair(a) for a in ALLOWED])
 # Prebuild vectors based on length of index
-Xi1 = [Pair(a) for a in ALLOWED if len(a) == 1]
-Xi2 = [Pair(a) for a in ALLOWED if len(a) == 2]
-Xi3 = [Pair(a) for a in ALLOWED if len(a) == 3]
+Xi1 = MultiVector([Pair(a) for a in ALLOWED if len(a) == 1])
+Xi2 = MultiVector([Pair(a) for a in ALLOWED if len(a) == 2])
+Xi3 = MultiVector([Pair(a) for a in ALLOWED if len(a) == 3])
 
 # For use in the REPL
 Xi_vecs = {'XiM': XiM, 'XiT': XiT, 'XiA': XiA, 'XiE': XiE, 'XiG': XiG,

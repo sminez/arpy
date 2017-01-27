@@ -33,7 +33,7 @@ def vec_partial(vec, wrt):
     '''
     Symbolically differentiate a whole vector of ξα pairs
     '''
-    return [pair_partial(comp, wrt) for comp in vec]
+    return [pair_partial(comp, wrt) for comp in vec if comp.xi is not None]
 
 
 def _differential(vec, wrt=None):
