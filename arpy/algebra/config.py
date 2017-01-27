@@ -9,15 +9,15 @@ ALLOWED = [
 ]
 
 # How the 3-vector components are grouped and under what names
-XI_GROUPS = [
-    ('i', ['1', '2', '3']),
-    ('i0', [a for a in ALLOWED if len(a) == 2 and '0' in a]),
-    ('jk', [a for a in ALLOWED if len(a) == 2 and '0' not in a]),
-    ('0jk', [a for a in ALLOWED if len(a) == 3 and '0' in a])
-]
+XI_GROUPS = {
+    'i': ['1', '2', '3'],
+    'i0': [a for a in ALLOWED if len(a) == 2 and '0' in a],
+    'jk': [a for a in ALLOWED if len(a) == 2 and '0' not in a],
+    '0jk': [a for a in ALLOWED if len(a) == 3 and '0' in a]
+}
 
 # Names to group the results of calculations under: scalars & 3-vectors
-ALLOWED_GROUPS = ['p', '0', '123', '0123'] + [g[0] for g in XI_GROUPS]
+ALLOWED_GROUPS = ['p', '0', '123', '0123'] + [g for g in XI_GROUPS.keys()]
 
 # The space-time metric that will be used
 METRIC = [1, -1, -1, -1]
@@ -32,8 +32,9 @@ def _build_alpha_to_group():
     # Scalars are grouped individually
     _pairs = [('p', 'p'), ('0', '0'), ('123', '123'), ('0123', '0123')]
     # 3-vector components are grouped under the vector name
-    for g in [[(μ, group) for μ in αs] for (group, αs) in XI_GROUPS]:
-        _pairs += g
+    flipped = [[(v, group) for v in vals] for group, vals in XI_GROUPS.items()]
+    for group in flipped:
+        _pairs.extend(group)
     return dict(_pairs)
 ##############################################################################
 
