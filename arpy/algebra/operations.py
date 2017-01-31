@@ -97,7 +97,7 @@ def inverse(a):
 @dispatch_on('all')
 def wedge(a, b):
     '''Compute the Wedge Product of two elements'''
-    return NotImplemented
+    raise NotImplementedError
 
 
 @wedge.add((Alpha, Alpha))
@@ -133,22 +133,22 @@ def _wedge_pair_pair(a, b):
 @dispatch_on('all')
 def dot(a, b):
     '''Compute the dot product of two elements'''
-    return NotImplemented
+    raise NotImplementedError
 
 
 @dot.add((Alpha, Alpha))
 def dot_alpha_alpha(a, b):
-    return NotImplemented
+    raise NotImplementedError
 
 
 @dot.add((Alpha, Pair))
 def dot_alpha_pair(a, b):
-    return NotImplemented
+    raise NotImplementedError
 
 
 @dot.add((Pair, Alpha))
 def dot_pair_alpha(a, b):
-    return NotImplemented
+    raise NotImplementedError
 
 
 ##############################################################################
@@ -161,7 +161,7 @@ def full(a, b):
 @dispatch_on('all')
 def div_by(a, b):
     '''Divide one element by another'''
-    return NotImplemented
+    raise NotImplementedError
 
 
 @div_by.add((Alpha, Alpha))
@@ -179,7 +179,7 @@ def _div_by_pair_alpha(a, b):
 @dispatch_on('all')
 def div_into(a, b):
     '''Divide one element into another'''
-    return NotImplemented
+    raise NotImplementedError
 
 
 @div_into.add((Alpha, Alpha))
@@ -201,7 +201,7 @@ def project(element, grade):
     Return only the elements of A that are of grade n.
     NOTE:: αp is a grade-0 scalar element.
     '''
-    return NotImplemented
+    raise NotImplementedError
 
 
 @project.add(Alpha)
