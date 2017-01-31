@@ -117,6 +117,18 @@ def _wedge_pair_alpha(a, b):
     return Pair(alpha, a.xi)
 
 
+@wedge.add((Pair, Pair))
+def _wedge_pair_pair(a, b):
+    alpha = find_prod(a.alpha, b.alpha)
+    if alpha.sign == -1:
+        axi, bxi = a.xi, b.xi
+        axi.sign, bxi.sign = '-', '-'
+        alpha.sign = 1
+        return Pair(alpha, [axi, bxi])
+    else:
+        return Pair(alpha, [a.xi, b.xi])
+
+
 ##############################################################################
 @dispatch_on('all')
 def dot(a, b):

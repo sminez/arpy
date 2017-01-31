@@ -2,7 +2,7 @@
 Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 import collections.abc
-from .config import ALLOWED, ALLOWED_GROUPS, XI_GROUPS
+from .config import ALLOWED, ALLOWED_GROUPS
 
 
 class Alpha:
@@ -43,7 +43,7 @@ class Alpha:
 
 class Xi:
     '''A symbolic Real value'''
-    def __init__(self, val, unit=None, partials=[]):
+    def __init__(self, val, sign='', unit=None, partials=[]):
         if isinstance(val, Alpha):
             val = val.index
 
@@ -52,6 +52,7 @@ class Xi:
 
         self.val = val
         self.unit = unit
+        self.sign = sign
         self.partials = partials
 
     def __eq__(self, other):
@@ -59,7 +60,7 @@ class Xi:
 
     def __repr__(self):
         partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
-        return '{}ξ{}'.format(''.join(partials), self.val)
+        return '{}{}ξ{}'.format(self.sign, ''.join(partials), self.val)
 
 
 class Pair:
@@ -77,7 +78,13 @@ class Pair:
         return (self.alpha == other.alpha) and (self.xi == other.xi)
 
     def __repr__(self):
-        return '({},{})'.format(self.alpha, self.xi)
+        try:
+            return '({},{})'.format(
+                self.alpha, ''.join(str(x) for x in self.xi)
+            )
+        except TypeError:
+            # self.xi is not a collection type
+            return '({},{})'.format(self.alpha, self.xi)
 
 
 class MultiVector(collections.abc.Set):
@@ -86,28 +93,50 @@ class MultiVector(collections.abc.Set):
         '''
         Given a list of pairs, build the mulitvector by binding the ξ values
         '''
-        self.basis_blades = {Alpha(a): None for a in ALLOWED}
+        self.basis_blades = {Alpha(a): [] for a in ALLOWED}
 
         if not all([isinstance(comp, Pair) for comp in components]):
             raise ValueError("Multivectors can only contain Xi/Alpha pairs")
 
         for comp in components:
-            self.basis_blades[comp.alpha] = comp.xi
+            self.basis_blades[comp.alpha].append(comp.xi)
+
+    def cartesian_apply(self, other, operation):
+        '''
+        Apply a function to the cartesian product of two multivectors
+        NOTE:: The function must act on two Pairs.
+        '''
+        if not isinstance(other, MultiVector):
+            raise TypeError("other must be a MultiVector")
+        return MultiVector([operation(a, b) for a in self for b in other])
 
     def __len__(self):
         '''
         Only initialised blades count towards the length of a multivector
         '''
-        return len([blade for blade in self.basis_blades if blade is not None])
+        return len([blade for blade in self.basis_blades.values() if blade])
 
     def __contains__(self, other):
         '''Return True if the requested alpha value has been initialised'''
         if isinstance(other, Alpha):
-            return self.basis_blades[other] is not None
+            return self.basis_blades[other] != []
         elif isinstance(other, Pair):
-            return self.basis_blades[other.alpha] is not None
+            return other.xi in self.basis_blades[other.alpha]
         else:
             return False
+
+    def _nice_xi(self, alpha, raise_key_error=True, for_print=False):
+        '''Single element xi lists return their value raw'''
+        xi = self.basis_blades[alpha]
+        if not xi and raise_key_error:
+            raise KeyError
+        if len(xi) == 1:
+            return xi[0]
+        else:
+            if for_print:
+                return ''.join(str(x) for x in xi)
+            else:
+                return xi
 
     def __getitem__(self, key):
         '''mvec[alpha] returns a pair'''
@@ -117,20 +146,15 @@ class MultiVector(collections.abc.Set):
         if not isinstance(key, Alpha):
             raise KeyError
 
-        xi = self.basis_blades[key]
-        if xi is not None:
-            return Pair(key, xi)
-        else:
-            raise KeyError
+        return Pair(key, self._nice_xi(key))
 
     def __iter__(self):
-        # '''Iteration over a multivector always gives all 16 elements'''
-        for a in ALLOWED:
-            blade = Alpha(a)
-            if self.basis_blades[blade] is not None:
-                yield Pair(blade, self.basis_blades[blade])
+        for alpha in self.basis_blades:
+            xi = self._nice_xi(alpha, False)
+            if xi:
+                yield Pair(alpha, xi)
 
     def __repr__(self):
-        comps = ['α{}{}'.format(a, self.basis_blades[Alpha(a)])
+        comps = ['α{}{}'.format(a, self._nice_xi(Alpha(a), False, True))
                  for a in ALLOWED if self.basis_blades[Alpha(a)]]
         return '{' + ', '.join(comps) + '}'
