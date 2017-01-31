@@ -6,62 +6,76 @@ SLY is rather magical - docs are here:
     http://sly.readthedocs.io/en/latest/
     https://github.com/dabeaz/sly
 '''
-from sly import Lexer, Parser
-from ..algebra.ar_types import Alpha, Pair, Xi_vecs
-from ..algebra.operations import wedge, div_by, div_into
-from ..algebra.differential import Dmu
+import sly
+from sys import _getframe
+from ..algebra.ar_types import Alpha, Pair  # MultiVector
+from ..algebra.operations import wedge, dot, full, div_by, div_into, project
 
 
-class ArpyLexer(Lexer):
-    tokens = {'ALPHA', 'PAIR'}  # TODO:: add multivectors
+class ArpyLexer(sly.Lexer):
+    tokens = {'ALPHA', 'PAIR', 'INDEX', 'VAR'}
     ignore = ' \t'
-    literals = set(r'+ ^ . * / \ ( ) < > { }'.split())
+    literals = {'+', '^', '.', '*', '/', '\\', '(', ')', '<', '>'}
 
-    @_(r'-a[0123]{1,4}', r'a[0123]{1,4}', r'-?ap')
-    def ALPHA(self, t):
-        try:
-            if t.value.startswith('-'):
-                t.value = Alpha(t.value[2:], -1)
-            else:
-                t.value = Alpha(t.value[1:])
-            return t
-        except ValueError as e:
-            print(e)
+    ALPHA = r'-a[0123]{1,4}|a[0123]{1,4}|-?ap'
+    PAIR = r'-p[0123]{1,4}|p[0123]{1,4}'
+    VAR = r'[a-zA-Z_][a-zA-Z_0-9]*'
+    INDEX = r'[01234]'
 
-    @_(r'-p[0123]{1,4}', r'p[0123]{1,4}')
-    def PAIR(self, t):
-        try:
-            if t.value.startswith('-'):
-                t.value = Pair(Alpha(t.value[2:], -1))
-            else:
-                t.value = Pair(Alpha(t.value[1:]))
-            return t
-        except ValueError as e:
-            print(e)
+    def __init__(self, _globals):
+        self._globals = _globals
 
-    def error(self, value):
-        pass
+    def ALPHA(self, token):
+        if token.value.startswith('-'):
+            token.value = Alpha(token.value[2:], -1)
+        else:
+            token.value = Alpha(token.value[1:])
+        return token
+
+    def PAIR(self, token):
+        if token.value.startswith('-'):
+            token.value = Pair(Alpha(token.value[2:], -1))
+        else:
+            token.value = Pair(Alpha(token.value[1:]))
+        return token
+
+    def INDEX(self, token):
+        token.value = int(token.value)
+        return token
+
+    def VAR(self, token):
+        token.value = eval(token.value, self._globals)
+        return token
 
 
-class ArpyParser(Parser):
+class ArpyParser(sly.Parser):
     tokens = ArpyLexer.tokens
 
     precedence = (
-        ('left', '^', '/'),
-        ('left', '\\', 'ALPHA'),
+        ('left', '*', '^'),
+        ('left', '.', '/'),
+        ('left', '\\', 'ALPHA',),
     )
 
     @_('expr')
     def result(self, p):
         return p.expr
 
-    @_('"(" expr ")"')
+    @_('"<" expr ">" INDEX')
     def expr(self, p):
-        return p.expr
+        return project(p.expr, p.INDEX)
 
     @_('expr "^" expr')
     def expr(self, p):
         return wedge(p.expr0, p.expr1)
+
+    @_('expr "." expr')
+    def expr(self, p):
+        return dot(p.expr0, p.expr1)
+
+    @_('expr "*" expr')
+    def expr(self, p):
+        return full(p.expr0, p.expr1)
 
     @_('expr "/" expr')
     def expr(self, p):
@@ -79,10 +93,15 @@ class ArpyParser(Parser):
     def expr(self, p):
         return p.PAIR
 
-##############################################################################
+    @_('VAR')
+    def expr(self, p):
+        return p.VAR
 
-ar_lexer = ArpyLexer()
-ar_parser = ArpyParser()
+    @_('"(" expr ")"')
+    def expr(self, p):
+        return p.expr
+
+##############################################################################
 
 
 def ar(user_input):
@@ -90,14 +109,12 @@ def ar(user_input):
     Parse user input under a nicer API.
     Call ar_help() for details on syntax.
     '''
-    return ar_parser.parse(ar_lexer.tokenize(user_input))
-
-
-if __name__ == '__main__':
-    while True:
-        try:
-            text = input('ξα > ')
-        except (EOFError, KeyboardInterrupt):
-            break
-        if text:
-            ar(text)
+    # NOTE:: The following is a horrible hack that allows you to
+    #        inject local variables into the parser.
+    frame = _getframe(1)
+    lexer = ArpyLexer(frame.f_locals)
+    parser = ArpyParser()
+    try:
+        return parser.parse(lexer.tokenize(user_input))
+    except sly.lex.LexError as e:
+        raise SyntaxWarning(e)

@@ -20,6 +20,8 @@ def pair_partial(component, wrt):
     if DIVISION_TYPE == 'by':
         alpha = div_by(component.alpha, wrt)
     elif DIVISION_TYPE == 'into':
+        # NOTE:: This is dividing the component into the α for the differential
+        #        Is that the correct way round?
         alpha = div_into(component.alpha, wrt)
     else:
         raise ValueError(

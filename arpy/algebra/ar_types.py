@@ -5,7 +5,7 @@ import collections.abc
 from .config import ALLOWED, ALLOWED_GROUPS, XI_GROUPS
 
 
-class Alpha():
+class Alpha:
     '''Unit elements in the algebra'''
     def __init__(self, index, sign=None):
         '''
@@ -41,7 +41,7 @@ class Alpha():
         return hash((self.index, self.sign))
 
 
-class Xi():
+class Xi:
     '''A symbolic Real value'''
     def __init__(self, val, unit=None, partials=[]):
         if isinstance(val, Alpha):
@@ -100,12 +100,14 @@ class MultiVector(collections.abc.Set):
         '''
         return len([blade for blade in self.basis_blades if blade is not None])
 
-    def __contains__(self, alpha):
+    def __contains__(self, other):
         '''Return True if the requested alpha value has been initialised'''
-        if not isinstance(alpha, Alpha):
-            raise ValueError("Multivectors can only contain Xi/Alpha pairs")
+        if isinstance(other, Alpha):
+            return self.basis_blades[other] is not None
+        elif isinstance(other, Pair):
+            return self.basis_blades[other.alpha] is not None
         else:
-            return self.basis_blades[alpha] is not None
+            return False
 
     def __getitem__(self, key):
         '''mvec[alpha] returns a pair'''
@@ -132,20 +134,3 @@ class MultiVector(collections.abc.Set):
         comps = ['α{}{}'.format(a, self.basis_blades[Alpha(a)])
                  for a in ALLOWED if self.basis_blades[Alpha(a)]]
         return '{' + ', '.join(comps) + '}'
-
-
-##############################################################################
-# vectors to work with based on the 4-vector components
-XiM = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
-XiT = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
-XiA = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
-XiE = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
-XiG = MultiVector([Pair(a) for a in ALLOWED])
-# Prebuild vectors based on length of index
-Xi1 = MultiVector([Pair(a) for a in ALLOWED if len(a) == 1])
-Xi2 = MultiVector([Pair(a) for a in ALLOWED if len(a) == 2])
-Xi3 = MultiVector([Pair(a) for a in ALLOWED if len(a) == 3])
-
-# For use in the REPL
-Xi_vecs = {'XiM': XiM, 'XiT': XiT, 'XiA': XiA, 'XiE': XiE, 'XiG': XiG,
-           'Xi1': Xi1, 'Xi2': Xi2, 'Xi3': Xi3}

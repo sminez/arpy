@@ -1,9 +1,8 @@
 '''
 Multiplying αs
 ==============
-This is based on a set of simplification rules based on allowed
-manipulations of elements in the algebra.
-(NOTE:: In all notation, αμ.αν is simplified to αμν)
+This is based on a set of simplification rules based on allowed manipulations
+of elements in the algebra. (NOTE: In all notation, αμ.αν is simplified to αμν)
 
 (1)   αpμ == αμp == αμ
     'Multiplication by αp (r-point) is idempotent. (αp is the identity)'
@@ -19,26 +18,22 @@ manipulations of elements in the algebra.
 
 Counting pops
 =============
-I am converting the current product into an array of integers in order
-to allow for the different orderings of each final product in a flexible
-way. Ordering is a mapping of index (0,1,2,3) to position in the final
-product. This should be stable regardless of how we define the 16
-elements of the algebra.
+I am converting the current product into an array of integers in order to allow
+for the different orderings of each final product in a flexible way. Ordering
+is a mapping of index (0,1,2,3) to position in the final product. This should
+be stable regardless of how we define the 16 elements of the algebra.
 
-The algorithm makes use of the fact that for any ordering we can
-dermine the whether the total number of pops is odd or even by looking
-at the first element alone and then recursing on the rest of the
-ordering as a sub-problem.
-If the final position of the first element is even then it will take an
-odd number of pops to correctly position it. We can then look only at
-the remaining elements and re-label them with indices 1->(n-1) and
-repeat the process until we are done.
-NOTE:: I proved this by brute force. (i.e. listing all options and
-showing that the proposition holds...!)
+The algorithm makes use of the fact that for any ordering we can dermine the
+whether the total number of pops is odd or even by looking at the first element
+alone and then recursing on the rest of the ordering as a sub-problem.
+If the final position of the first element is even then it will take an odd
+number of pops to correctly position it. We can then look only at the remaining
+elements and re-label them with indices 1->(n-1) and repeat the process until
+we are done.
 '''
-from .ar_types import Alpha, Pair
 from .config import ALLOWED, METRIC
 from ..utils.dispatch import dispatch_on
+from .ar_types import Alpha, Pair, MultiVector
 
 
 def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
@@ -98,10 +93,11 @@ def inverse(a):
     return Alpha(a.index, (find_prod(a, a).sign * a.sign))
 
 
+##############################################################################
 @dispatch_on('all')
 def wedge(a, b):
-    '''Compute the Wedge Product of two values.'''
-    raise ValueError("Invalid wedge product: {} {}".format(a, b))
+    '''Compute the Wedge Product of two elements'''
+    return NotImplemented
 
 
 @wedge.add((Alpha, Alpha))
@@ -121,10 +117,39 @@ def _wedge_pair_alpha(a, b):
     return Pair(alpha, a.xi)
 
 
+##############################################################################
+@dispatch_on('all')
+def dot(a, b):
+    '''Compute the dot product of two elements'''
+    return NotImplemented
+
+
+@dot.add((Alpha, Alpha))
+def dot_alpha_alpha(a, b):
+    return NotImplemented
+
+
+@dot.add((Alpha, Pair))
+def dot_alpha_pair(a, b):
+    return NotImplemented
+
+
+@dot.add((Pair, Alpha))
+def dot_pair_alpha(a, b):
+    return NotImplemented
+
+
+##############################################################################
+def full(a, b):
+    '''Compute the Geometric product of two elements'''
+    return MultiVector([dot(a, b), wedge(a, b)])
+
+
+##############################################################################
 @dispatch_on('all')
 def div_by(a, b):
     '''Divide one element by another'''
-    raise ValueError("Invalid division: {} / {}".format(a, b))
+    return NotImplemented
 
 
 @div_by.add((Alpha, Alpha))
@@ -132,10 +157,17 @@ def _div_by_alpha_alpha(a, b):
     return find_prod(a, inverse(b))
 
 
+@div_by.add((Pair, Alpha))
+def _div_by_pair_alpha(a, b):
+    alpha = find_prod(inverse(a.alpha), b)
+    return Pair(alpha, a.xi)
+
+
+##############################################################################
 @dispatch_on('all')
 def div_into(a, b):
     '''Divide one element into another'''
-    raise ValueError("Invalid division: {} \ {}".format(a, b))
+    return NotImplemented
 
 
 @div_into.add((Alpha, Alpha))
@@ -147,3 +179,49 @@ def _div_into_Alpha_Alpha(a, b):
 def _div_into_Alpha_Pair(a, b):
     alpha = find_prod(inverse(a), b.alpha)
     return Pair(alpha, b.xi)
+
+
+##############################################################################
+@dispatch_on(index=0)
+def project(element, grade):
+    '''
+    Implementation of the grade-projection operator <A>n.
+    Return only the elements of A that are of grade n.
+    NOTE:: αp is a grade-0 scalar element.
+    '''
+    return NotImplemented
+
+
+@project.add(Alpha)
+def _project_alpha(element, grade):
+    if grade == 0 and element.index == 'p':
+        return element
+    elif len(element.index) == grade:
+        return element
+    else:
+        return None
+
+
+@project.add(Pair)
+def _project_pair(element, grade):
+    if grade == 0 and element.alpha.index == 'p':
+        return element
+    elif len(element.alpha.index) == grade:
+        return element
+    else:
+        return None
+
+
+@project.add(MultiVector)
+def _project_multivector(element, grade):
+    correct_grade = []
+    if grade == 0:
+        for component in element:
+            if component.alpha.index == 'p':
+                correct_grade.append(component)
+    else:
+        for component in element:
+            ix = component.alpha.index
+            if len(ix) == grade and ix != 'p':
+                correct_grade.append(component)
+    return MultiVector(correct_grade)

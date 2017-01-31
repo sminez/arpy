@@ -61,12 +61,12 @@ def dispatch_on(index=0, func=None):
                 raise TypeError(
                     'The base case takes {} parameters. ({} supplied)'.format(
                         key_len, len(key)))
-            for t in key:
-                if type(t) != type:
-                    raise TypeError('Arguments should be types')
-        else:
-            if type(key) != type:
-                raise TypeError('Arguments should be types')
+            # for t in key:
+            #     if type(t) != type:
+            #         raise TypeError('Arguments should be types')
+        # else:
+            # if type(key) != type:
+            #     raise TypeError('Arguments should be types')
 
         implementations[key] = func
         return func
