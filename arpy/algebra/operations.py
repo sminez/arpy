@@ -38,6 +38,7 @@ showing that the proposition holds...!)
 '''
 from .ar_types import Alpha, Pair
 from .config import ALLOWED, METRIC
+from ..utils.dispatch import dispatch_on
 
 
 def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
@@ -97,39 +98,52 @@ def inverse(a):
     return Alpha(a.index, (find_prod(a, a).sign * a.sign))
 
 
+@dispatch_on('all')
 def wedge(a, b):
-    '''Compute the Wedge Product of two values'''
-    if isinstance(a, Alpha):
-        if isinstance(b, Alpha):
-            return find_prod(a, b)
-        if isinstance(b, Pair):
-            alpha = find_prod(a, b.alpha)
-            return Pair(alpha, b.xi)
-    elif isinstance(a, Pair):
-        if isinstance(b, Alpha):
-            alpha = find_prod(a.alpha, b)
-            return Pair(alpha, a.xi)
-        elif isinstance(b, Pair):
-            raise ValueError("Unable to wedge Pairs")
-    else:
-        raise ValueError("Invalid wedge product: {} {}".format(a, b))
+    '''Compute the Wedge Product of two values.'''
+    raise ValueError("Invalid wedge product: {} {}".format(a, b))
 
 
+@wedge.add((Alpha, Alpha))
+def _wedge_alpha_alpha(a, b):
+    return find_prod(a, b)
+
+
+@wedge.add((Alpha, Pair))
+def _wedge_alpha_pair(a, b):
+    alpha = find_prod(a, b.alpha)
+    return Pair(alpha, b.xi)
+
+
+@wedge.add((Pair, Alpha))
+def _wedge_pair_alpha(a, b):
+    alpha = find_prod(a.alpha, b)
+    return Pair(alpha, a.xi)
+
+
+@dispatch_on('all')
 def div_by(a, b):
     '''Divide one element by another'''
-    if isinstance(a, Alpha) and isinstance(b, Alpha):
-        return find_prod(a, inverse(b))
-    else:
-        raise ValueError("Invalid division: {} / {}".format(a, b))
+    raise ValueError("Invalid division: {} / {}".format(a, b))
 
 
+@div_by.add((Alpha, Alpha))
+def _div_by_alpha_alpha(a, b):
+    return find_prod(a, inverse(b))
+
+
+@dispatch_on('all')
 def div_into(a, b):
     '''Divide one element into another'''
-    if isinstance(a, Alpha):
-        if isinstance(b, Alpha):
-            return find_prod(inverse(a), b)
-        elif isinstance(b, Pair):
-            alpha = find_prod(inverse(a), b.alpha)
-            return Pair(alpha, b.xi)
-    else:
-        raise ValueError("Invalid division: {} \ {}".format(a, b))
+    raise ValueError("Invalid division: {} \ {}".format(a, b))
+
+
+@div_into.add((Alpha, Alpha))
+def _div_into_Alpha_Alpha(a, b):
+    return find_prod(inverse(a), b)
+
+
+@div_into.add((Alpha, Pair))
+def _div_into_Alpha_Pair(a, b):
+    alpha = find_prod(inverse(a), b.alpha)
+    return Pair(alpha, b.xi)

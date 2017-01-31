@@ -13,7 +13,6 @@ setup(
     author_email='innesdmorrison@gmail.com',
     install_requires=[
         'sly',
-        'prompt_toolkit==1.0.0',
     ],
     tests_require=[
         'pytest',
