@@ -6,27 +6,18 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='arpy',
-    version="0.0.1",
-    description="A REPL for computing with Absolute Relativity",
+    version="0.0.2",
+    description="A library for computing with Absolute Relativity",
     url="https://bitbucket.com/sminez/arpy",
     author="Innes Anderson-Morrison",
     author_email='innesdmorrison@gmail.com',
-    install_requires=[
-        'sly',
-    ],
-    tests_require=[
-        'pytest',
-        ],
+    install_requires=['sly'],
+    tests_require=['pytest'],
+    extras_require={'test': ['pytest']},
     packages=find_packages(),
     package_dir={'arpy': 'arpy'},
-    zip_safe=False,
     classifiers=[
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Development Status :: 4 - Beta'
-    ],
-    entry_points={
-        'console_scripts': [
-            'arpy = arpy.cli:run',
-        ]
-    },
+    ]
 )
