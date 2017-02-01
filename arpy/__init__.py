@@ -1,7 +1,8 @@
-from .algebra.config import *
-from .algebra.ar_types import *
-from .algebra.operations import *
-from .algebra.differential import *
+from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE
+from .algebra.ar_types import Alpha, Xi, Pair, MultiVector
+from .algebra.operations import find_prod, inverse, wedge, dot, full, \
+        div_by, div_into, project
+from .algebra.differential import AR_differential, Dmu, DG
 from .utils.lexparse import ar
 
 
