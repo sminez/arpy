@@ -59,7 +59,7 @@ class Xi:
         return (self.val == other.val) and (self.partials == other.partials)
 
     def __repr__(self):
-        sign = '' if self.sign == 1 else '-'
+        sign = '+' if self.sign == 1 else '-'
         partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
         return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
 
@@ -88,13 +88,20 @@ class MultiVector(collections.abc.Set):
         '''
         Given a list of pairs, build the mulitvector by binding the ξ values
         '''
-        self.basis_blades = {Alpha(a): [] for a in ALLOWED}
+        self.components = {Alpha(a): [] for a in ALLOWED}
 
         if not all([isinstance(comp, Pair) for comp in components]):
             raise ValueError("Multivectors can only contain Xi/Alpha pairs")
 
         for comp in components:
-            self.basis_blades[comp.alpha].append(comp.xi)
+            try:
+                self.components[comp.alpha].append(comp.xi)
+            except KeyError:
+                # Negative Alpha value
+                alpha, xi = comp.alpha, comp.xi
+                alpha.sign = 1
+                xi.sign *= -1
+                self.components[alpha].append(xi)
 
     def cartesian_apply(self, other, operation):
         '''
@@ -109,38 +116,53 @@ class MultiVector(collections.abc.Set):
         '''Return a formatted string that is grouped into del notation'''
         raise NotImplementedError
 
+    def __add__(self, other):
+        '''
+        Allow for the addition of Multivectors and Pairs.
+        This will always return a new MultiVector.
+        '''
+        if not isinstance(other, (Pair, MultiVector)):
+            raise TypeError()
+
+        comps = [p for p in self]
+        if isinstance(other, Pair):
+            comps.append(other)
+        elif isinstance(other, MultiVector):
+            comps.extend(p for p in other)
+
+        return MultiVector(comps)
+
     def __len__(self):
-        '''
-        Only initialised blades count towards the length of a multivector
-        '''
-        return len([blade for blade in self.basis_blades.values() if blade])
+        # All allowed values are initialised with [] so we are
+        # only counting componets that have a Xi value set.
+        return len([v for v in self.components.values() if v != []])
 
     def __contains__(self, other):
-        '''Return True if the requested alpha value has been initialised'''
         if isinstance(other, Alpha):
-            return self.basis_blades[other] != []
+            return self.components[other] != []
         elif isinstance(other, Pair):
-            return other.xi in self.basis_blades[other.alpha]
+            return other.xi in self.components[other.alpha]
         else:
             return False
 
     def _nice_xi(self, alpha, raise_key_error=True, for_print=False):
         '''Single element xi lists return their value raw'''
-        xi = self.basis_blades[alpha]
-        if not xi and raise_key_error:
-            raise KeyError
+        try:
+            xi = self.components[alpha]
+        except KeyError:
+            if raise_key_error:
+                raise KeyError
         if len(xi) == 1:
             return xi[0]
         else:
             if for_print:
-                return ''.join(str(x) for x in xi)
+                return '(' + ', '.join(str(x) for x in xi) + ')'
             else:
                 return xi
 
     def __getitem__(self, key):
-        '''mvec[alpha] returns a pair'''
         if isinstance(key, str):
-            # Allow retreval by bare string as well as Alpha
+            # Allow retreval by string as well as Alpha
             key = Alpha(key)
         if not isinstance(key, Alpha):
             raise KeyError
@@ -148,12 +170,16 @@ class MultiVector(collections.abc.Set):
         return Pair(key, self._nice_xi(key))
 
     def __iter__(self):
-        for alpha in self.basis_blades:
-            xi = self._nice_xi(alpha, False)
+        for alpha in ALLOWED:
+            xi = self._nice_xi(Alpha(alpha), False)
             if xi:
-                yield Pair(alpha, xi)
+                if isinstance(xi, list):
+                    for x in xi:
+                        yield Pair(alpha, x)
+                else:
+                    yield Pair(alpha, xi)
 
     def __repr__(self):
-        comps = ['α{}{}'.format(a, self._nice_xi(Alpha(a), False, True))
-                 for a in ALLOWED if self.basis_blades[Alpha(a)]]
-        return '{' + ', '.join(comps) + '}'
+        comps = ['  α{} {}'.format(a, self._nice_xi(Alpha(a), False, True))
+                 for a in ALLOWED if self.components[Alpha(a)]]
+        return '{\n' + '\n'.join(comps) + '\n}'
