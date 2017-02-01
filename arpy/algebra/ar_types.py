@@ -43,7 +43,7 @@ class Alpha:
 
 class Xi:
     '''A symbolic Real value'''
-    def __init__(self, val, sign='', unit=None, partials=[]):
+    def __init__(self, val, unit=None, partials=[], sign=1):
         if isinstance(val, Alpha):
             val = val.index
 
@@ -59,8 +59,9 @@ class Xi:
         return (self.val == other.val) and (self.partials == other.partials)
 
     def __repr__(self):
+        sign = '' if self.sign == 1 else '-'
         partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
-        return '{}{}ξ{}'.format(self.sign, ''.join(partials), self.val)
+        return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
 
 
 class Pair:
@@ -78,13 +79,7 @@ class Pair:
         return (self.alpha == other.alpha) and (self.xi == other.xi)
 
     def __repr__(self):
-        try:
-            return '({},{})'.format(
-                self.alpha, ''.join(str(x) for x in self.xi)
-            )
-        except TypeError:
-            # self.xi is not a collection type
-            return '({},{})'.format(self.alpha, self.xi)
+        return '({},{})'.format(self.alpha, self.xi)
 
 
 class MultiVector(collections.abc.Set):
@@ -109,6 +104,10 @@ class MultiVector(collections.abc.Set):
         if not isinstance(other, MultiVector):
             raise TypeError("other must be a MultiVector")
         return MultiVector([operation(a, b) for a in self for b in other])
+
+    def vector_notation(self):
+        '''Return a formatted string that is grouped into del notation'''
+        raise NotImplementedError
 
     def __len__(self):
         '''
