@@ -8,82 +8,49 @@ In Cartesian coordinates this is:
 from itertools import groupby
 
 from .config import ALLOWED, ALPHA_TO_GROUP, DIVISION_TYPE
-from .ar_types import Alpha, Xi, Pair
+from .ar_types import Alpha, Xi, Pair, MultiVector
 from .operations import div_by, div_into
 
 
-def pair_partial(component, wrt):
+def component_partial(component, wrt, div):
     '''
     Symbolically differentiate a component by storing the partials and
     converting the alpha value using the correct division type.
     '''
-    if DIVISION_TYPE == 'by':
+    if div == 'by':
         alpha = div_by(component.alpha, wrt)
-    elif DIVISION_TYPE == 'into':
-        # NOTE:: This is dividing the component into the α for the differential
-        #        Is that the correct way round?
+    elif div == 'into':
         alpha = div_into(component.alpha, wrt)
     else:
-        raise ValueError(
-            "invalid division specification: {}".format(DIVISION_TYPE)
-        )
+        raise ValueError('Invalid division specification: %s' % div)
     partials = component.xi.partials + [wrt]
     return Pair(alpha, Xi(component.xi.val, component.xi.unit, partials))
 
 
-def vec_partial(vec, wrt):
+def AR_differential(mvec, wrt, div=DIVISION_TYPE):
     '''
-    Symbolically differentiate a whole vector of ξα pairs
+    Compute the result of Differentiating a each component of a MultiVector
+    with respect to a given list of unit elements under the algebra.
     '''
-    return [pair_partial(comp, wrt) for comp in vec if comp.xi is not None]
+    return MultiVector([
+        component_partial(component, Alpha(element), div)
+        for element in wrt for component in mvec
+    ])
 
 
-def _differential(vec, wrt=None):
-    '''
-    Compute the result of Differentiating a xi vector with respect to a given
-    list of unit elements under the algebra. This result is a
-    single list of terms which almost always will get passed through
-    `by_α` or `by_vec_notation` to make it more readable.
-
-    This is used as base to build other differential operators.
-    '''
-    grouped = [vec_partial(vec, Alpha(comp)) for comp in wrt]
-    output = []
-    for g in grouped:
-        output += g
-    return output
-
-
-def del_i(vec):
-    '''The 3D gradient of a vector'''
-    return _differential(vec, ['1', '2', '3'])
-
-
-def Dmu(vec):
+def Dmu(mvec):
     '''The main operator from the paper'''
-    return _differential(vec, ['0', '1', '2', '3'])
+    return AR_differential(mvec, ['0', '1', '2', '3'])
 
 
-def DG(vec):
+def DG(mvec):
     '''A full derivative with respect to all components'''
-    return _differential(vec, ALLOWED)
-
-
-def DM(vec):
-    '''Differentiate with respect to the magnetic field'''
-    M = ['p'] + [a for a in ALLOWED if len(a) == 2 and '0' not in a]
-    return _differential(vec, M)
-
-
-def DE(vec):
-    '''Differentiate with respect to the electric field'''
-    E = ['0123'] + [a for a in ALLOWED if len(a) == 2 and '0' in a]
-    return _differential(vec, E)
-
+    return AR_differential(mvec, ALLOWED)
 
 ##############################################################################
 
 
+# TODO:: Move these to being methods on MultiVectors
 def by_alpha(vec, vector_groups=False):
     '''
     Group results of a derivative operation together in order to form the
