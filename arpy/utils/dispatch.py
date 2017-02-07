@@ -61,12 +61,6 @@ def dispatch_on(index=0, func=None):
                 raise TypeError(
                     'The base case takes {} parameters. ({} supplied)'.format(
                         key_len, len(key)))
-            # for t in key:
-            #     if type(t) != type:
-            #         raise TypeError('Arguments should be types')
-        # else:
-            # if type(key) != type:
-            #     raise TypeError('Arguments should be types')
 
         implementations[key] = func
         return func
@@ -79,9 +73,9 @@ def dispatch_on(index=0, func=None):
         '''
         if multi:
             if index == 'all':
-                dispatch_key = tuple([type(a) for a in args])
+                dispatch_key = tuple(type(a) for a in args)
             else:
-                dispatch_key = tuple(args[i] for i in index)
+                dispatch_key = tuple(type(args[i]) for i in index)
         else:
             dispatch_key = type(args[index])
 
