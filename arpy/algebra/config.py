@@ -20,7 +20,7 @@ XI_GROUPS = {
 ALLOWED_GROUPS = ['p', '0', '123', '0123'] + [g for g in XI_GROUPS.keys()]
 
 # The space-time metric that will be used
-METRIC = [1, -1, -1, -1]
+METRIC = (1, -1, -1, -1)
 
 # Whether division is defined as 'by' or 'into'
 # NOTE:: Any other values will raise exceptions within the rest of the code!

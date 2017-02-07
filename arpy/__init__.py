@@ -1,9 +1,9 @@
-from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE
+from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, ALPHA_TO_GROUP
 from .algebra.ar_types import Alpha, Xi, Pair, MultiVector
 from .algebra.operations import find_prod, inverse, wedge, dot, full, \
         div_by, div_into, project
 from .algebra.differential import AR_differential, Dmu, DG
-from .utils.lexparse import ar
+from .utils.lexparse import ARContext
 
 
 ##############################################################################
@@ -18,3 +18,8 @@ Xi1 = project(XiG, 1)
 Xi2 = project(XiG, 2)
 Xi3 = project(XiG, 3)
 Xi4 = project(XiG, 4)
+
+# Build the default context for computation
+# NOTE:: The user can create a new context in the same way or modify the
+#        properties of the original context using .metric and .division
+ar = ARContext(METRIC, DIVISION_TYPE)

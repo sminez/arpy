@@ -88,38 +88,38 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     return Alpha(target, sign)
 
 
-def inverse(a):
+def inverse(a, metric=METRIC):
     '''Find the inverse of an Alpha element'''
-    return Alpha(a.index, (find_prod(a, a).sign * a.sign))
+    return Alpha(a.index, (find_prod(a, a, metric).sign * a.sign))
 
 
 ##############################################################################
-@dispatch_on('all')
-def wedge(a, b):
+@dispatch_on((0, 1))
+def wedge(a, b, metric=METRIC):
     '''Compute the Wedge Product of two elements'''
     raise NotImplementedError
 
 
 @wedge.add((Alpha, Alpha))
-def _wedge_alpha_alpha(a, b):
-    return find_prod(a, b)
+def _wedge_alpha_alpha(a, b, metric=METRIC):
+    return find_prod(a, b, metric)
 
 
 @wedge.add((Alpha, Pair))
-def _wedge_alpha_pair(a, b):
-    alpha = find_prod(a, b.alpha)
+def _wedge_alpha_pair(a, b, metric=METRIC):
+    alpha = find_prod(a, b.alpha, metric)
     return Pair(alpha, b.xi)
 
 
 @wedge.add((Pair, Alpha))
-def _wedge_pair_alpha(a, b):
-    alpha = find_prod(a.alpha, b)
+def _wedge_pair_alpha(a, b, metric=METRIC):
+    alpha = find_prod(a.alpha, b, metric)
     return Pair(alpha, a.xi)
 
 
 @wedge.add((Pair, Pair))
-def _wedge_pair_pair(a, b):
-    alpha = find_prod(a.alpha, b.alpha)
+def _wedge_pair_pair(a, b, metric=METRIC):
+    alpha = find_prod(a.alpha, b.alpha, metric)
     if alpha.sign == -1:
         axi, bxi = a.xi, b.xi
         axi.sign, bxi.sign = '-', '-'
@@ -130,66 +130,66 @@ def _wedge_pair_pair(a, b):
 
 
 ##############################################################################
-@dispatch_on('all')
-def dot(a, b):
+@dispatch_on((0, 1))
+def dot(a, b, metric=METRIC):
     '''Compute the dot product of two elements'''
     raise NotImplementedError
 
 
 @dot.add((Alpha, Alpha))
-def dot_alpha_alpha(a, b):
+def dot_alpha_alpha(a, b, metric=METRIC):
     raise NotImplementedError
 
 
 @dot.add((Alpha, Pair))
-def dot_alpha_pair(a, b):
+def dot_alpha_pair(a, b, metric=METRIC):
     raise NotImplementedError
 
 
 @dot.add((Pair, Alpha))
-def dot_pair_alpha(a, b):
+def dot_pair_alpha(a, b, metric=METRIC):
     raise NotImplementedError
 
 
 ##############################################################################
-def full(a, b):
+def full(a, b, metric=METRIC):
     '''Compute the Geometric product of two elements'''
     return MultiVector([dot(a, b), wedge(a, b)])
 
 
 ##############################################################################
-@dispatch_on('all')
-def div_by(a, b):
+@dispatch_on((0, 1))
+def div_by(a, b, metric=METRIC):
     '''Divide one element by another'''
     raise NotImplementedError
 
 
 @div_by.add((Alpha, Alpha))
-def _div_by_alpha_alpha(a, b):
-    return find_prod(a, inverse(b))
+def _div_by_alpha_alpha(a, b, metric=METRIC):
+    return find_prod(a, inverse(b, metric), metric)
 
 
 @div_by.add((Pair, Alpha))
-def _div_by_pair_alpha(a, b):
-    alpha = find_prod(inverse(a.alpha), b)
+def _div_by_pair_alpha(a, b, metric=METRIC):
+    alpha = find_prod(inverse(a.alpha, metric), b, metric)
     return Pair(alpha, a.xi)
 
 
 ##############################################################################
-@dispatch_on('all')
-def div_into(a, b):
+@dispatch_on((0, 1))
+def div_into(a, b, metric=METRIC):
     '''Divide one element into another'''
     raise NotImplementedError
 
 
 @div_into.add((Alpha, Alpha))
-def _div_into_Alpha_Alpha(a, b):
-    return find_prod(inverse(a), b)
+def _div_into_Alpha_Alpha(a, b, metric=METRIC):
+    return find_prod(inverse(a, metric), b, metric)
 
 
 @div_into.add((Alpha, Pair))
-def _div_into_Alpha_Pair(a, b):
-    alpha = find_prod(inverse(a), b.alpha)
+def _div_into_Alpha_Pair(a, b, metric=METRIC):
+    alpha = find_prod(inverse(a, metric), b.alpha, metric)
     return Pair(alpha, b.xi)
 
 

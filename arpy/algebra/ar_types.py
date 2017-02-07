@@ -2,7 +2,13 @@
 Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 import collections.abc
-from .config import ALLOWED, ALLOWED_GROUPS
+from itertools import groupby
+from functools import partial
+from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
+
+
+CW = {1: 2, 2: 3, 3: 1}
+ACW = {1: 3, 2: 1, 3: 2}
 
 
 class Alpha:
@@ -103,18 +109,15 @@ class MultiVector(collections.abc.Set):
                 xi.sign *= -1
                 self.components[alpha].append(xi)
 
-    def cartesian_apply(self, other, operation):
-        '''
-        Apply a function to the cartesian product of two multivectors
-        NOTE:: The function must act on two Pairs.
-        '''
-        if not isinstance(other, MultiVector):
-            raise TypeError("other must be a MultiVector")
-        return MultiVector([operation(a, b) for a in self for b in other])
+    def __repr__(self):
+        comps = ['  α{} {}'.format(a, self._nice_xi(Alpha(a), False, True))
+                 for a in ALLOWED if self.components[Alpha(a)]]
+        return '{\n' + '\n'.join(comps) + '\n}'
 
-    def vector_notation(self):
-        '''Return a formatted string that is grouped into del notation'''
-        raise NotImplementedError
+    def __len__(self):
+        # All allowed values are initialised with [] so we are
+        # only counting componets that have a Xi value set.
+        return len([v for v in self.components.values() if v != []])
 
     def __add__(self, other):
         '''
@@ -132,11 +135,6 @@ class MultiVector(collections.abc.Set):
 
         return MultiVector(comps)
 
-    def __len__(self):
-        # All allowed values are initialised with [] so we are
-        # only counting componets that have a Xi value set.
-        return len([v for v in self.components.values() if v != []])
-
     def __contains__(self, other):
         if isinstance(other, Alpha):
             return self.components[other] != []
@@ -144,21 +142,6 @@ class MultiVector(collections.abc.Set):
             return other.xi in self.components[other.alpha]
         else:
             return False
-
-    def _nice_xi(self, alpha, raise_key_error=True, for_print=False):
-        '''Single element xi lists return their value raw'''
-        try:
-            xi = self.components[alpha]
-        except KeyError:
-            if raise_key_error:
-                raise KeyError
-        if len(xi) == 1:
-            return xi[0]
-        else:
-            if for_print:
-                return '(' + ', '.join(str(x) for x in xi) + ')'
-            else:
-                return xi
 
     def __getitem__(self, key):
         if isinstance(key, str):
@@ -179,7 +162,91 @@ class MultiVector(collections.abc.Set):
                 else:
                     yield Pair(alpha, xi)
 
-    def __repr__(self):
-        comps = ['  α{} {}'.format(a, self._nice_xi(Alpha(a), False, True))
-                 for a in ALLOWED if self.components[Alpha(a)]]
-        return '{\n' + '\n'.join(comps) + '\n}'
+    def _nice_xi(self, alpha, raise_key_error=True, for_print=False):
+        '''Single element xi lists return their value raw'''
+        try:
+            xi = self.components[alpha]
+        except KeyError:
+            if raise_key_error:
+                raise KeyError
+        if len(xi) == 1:
+            return xi[0]
+        else:
+            if for_print:
+                return '(' + ', '.join(str(x) for x in xi) + ')'
+            else:
+                return xi
+
+    def cartesian_apply(self, other, operation):
+        '''
+        Apply a function to the cartesian product of two multivectors
+        NOTE:: The function must act on two Pairs.
+        '''
+        if not isinstance(other, MultiVector):
+            raise TypeError("other must be a MultiVector")
+        return MultiVector([operation(i, j) for i in self for j in other])
+
+    def MTAE_grouped(self):
+        '''
+        Print an MTAE grouped representation of the MultiVector
+        NOTE:: This deliberately does not return a new MultiVector as we
+               should always be working with strict alpha values not grouped.
+        '''
+        by_alpha = groupby(self, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
+        MTAE = [
+            (group, tuple(c.xi for c in components))
+            for (group, components) in by_alpha
+        ]
+        print('{')
+        for group, comps in MTAE:
+            print('  α{}'.format(group).ljust(7), comps)
+        print('}')
+
+    def del_notation(self):
+        '''
+        Print an MTAE grouped representation of the multivector with del
+        vector derivative notation if possible.
+        '''
+        print(del_notation(self))
+
+
+def to_del(group, components, replacement, sign=None):
+    '''Replace a list of components with an alternative Pair'''
+    sign = sign if sign else components[0].alpha.sign
+    return Pair(group, replacement)
+
+
+def del_notation(mvec):
+    '''
+    Return a formatted string representation of a MultiVector that is
+    MTAE grouped and expressed in del notation.
+    '''
+    def curl(MTAE_group):
+        return MTAE_group
+
+    def grad(MTAE_group):
+        return MTAE_group
+
+    def div(MTAE_group):
+        return MTAE_group
+
+    def partials(MTAE_group):
+        return MTAE_group
+
+    def terms(MTAE_group):
+        '''Ensure that all terms have MTAE alphas'''
+        return [comp.xi for _, comp in MTAE_group]
+
+    del_replaced = []
+    grouped = groupby(mvec, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
+
+    for group, components in grouped:
+        MTAE_group = [(group, comp) for comp in components]
+        del_terms = terms(partials(div(grad(curl(MTAE_group)))))
+        del_replaced.append((group, del_terms))
+
+    formatted = [
+        '  α{}'.format(group).ljust(7) + '{}'.format(comps)
+        for (group, comps) in del_replaced
+    ]
+    return '{\n' + '\n'.join(formatted) + '\n}'
