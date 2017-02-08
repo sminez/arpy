@@ -32,7 +32,7 @@ elements and re-label them with indices 1->(n-1) and repeat the process until
 we are done.
 '''
 from .config import ALLOWED, METRIC
-from ..utils.dispatch import dispatch_on
+from ..utils.concepts.dispatch import dispatch_on
 from .ar_types import Alpha, Pair, MultiVector
 
 
