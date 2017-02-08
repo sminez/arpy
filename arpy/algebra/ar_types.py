@@ -96,10 +96,11 @@ class MultiVector(collections.abc.Set):
         '''
         self.components = {Alpha(a): [] for a in ALLOWED}
 
-        if not all([isinstance(comp, Pair) for comp in components]):
-            raise ValueError("Multivectors can only contain Xi/Alpha pairs")
-
         for comp in components:
+            if isinstance(comp, (str, Alpha)):
+                comp = Pair(comp)
+            if not isinstance(comp, Pair):
+                raise ValueError("Arguments must be Alphas, Pairs or Strings")
             try:
                 self.components[comp.alpha].append(comp.xi)
             except KeyError:
@@ -206,6 +207,8 @@ class MultiVector(collections.abc.Set):
         '''
         Print an MTAE grouped representation of the multivector with del
         vector derivative notation if possible.
+        NOTE:: This deliberately does not return a new MultiVector as we
+               should always be working with strict alpha values not grouped.
         '''
         print(del_notation(self))
 
