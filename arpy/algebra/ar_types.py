@@ -3,7 +3,6 @@ Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 import collections.abc
 from itertools import groupby
-from functools import partial
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
 
 
@@ -48,16 +47,99 @@ class Alpha:
 
 
 class Xi:
+    '''
+    An arbitrary linear combination of XiProducts.
+
+    This is trying to be generic but a couple of assumtions are made throughout
+    all of the Xi... classes:
+        1) All Xi's have a .sign property that is +- 1 to allow for tracking
+           the overall sign of a product and for negation of arbitrary linear
+           combinations of Xi values.
+        2) When converting to a string, all XiComponents and XiProducts have a
+           leading sign of +/- and no other sign information.
+    '''
+    def __init__(self, elements):
+        _elements = []
+        if isinstance(elements, (Alpha, str)):
+            p = XiProduct([XiComponent(elements)])
+            _elements.append(p)
+        else:
+            for e in elements:
+                if isinstance(e, XiProduct):
+                    _elements.append(e)
+                elif isinstance(e, XiComponent):
+                    p = XiProduct([e])
+                    _elements.append(p)
+                elif isinstance(e, (Alpha, str)):
+                    p = XiProduct([XiComponent(e)])
+                    _elements.append(p)
+                else:
+                    raise TypeError(
+                        'Invalid type for building a Xi: {}'.format(type(e))
+                    )
+
+        self.val = tuple(_elements)
+        self.sign = 1
+
+    def __repr__(self):
+        if len(self.components) == 1:
+            return str(self.components[0])
+        else:
+            _comps = []
+            for c in self.components:
+                strcomp = str(c)
+                sign = strcomp[0]
+                val = strcomp[1:]
+                if self.sign == -1:
+                    # Negate all component signs
+                    sign = '+' if sign == '-' else '-'
+                _comps.extend([sign, val])
+            # Strip leading '+'
+            if _comps[0] == '+':
+                _comps = _comps[1:]
+            return '(' + ' '.join(_comps) + ')'
+
+
+class XiProduct:
+    '''Symbolic Xi valued products with a single sign'''
+    def __init__(self, components):
+        components = list(components)
+        # Count negative signs and correct self.sign accordingly
+        num_negatives = sum(1 for c in components if c.sign == -1)
+        self.sign = 1 if num_negatives % 2 == 0 else -1
+        # Set all component signs to positive and store
+        for c in components:
+            c.sign = 1
+        self.components = tuple(components)
+
+    @property
+    def val(self):
+        # Expressing the product values as a dotted list of indices
+        return '.'.join(c.val for c in self.components)
+
+    def __eq__(self, other):
+        same_sign = (self.sign == other.sign)
+        same_components = (self.components == other.components)
+        return same_sign and same_components
+
+    def __repr__(self):
+        sign = '+' if self.sign == 1 else '-'
+        # Stripping component signs as we have taken care of the overall
+        # product sign at initialisation.
+        comps = ''.join(str(c)[1:] for c in self.components)
+        return sign + comps
+
+    def _recompute_sign(self):
+        raise NotImplementedError
+
+
+class XiComponent:
     '''A symbolic Real value'''
-    def __init__(self, val, unit=None, partials=[], sign=1):
+    def __init__(self, val, partials=[], sign=1):
         if isinstance(val, Alpha):
             val = val.index
 
-        if unit is None:
-            unit = val
-
         self.val = val
-        self.unit = unit
         self.sign = sign
         self.partials = partials
 
@@ -71,6 +153,7 @@ class Xi:
 
 
 class Pair:
+    '''A Pair may be any object along with an Alpha value'''
     def __init__(self, a, xi=None):
         if xi is None:
             xi = Xi(a)
@@ -91,16 +174,14 @@ class Pair:
 class MultiVector(collections.abc.Set):
     '''A custom container type for working efficiently with multivectors'''
     def __init__(self, components=[]):
-        '''
-        Given a list of pairs, build the mulitvector by binding the ξ values
-        '''
+        # Given a list of pairs, build the mulitvector by binding the ξ values
         self.components = {Alpha(a): [] for a in ALLOWED}
 
         for comp in components:
             if isinstance(comp, (str, Alpha)):
                 comp = Pair(comp)
             if not isinstance(comp, Pair):
-                raise ValueError("Arguments must be Alphas, Pairs or Strings")
+                raise ValueError('Arguments must be Alphas, Pairs or Strings')
             try:
                 self.components[comp.alpha].append(comp.xi)
             except KeyError:
@@ -121,10 +202,8 @@ class MultiVector(collections.abc.Set):
         return len([v for v in self.components.values() if v != []])
 
     def __add__(self, other):
-        '''
-        Allow for the addition of Multivectors and Pairs.
-        This will always return a new MultiVector.
-        '''
+        # Allow for the addition of Multivectors and Pairs.
+        # This will always return a new MultiVector.
         if not isinstance(other, (Pair, MultiVector)):
             raise TypeError()
 
@@ -184,7 +263,7 @@ class MultiVector(collections.abc.Set):
         NOTE:: The function must act on two Pairs.
         '''
         if not isinstance(other, MultiVector):
-            raise TypeError("other must be a MultiVector")
+            raise TypeError('Argument must be a MultiVector')
         return MultiVector([operation(i, j) for i in self for j in other])
 
     def MTAE_grouped(self):
