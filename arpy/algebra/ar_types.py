@@ -103,14 +103,9 @@ class Xi:
 class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
     def __init__(self, components):
-        components = list(components)
-        # Count negative signs and correct self.sign accordingly
-        num_negatives = sum(1 for c in components if c.sign == -1)
-        self.sign = 1 if num_negatives % 2 == 0 else -1
-        # Set all component signs to positive and store
-        for c in components:
-            c.sign = 1
+        self.sign = 1
         self.components = tuple(components)
+        self._recompute_sign()
 
     @property
     def val(self):
@@ -130,7 +125,18 @@ class XiProduct:
         return sign + comps
 
     def _recompute_sign(self):
-        raise NotImplementedError
+        '''
+        Determines whether the current product is +ve or -ve and then sets
+        all component level signs to +ve
+        '''
+        components = list(self.components)
+        # Count negative signs and correct self.sign accordingly
+        num_negatives = sum(1 for c in components if c.sign == -1)
+        self.sign = 1 if num_negatives % 2 == 0 else -1
+        # Set all component signs to positive and store
+        for c in components:
+            c.sign = 1
+        self.components = tuple(components)
 
 
 class XiComponent:
