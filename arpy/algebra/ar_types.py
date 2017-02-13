@@ -82,11 +82,11 @@ class Xi:
         self.sign = 1
 
     def __repr__(self):
-        if len(self.components) == 1:
-            return str(self.components[0])
+        if len(self.val) == 1:
+            return str(self.val[0])
         else:
             _comps = []
-            for c in self.components:
+            for c in self.val:
                 strcomp = str(c)
                 sign = strcomp[0]
                 val = strcomp[1:]
