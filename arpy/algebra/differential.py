@@ -25,7 +25,9 @@ def component_partial(component, wrt, div):
         new_component.alpha = div_into(new_component.alpha, wrt)
     else:
         raise ValueError('Invalid division specification: %s' % div)
-    new_component.xi.add_partial(wrt)
+    # new_component.xi.add_partial(wrt)
+    new_component.xi.partials = [wrt] + new_component.xi.partials
+
     return new_component
 
 

@@ -31,9 +31,10 @@ number of pops to correctly position it. We can then look only at the remaining
 elements and re-label them with indices 1->(n-1) and repeat the process until
 we are done.
 '''
+from copy import deepcopy
 from .config import ALLOWED, METRIC
 from ..utils.concepts.dispatch import dispatch_on
-from .ar_types import Alpha, Pair, MultiVector
+from .ar_types import Alpha, Pair, MultiVector, XiProduct
 
 
 def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
@@ -119,14 +120,15 @@ def _wedge_pair_alpha(a, b, metric=METRIC):
 
 @wedge.add((Pair, Pair))
 def _wedge_pair_pair(a, b, metric=METRIC):
+    a, b = deepcopy(a), deepcopy(b)
     alpha = find_prod(a.alpha, b.alpha, metric)
     if alpha.sign == -1:
         axi, bxi = a.xi, b.xi
-        axi.sign, bxi.sign = '-', '-'
+        axi.sign, bxi.sign = -1, -1
         alpha.sign = 1
-        return Pair(alpha, [axi, bxi])
+        return Pair(alpha, XiProduct([axi, bxi]))
     else:
-        return Pair(alpha, [a.xi, b.xi])
+        return Pair(alpha, XiProduct([a.xi, b.xi]))
 
 
 ##############################################################################

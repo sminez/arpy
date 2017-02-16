@@ -46,77 +46,17 @@ class Alpha:
         return hash((self.index, self.sign))
 
 
-class Xi:
-    '''
-    An arbitrary linear combination of XiProducts.
-
-    This is trying to be generic but a couple of assumtions are made throughout
-    all of the Xi... classes:
-        1) All Xi's have a .sign property that is +- 1 to allow for tracking
-           the overall sign of a product and for negation of arbitrary linear
-           combinations of Xi values.
-        2) When converting to a string, all XiComponents and XiProducts have a
-           leading sign of +/- and no other sign information.
-    '''
-    def __init__(self, elements):
-        _elements = []
-        if isinstance(elements, (Alpha, str)):
-            p = XiProduct([XiComponent(elements)])
-            _elements.append(p)
-        else:
-            for e in elements:
-                if isinstance(e, XiProduct):
-                    _elements.append(e)
-                elif isinstance(e, XiComponent):
-                    p = XiProduct([e])
-                    _elements.append(p)
-                elif isinstance(e, (Alpha, str)):
-                    p = XiProduct([XiComponent(e)])
-                    _elements.append(p)
-                else:
-                    raise TypeError(
-                        'Invalid type for building a Xi: {}'.format(type(e))
-                    )
-
-        self.val = tuple(_elements)
-        self.sign = 1
-
-    def __repr__(self):
-        if len(self.val) == 1:
-            return str(self.val[0])
-        else:
-            _comps = []
-            for c in self.val:
-                strcomp = str(c)
-                sign = strcomp[0]
-                val = strcomp[1:]
-                if self.sign == -1:
-                    # Negate all component signs
-                    sign = '+' if sign == '-' else '-'
-                _comps.extend([sign, val])
-            # Strip leading '+'
-            if _comps[0] == '+':
-                _comps = _comps[1:]
-            return '(' + ' '.join(_comps) + ')'
-
-    def add_partial(self, partial):
-        '''Add a partial derivative to all components'''
-        new_vals = []
-        for product in self.val:
-            comps = []
-            for comp in product.components:
-                comp.partials.append(partial)
-                comps.append(comp)
-            new_vals.append(XiProduct(comps))
-        self.val = tuple(new_vals)
-
-
 class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
     def __init__(self, components):
-        self.sign = 1
         self.components = tuple(components)
-        self._recompute_sign()
+
+    @property
+    def sign(self):
+        sign = 1
+        for comp in self.components:
+            sign *= comp.sign
+        return sign
 
     @property
     def val(self):
@@ -135,22 +75,8 @@ class XiProduct:
         comps = ''.join(str(c)[1:] for c in self.components)
         return sign + comps
 
-    def _recompute_sign(self):
-        '''
-        Determines whether the current product is +ve or -ve and then sets
-        all component level signs to +ve
-        '''
-        components = list(self.components)
-        # Count negative signs and correct self.sign accordingly
-        num_negatives = sum(1 for c in components if c.sign == -1)
-        self.sign = 1 if num_negatives % 2 == 0 else -1
-        # Set all component signs to positive and store
-        for c in components:
-            c.sign = 1
-        self.components = tuple(components)
 
-
-class XiComponent:
+class Xi:
     '''A symbolic Real value'''
     def __init__(self, val, partials=None, sign=1):
         if isinstance(val, Alpha):
@@ -281,7 +207,7 @@ class MultiVector(collections.abc.Set):
         '''
         if not isinstance(other, MultiVector):
             raise TypeError('Argument must be a MultiVector')
-        return MultiVector([operation(i, j) for i in self for j in other])
+        return MultiVector(operation(i, j) for i in self for j in other)
 
     def MTAE_grouped(self):
         '''
@@ -307,6 +233,19 @@ class MultiVector(collections.abc.Set):
                should always be working with strict alpha values not grouped.
         '''
         print(del_notation(self))
+
+    def collected_terms(self):
+        '''Display the multivector with factorised Xi values'''
+        print('{')
+        for blade, xis in self.components.items():
+            print('  {}:'.format(blade))
+            g = groupby(xis, lambda x: x.components[0])
+            for common, full in g:
+                s = []
+                for element in full:
+                    s.append(element.components[1])
+                print('    {}({})'.format(common, ''.join(str(x) for x in s)))
+        print('}')
 
 
 def to_del(group, components, replacement, sign=None):
