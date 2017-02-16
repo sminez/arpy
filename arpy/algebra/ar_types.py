@@ -99,6 +99,17 @@ class Xi:
                 _comps = _comps[1:]
             return '(' + ' '.join(_comps) + ')'
 
+    def add_partial(self, partial):
+        '''Add a partial derivative to all components'''
+        new_vals = []
+        for product in self.val:
+            comps = []
+            for comp in product.components:
+                comp.partials.append(partial)
+                comps.append(comp)
+            new_vals.append(XiProduct(comps))
+        self.val = tuple(new_vals)
+
 
 class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
@@ -141,13 +152,13 @@ class XiProduct:
 
 class XiComponent:
     '''A symbolic Real value'''
-    def __init__(self, val, partials=[], sign=1):
+    def __init__(self, val, partials=None, sign=1):
         if isinstance(val, Alpha):
             val = val.index
 
         self.val = val
         self.sign = sign
-        self.partials = partials
+        self.partials = partials if partials else []
 
     def __eq__(self, other):
         return (self.val == other.val) and (self.partials == other.partials)
