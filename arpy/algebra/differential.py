@@ -43,6 +43,13 @@ def AR_differential(mvec, wrt, div=DIVISION_TYPE):
     return MultiVector(comps)
 
 
+def differential_operator(wrt):
+    '''Define a new operator as a function for later use'''
+    def operator(mvec):
+        return AR_differential(mvec, wrt)
+    return operator
+
+
 def Dmu(mvec):
     '''The main operator from the paper'''
     return AR_differential(mvec, ['0', '1', '2', '3'])

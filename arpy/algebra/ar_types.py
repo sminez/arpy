@@ -46,6 +46,25 @@ class Alpha:
         return hash((self.index, self.sign))
 
 
+class Xi:
+    '''A symbolic Real value'''
+    def __init__(self, val, partials=None, sign=1):
+        if isinstance(val, Alpha):
+            val = val.index
+
+        self.val = val
+        self.sign = sign
+        self.partials = partials if partials else []
+
+    def __eq__(self, other):
+        return (self.val == other.val) and (self.partials == other.partials)
+
+    def __repr__(self):
+        sign = '+' if self.sign == 1 else '-'
+        partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
+        return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
+
+
 class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
     def __init__(self, components):
@@ -76,36 +95,21 @@ class XiProduct:
         return sign + comps
 
 
-class Xi:
-    '''A symbolic Real value'''
-    def __init__(self, val, partials=None, sign=1):
-        if isinstance(val, Alpha):
-            val = val.index
-
-        self.val = val
-        self.sign = sign
-        self.partials = partials if partials else []
-
-    def __eq__(self, other):
-        return (self.val == other.val) and (self.partials == other.partials)
-
-    def __repr__(self):
-        sign = '+' if self.sign == 1 else '-'
-        partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
-        return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
-
-
 class Pair:
     '''A Pair may be any object along with an Alpha value'''
-    def __init__(self, a, xi=None):
-        if xi is None:
-            xi = Xi(a)
+    def __init__(self, a, x=None):
+        if x is None:
+            x = Xi(a)
 
         if isinstance(a, Alpha):
             self.alpha = a
         else:
             self.alpha = Alpha(a)
-        self.xi = xi
+
+        if not isinstance(x, Xi):
+            x = Xi(x)
+
+        self.xi = x
 
     def __eq__(self, other):
         return (self.alpha == other.alpha) and (self.xi == other.xi)
