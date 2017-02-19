@@ -21,10 +21,11 @@ Xi3 = project(XiG, 3)
 Xi4 = project(XiG, 4)
 
 # 4-set Differentials
-DB = differential_operator(XI_GROUPS['jk'])
-DT = differential_operator(XI_GROUPS['0jk'])
-DA = differential_operator(XI_GROUPS['i'])
-DE = differential_operator(XI_GROUPS['i0'])
+DB = differential_operator(XI_GROUPS['jk'] + ['p'])
+DT = differential_operator(XI_GROUPS['0jk'] + ['0'])
+DA = differential_operator(XI_GROUPS['i'] + ['123'])
+DE = differential_operator(XI_GROUPS['i0'] + ['0123'])
+DF = differential_operator(XI_GROUPS['jk'] + XI_GROUPS['i0'] + ['p', '0123'])
 
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
