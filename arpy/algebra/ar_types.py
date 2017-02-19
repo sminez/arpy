@@ -159,7 +159,7 @@ class MultiVector(collections.abc.Set):
                 self.components[alpha].append(xi)
 
     def __repr__(self):
-        comps = ['  α{} {}'.format(a, self._nice_xi(Alpha(a), False, True))
+        comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
                  for a in ALLOWED if self.components[Alpha(a)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
@@ -202,15 +202,13 @@ class MultiVector(collections.abc.Set):
 
     def __iter__(self):
         for alpha in ALLOWED:
-            xi = self._nice_xi(Alpha(alpha), False)
-            if xi:
-                if isinstance(xi, list):
-                    for x in xi:
-                        yield Pair(alpha, x)
-                else:
+            try:
+                for xi in self.components[Alpha(alpha)]:
                     yield Pair(alpha, xi)
+            except KeyError:
+                pass
 
-    def _nice_xi(self, alpha, raise_key_error=True, for_print=False):
+    def _nice_xi(self, alpha, raise_key_error=False, for_print=True):
         '''Single element xi lists return their value raw'''
         try:
             xi = self.components[alpha]
@@ -225,25 +223,25 @@ class MultiVector(collections.abc.Set):
             else:
                 return xi
 
-    def MTAE_grouped(self):
+    def BTAE_grouped(self):
         '''
-        Print an MTAE grouped representation of the MultiVector
+        Print an BTAE grouped representation of the MultiVector
         NOTE:: This deliberately does not return a new MultiVector as we
                should always be working with strict alpha values not grouped.
         '''
         by_alpha = groupby(self, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
-        MTAE = [
+        BTAE = [
             (group, tuple(c.xi for c in components))
             for (group, components) in by_alpha
         ]
         print('{')
-        for group, comps in MTAE:
+        for group, comps in BTAE:
             print('  α{}'.format(group).ljust(7), comps)
         print('}')
 
     def del_notation(self):
         '''
-        Print an MTAE grouped representation of the multivector with del
+        Print an BTAE grouped representation of the multivector with del
         vector derivative notation if possible.
         NOTE:: This deliberately does not return a new MultiVector as we
                should always be working with strict alpha values not grouped.
@@ -281,30 +279,30 @@ def to_del(group, components, replacement, sign=None):
 def del_notation(mvec):
     '''
     Return a formatted string representation of a MultiVector that is
-    MTAE grouped and expressed in del notation.
+    BTAE grouped and expressed in del notation.
     '''
-    def curl(MTAE_group):
-        return MTAE_group
+    def curl(BTAE_group):
+        return BTAE_group
 
-    def grad(MTAE_group):
-        return MTAE_group
+    def grad(BTAE_group):
+        return BTAE_group
 
-    def div(MTAE_group):
-        return MTAE_group
+    def div(BTAE_group):
+        return BTAE_group
 
-    def partials(MTAE_group):
-        return MTAE_group
+    def partials(BTAE_group):
+        return BTAE_group
 
-    def terms(MTAE_group):
-        '''Ensure that all terms have MTAE alphas'''
-        return [comp.xi for _, comp in MTAE_group]
+    def terms(BTAE_group):
+        '''Ensure that all terms have BTAE alphas'''
+        return [comp.xi for _, comp in BTAE_group]
 
     del_replaced = []
     grouped = groupby(mvec, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
 
     for group, components in grouped:
-        MTAE_group = [(group, comp) for comp in components]
-        del_terms = terms(partials(div(grad(curl(MTAE_group)))))
+        BTAE_group = [(group, comp) for comp in components]
+        del_terms = terms(partials(div(grad(curl(BTAE_group)))))
         del_replaced.append((group, del_terms))
 
     formatted = [
