@@ -250,7 +250,7 @@ def _project_multivector(element, grade):
 ##############################################################################
 
 @dispatch_on('all')
-def apply(arg1, arg2, arg3):
+def prod_apply(arg1, arg2, arg3=None):
     '''
     Apply a function to the cartesian product of two multivectors
     NOTE:: The function must act on a single Multivector.
@@ -258,23 +258,39 @@ def apply(arg1, arg2, arg3):
     raise NotImplementedError
 
 
-@apply.add((FunctionType, MultiVector, MultiVector))
-def _apply_dmm(func, mv1, mv2):
+@prod_apply.add((FunctionType, MultiVector, MultiVector))
+def _prod_apply_dmm(func, mv1, mv2):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
     return MultiVector(wedge(i, j) for i in func(mv1) for j in mv2)
 
 
-@apply.add((MultiVector, FunctionType, MultiVector))
-def _apply_mdm(mv1, func, mv2):
+@prod_apply.add((MultiVector, FunctionType, MultiVector))
+def _prod_apply_mdm(mv1, func, mv2):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
     return MultiVector(wedge(i, j) for i in mv1 for j in func(mv2))
 
 
-@apply.add((FunctionType, (MultiVector, MultiVector), None))
-def _apply_d_mm(func, mvecs=(None, None), n=None):
+@prod_apply.add((FunctionType, tuple, type(None)))
+def _prod_apply_d_mm(func, mvecs=(None, None), _=None):
     if not isinstance(mvecs[0], MultiVector) and \
             isinstance(mvecs[1], MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return MultiVector(wedge(i, j) for i in func(mv1) for j in mv2)
+    return func(wedge(mvecs[0], mvecs[1]))
+
+
+##############################################################################
+
+_neg = [Alpha(a) for a in ALLOWED if wedge(Alpha(a), Alpha(a)).sign == -1]
+
+
+def dagger(mvec):
+    '''return ther Hermitian conjugate of the Multivector'''
+    mvec = deepcopy(mvec)
+    new_vec = []
+    for pair in mvec:
+        if pair.alpha in _neg:
+            pair.alpha.sign *= -1
+        new_vec.append(pair)
+    return MultiVector(new_vec)

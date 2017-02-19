@@ -82,13 +82,19 @@ class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
     def __init__(self, components):
         self.components = tuple(components)
+        self.partials = []
+        self.sign_base = 1
 
     @property
     def sign(self):
-        sign = 1
+        s = self.sign_base
         for comp in self.components:
-            sign *= comp.sign
-        return sign
+            s *= comp.sign
+        return s
+
+    @sign.setter
+    def sign(self, val):
+        self.sign_base = val
 
     @property
     def val(self):
@@ -104,8 +110,9 @@ class XiProduct:
         sign = '+' if self.sign == 1 else '-'
         # Stripping component signs as we have taken care of the overall
         # product sign at initialisation.
+        partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
         comps = ''.join(str(c)[1:] for c in self.components)
-        return sign + comps
+        return sign + ''.join(partials) + comps
 
 
 class Pair:

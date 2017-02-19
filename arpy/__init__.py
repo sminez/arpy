@@ -1,7 +1,7 @@
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, ALPHA_TO_GROUP
 from .algebra.ar_types import Alpha, Xi, Pair, MultiVector
 from .algebra.operations import find_prod, inverse, wedge, dot, full, \
-        div_by, div_into, project
+        div_by, div_into, project, prod_apply, dagger
 from .algebra.differential import AR_differential, Dmu, DG, differential_operator
 from .utils.lexparse import ARContext
 
