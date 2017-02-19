@@ -144,7 +144,7 @@ class ARContext:
         return self._division
 
     @division.setter
-    def division_type(self, div_type):
+    def division(self, div_type):
         if div_type not in ["by", "into"]:
             raise ValueError("Division type must be either 'by' or 'into'")
         self._division = div_type
