@@ -32,6 +32,7 @@ elements and re-label them with indices 1->(n-1) and repeat the process until
 we are done.
 '''
 from copy import deepcopy
+from types import FunctionType
 from .config import ALLOWED, METRIC
 from ..utils.concepts.dispatch import dispatch_on
 from .ar_types import Alpha, Pair, MultiVector, XiProduct
@@ -123,12 +124,17 @@ def _wedge_pair_pair(a, b, metric=METRIC):
     a, b = deepcopy(a), deepcopy(b)
     alpha = find_prod(a.alpha, b.alpha, metric)
     if alpha.sign == -1:
-        axi, bxi = a.xi, b.xi
-        axi.sign, bxi.sign = -1, -1
+        a.xi.sign *= -1
+        b.xi.sign *= -1
         alpha.sign = 1
-        return Pair(alpha, XiProduct([axi, bxi]))
+        return Pair(alpha, XiProduct([a.xi, b.xi]))
     else:
         return Pair(alpha, XiProduct([a.xi, b.xi]))
+
+
+@wedge.add((MultiVector, MultiVector))
+def _wedge_mvec_mvec(mv1, mv2, metric=METRIC):
+    return MultiVector(wedge(i, j) for i in mv1 for j in mv2)
 
 
 ##############################################################################
@@ -239,3 +245,36 @@ def _project_multivector(element, grade):
             if len(ix) == grade and ix != 'p':
                 correct_grade.append(component)
     return MultiVector(correct_grade)
+
+
+##############################################################################
+
+@dispatch_on('all')
+def apply(arg1, arg2, arg3):
+    '''
+    Apply a function to the cartesian product of two multivectors
+    NOTE:: The function must act on a single Multivector.
+    '''
+    raise NotImplementedError
+
+
+@apply.add((FunctionType, MultiVector, MultiVector))
+def _apply_dmm(func, mv1, mv2):
+    if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
+        raise TypeError('Arguments must be a MultiVectors')
+    return MultiVector(wedge(i, j) for i in func(mv1) for j in mv2)
+
+
+@apply.add((MultiVector, FunctionType, MultiVector))
+def _apply_mdm(mv1, func, mv2):
+    if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
+        raise TypeError('Arguments must be a MultiVectors')
+    return MultiVector(wedge(i, j) for i in mv1 for j in func(mv2))
+
+
+@apply.add((FunctionType, (MultiVector, MultiVector), None))
+def _apply_d_mm(func, mvecs=(None, None), n=None):
+    if not isinstance(mvecs[0], MultiVector) and \
+            isinstance(mvecs[1], MultiVector):
+        raise TypeError('Arguments must be a MultiVectors')
+    return MultiVector(wedge(i, j) for i in func(mv1) for j in mv2)

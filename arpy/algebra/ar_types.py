@@ -38,6 +38,9 @@ class Alpha:
     def __eq__(self, other):
         return (self.index == other.index) and (self.sign == other.sign)
 
+    def __lt__(self, other):
+        return ALLOWED.index(self.index) < ALLOWED.index(other.index)
+
     def __neg__(self):
         self.sign *= -1
         return self
@@ -56,8 +59,18 @@ class Xi:
         self.sign = sign
         self.partials = partials if partials else []
 
+    @property
+    def components(self):
+        return [self]
+
     def __eq__(self, other):
         return (self.val == other.val) and (self.partials == other.partials)
+
+    def __lt__(self, other):
+        try:
+            return ALLOWED.index(self.val) < ALLOWED.index(other.val)
+        except:
+            return self.val < other.val
 
     def __repr__(self):
         sign = '+' if self.sign == 1 else '-'
@@ -106,7 +119,7 @@ class Pair:
         else:
             self.alpha = Alpha(a)
 
-        if not isinstance(x, Xi):
+        if not isinstance(x, (Xi, XiProduct)):
             x = Xi(x)
 
         self.xi = x
@@ -115,7 +128,7 @@ class Pair:
         return (self.alpha == other.alpha) and (self.xi == other.xi)
 
     def __repr__(self):
-        return '({},{})'.format(self.alpha, self.xi)
+        return '({}, {})'.format(self.alpha, self.xi)
 
 
 class MultiVector(collections.abc.Set):
@@ -177,7 +190,8 @@ class MultiVector(collections.abc.Set):
         if not isinstance(key, Alpha):
             raise KeyError
 
-        return Pair(key, self._nice_xi(key))
+        xis = self.components[key]
+        return [Pair(key, x) for x in xis]
 
     def __iter__(self):
         for alpha in ALLOWED:
@@ -203,15 +217,6 @@ class MultiVector(collections.abc.Set):
                 return '(' + ', '.join(str(x) for x in xi) + ')'
             else:
                 return xi
-
-    def cartesian_apply(self, other, operation):
-        '''
-        Apply a function to the cartesian product of two multivectors
-        NOTE:: The function must act on two Pairs.
-        '''
-        if not isinstance(other, MultiVector):
-            raise TypeError('Argument must be a MultiVector')
-        return MultiVector(operation(i, j) for i in self for j in other)
 
     def MTAE_grouped(self):
         '''
@@ -241,14 +246,22 @@ class MultiVector(collections.abc.Set):
     def collected_terms(self):
         '''Display the multivector with factorised Xi values'''
         print('{')
-        for blade, xis in self.components.items():
-            print('  {}:'.format(blade))
-            g = groupby(xis, lambda x: x.components[0])
-            for common, full in g:
-                s = []
-                for element in full:
-                    s.append(element.components[1])
-                print('    {}({})'.format(common, ''.join(str(x) for x in s)))
+
+        sorted(self, key=lambda x: (x.alpha, x.xi.components[0]))
+        g = groupby(self, lambda x: (x.alpha, x.xi.components[0]))
+        alphas_seen = []
+
+        for key, full in g:
+            current_alpha = key[0]
+            comps = [f.xi.components[1:] for f in full]
+            s = []
+            for c in comps:
+                s.extend(c)
+            if s:
+                if current_alpha not in alphas_seen:
+                    print('  {}:'.format(key[0]))
+                    alphas_seen.append(current_alpha)
+                print('    {}({})'.format(key[1], ''.join(str(x) for x in s)))
         print('}')
 
 
