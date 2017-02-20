@@ -97,30 +97,30 @@ def inverse(a, metric=METRIC):
 
 ##############################################################################
 @dispatch_on((0, 1))
-def wedge(a, b, metric=METRIC):
-    '''Compute the Wedge Product of two elements'''
+def full(a, b, metric=METRIC):
+    '''Compute the Full product of two elements'''
     raise NotImplementedError
 
 
-@wedge.add((Alpha, Alpha))
-def _wedge_alpha_alpha(a, b, metric=METRIC):
+@full.add((Alpha, Alpha))
+def _full_alpha_alpha(a, b, metric=METRIC):
     return find_prod(a, b, metric)
 
 
-@wedge.add((Alpha, Pair))
-def _wedge_alpha_pair(a, b, metric=METRIC):
+@full.add((Alpha, Pair))
+def _full_alpha_pair(a, b, metric=METRIC):
     alpha = find_prod(a, b.alpha, metric)
     return Pair(alpha, b.xi)
 
 
-@wedge.add((Pair, Alpha))
-def _wedge_pair_alpha(a, b, metric=METRIC):
+@full.add((Pair, Alpha))
+def _full_pair_alpha(a, b, metric=METRIC):
     alpha = find_prod(a.alpha, b, metric)
     return Pair(alpha, a.xi)
 
 
-@wedge.add((Pair, Pair))
-def _wedge_pair_pair(a, b, metric=METRIC):
+@full.add((Pair, Pair))
+def _full_pair_pair(a, b, metric=METRIC):
     a, b = deepcopy(a), deepcopy(b)
     alpha = find_prod(a.alpha, b.alpha, metric)
     if alpha.sign == -1:
@@ -132,37 +132,9 @@ def _wedge_pair_pair(a, b, metric=METRIC):
         return Pair(alpha, XiProduct([a.xi, b.xi]))
 
 
-@wedge.add((MultiVector, MultiVector))
-def _wedge_mvec_mvec(mv1, mv2, metric=METRIC):
-    return MultiVector(wedge(i, j) for i in mv1 for j in mv2)
-
-
-##############################################################################
-@dispatch_on((0, 1))
-def dot(a, b, metric=METRIC):
-    '''Compute the dot product of two elements'''
-    raise NotImplementedError
-
-
-@dot.add((Alpha, Alpha))
-def dot_alpha_alpha(a, b, metric=METRIC):
-    raise NotImplementedError
-
-
-@dot.add((Alpha, Pair))
-def dot_alpha_pair(a, b, metric=METRIC):
-    raise NotImplementedError
-
-
-@dot.add((Pair, Alpha))
-def dot_pair_alpha(a, b, metric=METRIC):
-    raise NotImplementedError
-
-
-##############################################################################
-def full(a, b, metric=METRIC):
-    '''Compute the Geometric product of two elements'''
-    return MultiVector([dot(a, b), wedge(a, b)])
+@full.add((MultiVector, MultiVector))
+def _full_mvec_mvec(mv1, mv2, metric=METRIC):
+    return MultiVector(full(i, j) for i in mv1 for j in mv2)
 
 
 ##############################################################################
@@ -262,14 +234,14 @@ def prod_apply(arg1, arg2, arg3=None):
 def _prod_apply_dmm(func, mv1, mv2):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return MultiVector(wedge(i, j) for i in func(mv1) for j in mv2)
+    return MultiVector(full(i, j) for i in func(mv1) for j in mv2)
 
 
 @prod_apply.add((MultiVector, FunctionType, MultiVector))
 def _prod_apply_mdm(mv1, func, mv2):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return MultiVector(wedge(i, j) for i in mv1 for j in func(mv2))
+    return MultiVector(full(i, j) for i in mv1 for j in func(mv2))
 
 
 @prod_apply.add((FunctionType, tuple, type(None)))
@@ -277,12 +249,12 @@ def _prod_apply_d_mm(func, mvecs=(None, None), _=None):
     if not isinstance(mvecs[0], MultiVector) and \
             isinstance(mvecs[1], MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return func(wedge(mvecs[0], mvecs[1]))
+    return func(full(mvecs[0], mvecs[1]))
 
 
 ##############################################################################
 
-_neg = [Alpha(a) for a in ALLOWED if wedge(Alpha(a), Alpha(a)).sign == -1]
+_neg = [Alpha(a) for a in ALLOWED if full(Alpha(a), Alpha(a)).sign == -1]
 
 
 def dagger(mvec):
@@ -294,3 +266,27 @@ def dagger(mvec):
             pair.alpha.sign *= -1
         new_vec.append(pair)
     return MultiVector(new_vec)
+
+
+##############################################################################
+
+@dispatch_on('all')
+def commutator(a, b):
+    '''
+    Computes the group commutator [a, b] = (a . b . a^-1 . b^-1) for Alphas.
+    '''
+    raise NotImplementedError
+
+
+@commutator.add((Alpha, Alpha))
+def _group_commutator(a, b):
+    product = full(a, b)
+    product = full(product, inverse(a))
+    product = full(product, inverse(b))
+    return product
+
+
+# @commutator.add((Pair, Pair))
+# def _ring_commutator(a, b):
+#     '''Computes the ring commutator [a, b] = ab - ba for Pairs'''
+#     return full(a, b) - full(b, a)
