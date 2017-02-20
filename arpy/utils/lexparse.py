@@ -10,13 +10,13 @@ import sly
 from sys import _getframe
 from ..algebra.config import METRIC, DIVISION_TYPE
 from ..algebra.ar_types import Alpha, Pair  # MultiVector
-from ..algebra.operations import wedge, dot, full, div_by, div_into, project
+from ..algebra.operations import full, div_by, div_into, project, commutator
 
 
 class ArpyLexer(sly.Lexer):
     tokens = {'ALPHA', 'PAIR', 'INDEX', 'VAR'}
     ignore = ' \t'
-    literals = {'+', '^', '.', '*', '/', '\\', '(', ')', '<', '>'}
+    literals = {',', '+', '^', '/', '\\', '(', ')', '<', '>', '[', ']'}
 
     ALPHA = r'-a[0123]{1,4}|a[0123]{1,4}|-?ap'
     PAIR = r'-p[0123]{1,4}|p[0123]{1,4}'
@@ -54,8 +54,7 @@ class ArpyParser(sly.Parser):
     metric = METRIC
 
     precedence = (
-        ('left', '*', '^'),
-        ('left', '.', '/'),
+        ('left', '^', '/'),
         ('left', '\\', 'ALPHA',),
     )
 
@@ -67,15 +66,11 @@ class ArpyParser(sly.Parser):
     def expr(self, p):
         return project(p.expr, p.INDEX)
 
+    @_('"[" expr "," expr "]"')
+    def expr(self, p):
+        return commutator(p.expr0, p.expr1)
+
     @_('expr "^" expr')
-    def expr(self, p):
-        return wedge(p.expr0, p.expr1, self.metric)
-
-    @_('expr "." expr')
-    def expr(self, p):
-        return dot(p.expr0, p.expr1, self.metric)
-
-    @_('expr "*" expr')
     def expr(self, p):
         return full(p.expr0, p.expr1, self.metric)
 
