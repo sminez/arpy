@@ -18,17 +18,16 @@ parser for a lightweight DSL that closely resembles the mathematical syntax used
 in the published papers so far. The following basic operations are supported:
 
 ```Python
-a ^ b  # wedge product of a and b
-a . b  # dot product of a and b
-a * b  # full (or geometric) product of a and b
-a / b  # a divided by b
-a \ b  # a divided into b
+a ^ b     # full product of a and b
+a / b     # a divided by b
+a \ b     # a divided into b
 
-<a>n   # The grade(n) projection of a.
-       # This selects out the elements of a that have an alpha
-       # of the grade(n) (think of n as the length of the index).
-       # If used on a Pair or Alpha, this returns the argument if
-       # is of grade(n).
+<a>n      # The grade(n) projection of a.
+          # This selects out the elements of a that have an alpha
+          # of the grade(n) (think of n as the length of the index).
+          # If used on a Pair or Alpha, this returns the argument if
+          # is of grade(n).
+[a, b]    # Commutator of two alphas
 ```
 
 ### Example usage
