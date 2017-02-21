@@ -1,9 +1,12 @@
 '''
 A selection of different implementations for symbolically computing
-the 4-vector 4-differential Dμ.
+the 4-vector 4-differential Dμ and other Differential operators.
 
-In Cartesian coordinates this is:
+In Cartesian coordinates Dμ is:
     Dμ = ∂μ/αμ = ∂ / (αμ∂xμ) = α0∂0 - αi∂i = α0∂0 - ∇i
+
+All other differential operators follow the same restrictions of
+Absolute Relativity and should only operate on MultiVectors.
 '''
 from copy import deepcopy
 from .config import ALLOWED, DIVISION_TYPE, METRIC
