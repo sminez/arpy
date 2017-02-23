@@ -140,9 +140,11 @@ class Pair:
 
 class MultiVector(collections.abc.Set):
     '''A custom container type for working efficiently with multivectors'''
+    _allowed_alphas = ALLOWED
+
     def __init__(self, components=[]):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self.components = {Alpha(a): [] for a in ALLOWED}
+        self.components = {Alpha(a): [] for a in self._allowed_alphas}
 
         for comp in components:
             if isinstance(comp, (str, Alpha)):
@@ -160,7 +162,7 @@ class MultiVector(collections.abc.Set):
 
     def __repr__(self):
         comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
-                 for a in ALLOWED if self.components[Alpha(a)]]
+                 for a in self._allowed_alphas if self.components[Alpha(a)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __len__(self):
@@ -201,7 +203,7 @@ class MultiVector(collections.abc.Set):
         return [Pair(key, x) for x in xis]
 
     def __iter__(self):
-        for alpha in ALLOWED:
+        for alpha in self._allowed_alphas:
             try:
                 for xi in self.components[Alpha(alpha)]:
                     yield Pair(alpha, xi)

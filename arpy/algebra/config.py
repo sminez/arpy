@@ -1,12 +1,28 @@
 # The labelling and ordering of the 16 elements of the algebra.
 # NOTE:: The order will affect the visualisation of the Cayley Table
 #        but not the results of finding products.
-ALLOWED = [
-    'p', '23', '31', '12',     # ΞM :: Magnetic Field and rest mass
-    '0', '023', '031', '012',  # ΞE :: Electric Field and dual rest mass
-    '123', '1', '2', '3',      # ΞΑ :: Charge Current Density and dual time(?)
-    '0123', '10', '20', '30'   # ΞΤ :: Angular Momentum Density and time
-]
+_B = ['p', '23', '31', '12']     # ΞB :: Magnetic Field and rest mass
+_T = ['0', '023', '031', '012']  # ΞΤ :: Angular Momentum Density and time
+_A = ['123', '1', '2', '3']      # ΞΑ :: Charge Current Density and hedgehog
+_E = ['0123', '10', '20', '30']  # ΞE :: Electric Field and dual rest mass
+ALLOWED = _B + _T + _A + _E
+
+
+# Map α to 4set membership
+FOUR_SETS = {comp: 'B' for comp in _B}
+FOUR_SETS.update({comp: 'T' for comp in _T})
+FOUR_SETS.update({comp: 'A' for comp in _A})
+FOUR_SETS.update({comp: 'E' for comp in _E})
+
+# Fast lookup of 4set components in {t,x,y,z} order
+_dims = 'b x y z'.split()
+FOUR_SET_COMPS = {
+    'B': dict(zip(_dims, _B)),
+    'T': dict(zip(_dims, _T)),
+    'A': dict(zip(_dims, _A)),
+    'E': dict(zip(_dims, _E))
+}
+
 
 # How the 3-vector components are grouped and under what names
 XI_GROUPS = {
