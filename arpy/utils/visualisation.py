@@ -29,8 +29,18 @@ def sign_cayley(op=full):
     Any function that accepts two Alphas can be passed as op.
     '''
     comps = (
-        ' '.join([str(op(Alpha(a), Alpha(b)).sign) for b in ALLOWED])
+        ' '.join([
+            '■' if op(Alpha(a), Alpha(b)).sign == -1 else '□'
+            for b in ALLOWED
+        ])
         for a in ALLOWED
     )
-    for comp in comps:
-        print(comp)
+    print(' '.join(str(Alpha(a)) for a in ALLOWED), '\n')
+
+    for i, comp in enumerate(comps):
+        comp = '| '.join(comp[n:n+8] for n in range(0, len(comp), 8))
+        print(str(Alpha(ALLOWED[i])).ljust(5), comp)
+
+        # Divide after each 4-Set
+        if (i + 1) % 4 == 0:
+            print('     ', '-' * 37)
