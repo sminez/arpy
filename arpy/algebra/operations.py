@@ -151,7 +151,7 @@ def _div_by_alpha_alpha(a, b, metric=METRIC):
 
 @div_by.add((Pair, Alpha))
 def _div_by_pair_alpha(a, b, metric=METRIC):
-    alpha = find_prod(inverse(a.alpha, metric), b, metric)
+    alpha = find_prod(a, inverse(b.alpha, metric), metric)
     return Pair(alpha, a.xi)
 
 

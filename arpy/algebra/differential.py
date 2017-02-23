@@ -11,7 +11,7 @@ Absolute Relativity and should only operate on MultiVectors.
 from copy import deepcopy
 from .config import ALLOWED, DIVISION_TYPE, METRIC, FOUR_SET_COMPS, \
         ALPHA_TO_GROUP
-from .ar_types import Alpha, MultiVector
+from .ar_types import Alpha, Pair, MultiVector, DelMultiVector
 from .operations import div_by, div_into
 
 
@@ -20,7 +20,7 @@ def _div(alpha, wrt, metric, div):
     if div == 'by':
         return div_by(alpha, wrt, metric)
     elif div == 'into':
-        return div_into(alpha, wrt, metric)
+        return div_into(wrt, alpha, metric)
     else:
         raise ValueError('Invalid division specification: %s' % div)
 
@@ -113,18 +113,45 @@ def _find_4sets(alphas):
     return paired_blades, three_vecs
 
 
+def replace_partial(diff_4set, mvec_4set, component_blade, metric, div):
+    diff_index = FOUR_SET_COMPS[diff_4set]['b']
+    component_index = FOUR_SET_COMPS[mvec_4set][component_blade]
+    alpha = _div(Alpha(component_index), Alpha(diff_index), metric, div)
+    group_index = ALPHA_TO_GROUP[alpha.index]
+    if component_blade == 'b':
+        replacement_xi = '∂{}Ξ{}'.format(diff_index, component_index)
+    else:
+        replacement_xi = '∂{}Ξ{}'.format(diff_index, mvec_4set)
+    return Pair(Alpha(group_index, alpha.sign), replacement_xi)
+
+
+def replace_grad(diff_4set, mvec_4set, metric, div):
+    diff_index = FOUR_SET_COMPS[diff_4set]['y']
+    component_index = FOUR_SET_COMPS[mvec_4set]['b']
+    alpha = _div(Alpha(component_index), Alpha(diff_index), metric, div)
+    group_index = ALPHA_TO_GROUP[alpha.index]
+    return Pair(Alpha(group_index, alpha.sign), '∇Ξ{}'.format(component_index))
+
+
+def replace_div(diff_4set, mvec_4set, metric, div):
+    diff_index = FOUR_SET_COMPS[diff_4set]['y']
+    div_index = FOUR_SET_COMPS[mvec_4set]['y']
+    alpha = _div(Alpha(div_index), Alpha(diff_index), metric, div)
+    group_index = ALPHA_TO_GROUP[alpha.index]
+    return Pair(Alpha(group_index, alpha.sign), '∇•Ξ{}'.format(mvec_4set))
+
+
+def replace_curl(diff_4set, mvec_4set, metric, div):
+    diff_index = FOUR_SET_COMPS[diff_4set]['y']
+    curl_index = FOUR_SET_COMPS[mvec_4set]['x']
+    alpha = _div(Alpha(curl_index), Alpha(diff_index), metric, div)
+    group_index = ALPHA_TO_GROUP[alpha.index]
+    return Pair(Alpha(group_index, alpha.sign), '∇xΞ{}'.format(mvec_4set))
+
+
 def _4set_differential(mvec, wrt, div, metric):
     '''Shortcut differential that prints the result in del notation'''
-    def index_and_sign(comp_ix, diff_ix):
-        alpha = _div(Alpha(comp_ix), Alpha(diff_ix), metric, div)
-        return alpha.index, alpha.sign
-
-    PARTIAL = '∂{}Ξ{}'
-    GRAD = '∇Ξ{}'
-    DIV = '∇•Ξ{}'
-    CURL = '∇xΞ{}'
-
-    differential_components = []
+    components = []
 
     alphas = [a for a in ALLOWED if Alpha(a) in mvec]
     mvec_blade_4sets, mvec_3vec_4sets = _find_4sets(alphas)
@@ -132,54 +159,28 @@ def _4set_differential(mvec, wrt, div, metric):
 
     # Compute the action of any paired blades on 4-Sets
     for diff_4set in wrt_blade_4sets:
-        diff_index = FOUR_SET_COMPS[diff_4set]['b']
-
         # blade|blade: ∂{paired blade}{paired blade}
         for mvec_4set in mvec_blade_4sets:
-            component_index = FOUR_SET_COMPS[mvec_4set]['b']
-            index, sign = index_and_sign(component_index, diff_index)
-            group_index = ALPHA_TO_GROUP[index]
-            replacement_xi = PARTIAL.format(diff_index, component_index)
-            differential_components.append(
-                (Alpha(group_index, sign), replacement_xi)
+            components.append(
+                replace_partial(diff_4set, mvec_4set, 'b', metric, div)
             )
-
-        # blade vec: ∂{paired blade}{3vector}
+        # blade|vec: ∂{paired blade}{3vector}
         for mvec_4set in mvec_3vec_4sets:
-            result_4set = _4set_result(diff_4set, mvec_4set)
-            component_index = FOUR_SET_COMPS[mvec_4set]['x']
-            index, sign = index_and_sign(component_index, diff_index)
-            group_index = ALPHA_TO_GROUP[index]
-            replacement_xi = PARTIAL.format(diff_index, result_4set)
-            differential_components.append(
-                (Alpha(group_index, sign), replacement_xi)
+            components.append(
+                replace_partial(diff_4set, mvec_4set, 'x', metric, div)
             )
-
-    # vec blade: ∇Ξ{paired blade}
+    # Compute the action of any 3vectors on the 4set
     for diff_4set in wrt_3vec_4sets:
-        diff_index = FOUR_SET_COMPS[diff_4set]['y']
+        # vec|blade: ∇Ξ{paired blade}
         for mvec_4set in mvec_blade_4sets:
-            component_index = FOUR_SET_COMPS[mvec_4set]['b']
-            index, sign = index_and_sign(component_index, diff_index)
-            group_index = ALPHA_TO_GROUP[index]
-            differential_components.append(
-                (Alpha(group_index, sign), GRAD.format(component_index))
+            components.append(
+                replace_grad(diff_4set, mvec_4set, metric, div)
             )
-
-        # vec vec: ∇•{3vector} & ∇x{3vector}
+        # vec|vec: ∇•{3vector} & ∇x{3vector}
         for mvec_4set in mvec_3vec_4sets:
-            div_index = FOUR_SET_COMPS[mvec_4set]['y']
-            index, sign = index_and_sign(div_index, diff_index)
-            group_index = ALPHA_TO_GROUP[index]
-            differential_components.append(
-                (Alpha(group_index, sign), DIV.format(mvec_4set))
-            )
+            components.extend([
+                replace_div(diff_4set, mvec_4set, metric, div),
+                replace_curl(diff_4set, mvec_4set, metric, div)
+            ])
 
-            curl_index = FOUR_SET_COMPS[mvec_4set]['x']
-            index, sign = index_and_sign(curl_index, diff_index)
-            group_index = ALPHA_TO_GROUP[index]
-            differential_components.append(
-                (Alpha(group_index, sign), CURL.format(mvec_4set))
-            )
-
-    return differential_components
+    return DelMultiVector(components)
