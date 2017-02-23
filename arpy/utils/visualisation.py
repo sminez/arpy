@@ -19,3 +19,18 @@ def cayley(op=full, padding=6):
     )
     for comp in comps:
         print(comp)
+
+
+def sign_cayley(op=full):
+    '''
+    Print +-1 signs for the current Cayley table to the terminal allowing
+    for specification of the operation used to compute the table.
+
+    Any function that accepts two Alphas can be passed as op.
+    '''
+    comps = (
+        ' '.join([str(op(Alpha(a), Alpha(b)).sign) for b in ALLOWED])
+        for a in ALLOWED
+    )
+    for comp in comps:
+        print(comp)
