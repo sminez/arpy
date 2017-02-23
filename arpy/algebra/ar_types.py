@@ -6,10 +6,6 @@ from itertools import groupby
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
 
 
-CW = {1: 2, 2: 3, 3: 1}
-ACW = {1: 3, 2: 1, 3: 2}
-
-
 class Alpha:
     '''Unit elements in the algebra'''
     def __init__(self, index, sign=None):
@@ -75,7 +71,10 @@ class Xi:
     def __repr__(self):
         sign = '+' if self.sign == 1 else '-'
         partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
-        return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
+        if self.val in ALLOWED and self.val not in ALLOWED_GROUPS:
+            return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
+        else:
+            return '{}{}{}'.format(sign, ''.join(partials), self.val)
 
 
 class XiProduct:
@@ -140,9 +139,11 @@ class Pair:
 
 class MultiVector(collections.abc.Set):
     '''A custom container type for working efficiently with multivectors'''
+    _allowed_alphas = ALLOWED
+
     def __init__(self, components=[]):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self.components = {Alpha(a): [] for a in ALLOWED}
+        self.components = {Alpha(a): [] for a in self._allowed_alphas}
 
         for comp in components:
             if isinstance(comp, (str, Alpha)):
@@ -160,7 +161,7 @@ class MultiVector(collections.abc.Set):
 
     def __repr__(self):
         comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
-                 for a in ALLOWED if self.components[Alpha(a)]]
+                 for a in self._allowed_alphas if self.components[Alpha(a)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __len__(self):
@@ -201,7 +202,7 @@ class MultiVector(collections.abc.Set):
         return [Pair(key, x) for x in xis]
 
     def __iter__(self):
-        for alpha in ALLOWED:
+        for alpha in self._allowed_alphas:
             try:
                 for xi in self.components[Alpha(alpha)]:
                     yield Pair(alpha, xi)
@@ -239,15 +240,6 @@ class MultiVector(collections.abc.Set):
             print('  α{}'.format(group).ljust(7), comps)
         print('}')
 
-    def del_notation(self):
-        '''
-        Print an BTAE grouped representation of the multivector with del
-        vector derivative notation if possible.
-        NOTE:: This deliberately does not return a new MultiVector as we
-               should always be working with strict alpha values not grouped.
-        '''
-        print(del_notation(self))
-
     def collected_terms(self):
         '''Display the multivector with factorised Xi values'''
         print('{')
@@ -270,43 +262,6 @@ class MultiVector(collections.abc.Set):
         print('}')
 
 
-def to_del(group, components, replacement, sign=None):
-    '''Replace a list of components with an alternative Pair'''
-    sign = sign if sign else components[0].alpha.sign
-    return Pair(group, replacement)
-
-
-def del_notation(mvec):
-    '''
-    Return a formatted string representation of a MultiVector that is
-    BTAE grouped and expressed in del notation.
-    '''
-    def curl(BTAE_group):
-        return BTAE_group
-
-    def grad(BTAE_group):
-        return BTAE_group
-
-    def div(BTAE_group):
-        return BTAE_group
-
-    def partials(BTAE_group):
-        return BTAE_group
-
-    def terms(BTAE_group):
-        '''Ensure that all terms have BTAE alphas'''
-        return [comp.xi for _, comp in BTAE_group]
-
-    del_replaced = []
-    grouped = groupby(mvec, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
-
-    for group, components in grouped:
-        BTAE_group = [(group, comp) for comp in components]
-        del_terms = terms(partials(div(grad(curl(BTAE_group)))))
-        del_replaced.append((group, del_terms))
-
-    formatted = [
-        '  α{}'.format(group).ljust(7) + '{}'.format(comps)
-        for (group, comps) in del_replaced
-    ]
-    return '{\n' + '\n'.join(formatted) + '\n}'
+class DelMultiVector(MultiVector):
+    # _allowed_alphas = ALLOWED_GROUPS
+    _allowed_alphas = '0 123 i 0jk p 0123 i0 jk'.split()

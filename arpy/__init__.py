@@ -1,12 +1,12 @@
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
-        ALPHA_TO_GROUP
-from .algebra.ar_types import Alpha, Xi, Pair, MultiVector
+        ALPHA_TO_GROUP, ALLOWED_GROUPS
+from .algebra.ar_types import Alpha, Xi, Pair, MultiVector, DelMultiVector
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
         project, prod_apply, dagger, commutator
 from .algebra.differential import AR_differential, Dmu, DG, \
-        differential_operator
+        differential_operator, _4set_differential
 from .utils.lexparse import ARContext
-from .utils.visualisation import cayley
+from .utils.visualisation import cayley, sign_cayley
 
 
 ##############################################################################
