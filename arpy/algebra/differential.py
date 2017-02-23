@@ -119,10 +119,10 @@ def _4set_differential(mvec, wrt, div, metric):
         alpha = _div(Alpha(comp_ix), Alpha(diff_ix), metric, div)
         return alpha.index, alpha.sign
 
-    PARTIAL = '∂{}{}'
+    PARTIAL = '∂{}Ξ{}'
     GRAD = '∇Ξ{}'
-    DIV = '∇•{}'
-    CURL = '∇x{}'
+    DIV = '∇•Ξ{}'
+    CURL = '∇xΞ{}'
 
     differential_components = []
 

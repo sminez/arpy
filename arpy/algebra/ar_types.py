@@ -6,10 +6,6 @@ from itertools import groupby
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
 
 
-CW = {1: 2, 2: 3, 3: 1}
-ACW = {1: 3, 2: 1, 3: 2}
-
-
 class Alpha:
     '''Unit elements in the algebra'''
     def __init__(self, index, sign=None):
@@ -75,7 +71,10 @@ class Xi:
     def __repr__(self):
         sign = '+' if self.sign == 1 else '-'
         partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
-        return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
+        if self.val in ALLOWED and self.val not in ALLOWED_GROUPS:
+            return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
+        else:
+            return '{}{}{}'.format(sign, ''.join(partials), self.val)
 
 
 class XiProduct:
@@ -261,3 +260,7 @@ class MultiVector(collections.abc.Set):
                     alphas_seen.append(current_alpha)
                 print('    {}({})'.format(key[1], ''.join(str(x) for x in s)))
         print('}')
+
+
+class DelMultiVector(MultiVector):
+    _allowed_alphas = ALLOWED_GROUPS
