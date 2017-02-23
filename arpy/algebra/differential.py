@@ -121,7 +121,7 @@ def replace_partial(diff_4set, mvec_4set, component_blade, metric, div):
     if component_blade == 'b':
         replacement_xi = '∂{}Ξ{}'.format(diff_index, component_index)
     else:
-        replacement_xi = '∂{}Ξ{}'.format(diff_index, mvec_4set)
+        replacement_xi = '∂{}{}'.format(diff_index, mvec_4set)
     return Pair(Alpha(group_index, alpha.sign), replacement_xi)
 
 
@@ -138,7 +138,7 @@ def replace_div(diff_4set, mvec_4set, metric, div):
     div_index = FOUR_SET_COMPS[mvec_4set]['y']
     alpha = _div(Alpha(div_index), Alpha(diff_index), metric, div)
     group_index = ALPHA_TO_GROUP[alpha.index]
-    return Pair(Alpha(group_index, alpha.sign), '∇•Ξ{}'.format(mvec_4set))
+    return Pair(Alpha(group_index, alpha.sign), '∇•{}'.format(mvec_4set))
 
 
 def replace_curl(diff_4set, mvec_4set, metric, div):
@@ -146,7 +146,7 @@ def replace_curl(diff_4set, mvec_4set, metric, div):
     curl_index = FOUR_SET_COMPS[mvec_4set]['x']
     alpha = _div(Alpha(curl_index), Alpha(diff_index), metric, div)
     group_index = ALPHA_TO_GROUP[alpha.index]
-    return Pair(Alpha(group_index, alpha.sign), '∇xΞ{}'.format(mvec_4set))
+    return Pair(Alpha(group_index, alpha.sign), '∇x{}'.format(mvec_4set))
 
 
 def _4set_differential(mvec, wrt, div, metric):

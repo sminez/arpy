@@ -14,8 +14,8 @@ def cayley(op=full, padding=6):
     Any function that accepts two Alphas can be passed as op.
     '''
     comps = (
-        ' '.join([str(op(Alpha(a), Alpha(b))).rjust(padding) for a in ALLOWED])
-        for b in ALLOWED
+        ' '.join([str(op(Alpha(a), Alpha(b))).rjust(padding) for b in ALLOWED])
+        for a in ALLOWED
     )
     for comp in comps:
         print(comp)
