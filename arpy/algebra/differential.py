@@ -142,8 +142,8 @@ def replace_div(diff_4set, mvec_4set, metric, div):
 
 
 def replace_curl(diff_4set, mvec_4set, metric, div):
-    diff_index = FOUR_SET_COMPS[diff_4set]['y']
-    curl_index = FOUR_SET_COMPS[mvec_4set]['x']
+    diff_index = FOUR_SET_COMPS[diff_4set]['x']
+    curl_index = FOUR_SET_COMPS[mvec_4set]['y']
     alpha = _div(Alpha(curl_index), Alpha(diff_index), metric, div)
     group_index = ALPHA_TO_GROUP[alpha.index]
     return Pair(Alpha(group_index, alpha.sign), '∇x{}'.format(mvec_4set))

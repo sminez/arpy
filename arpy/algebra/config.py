@@ -40,7 +40,7 @@ METRIC = (1, -1, -1, -1)
 
 # Whether division is defined as 'by' or 'into'
 # NOTE:: Any other values will raise exceptions within the rest of the code!
-DIVISION_TYPE = 'by'
+DIVISION_TYPE = 'into'
 
 
 ##############################################################################

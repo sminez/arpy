@@ -6,7 +6,7 @@ from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
 from .algebra.differential import AR_differential, Dmu, DG, \
         differential_operator, _4set_differential
 from .utils.lexparse import ARContext
-from .utils.visualisation import cayley
+from .utils.visualisation import cayley, sign_cayley
 
 
 ##############################################################################

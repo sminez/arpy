@@ -64,7 +64,7 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
         first = components.find(repeated)
         second = components.find(repeated, first + 1)
         n_pops = second - first - 1
-        sign *= -1 if (n_pops % 2 == 1) else 1
+        sign *= (-1 if (n_pops % 2 == 1) else 1)
         sign *= metric[repeated]
         components = ''.join(c for c in components if c != repeated)
 
@@ -78,13 +78,14 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     if target == components:
         return Alpha(target, sign)
 
-    ordering = {c: i for i, c in enumerate(target)}
+    ordering = {c: i+1 for i, c in enumerate(target)}
     current = [ordering[c] for c in components]
 
-    while len(current) > 0:
-        sign *= -1 if (current[0] % 2 == 0) else 1
+    while len(current) > 1:
+        if current[0] % 2 == 0:
+            sign *= -1
         current = current[1:]
-        new_order = {j: i for i, j in enumerate(sorted(current))}
+        new_order = {j: i+1 for i, j in enumerate(sorted(current))}
         current = [new_order[k] for k in current]
 
     return Alpha(target, sign)
