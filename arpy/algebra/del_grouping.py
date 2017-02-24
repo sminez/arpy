@@ -38,13 +38,17 @@ def del_grouped(mvec):
 # Each of these will have a pattern to look for for each 3-vector and
 # paired blade that it will iterate over and pop out matching components.
 def replace_curl(pairs):
-    '''Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]'''
+    '''Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]
+    ∇x{}
+    '''
     replaced = []
     return replaced, pairs
 
 
 def replace_grad(pairs):
-    '''Grad f = αx[df/dx] + αy[df/dy] + αz[df/dz]'''
+    '''Grad f = αx[df/dx] + αy[df/dy] + αz[df/dz]
+    ∇Ξ{}
+    '''
     replaced = []
     return replaced, pairs
 
@@ -90,16 +94,13 @@ def replace_partials(pairs):
     ''' Partial F = d{comp} F
     Here, F is the 3vector components of a 4set.
     '''
-    def _xkey(p):
-        return ALPHA_TO_GROUP[p.xi.val]
-
-    def _akey(p):
+    def key(p):
         return ALPHA_TO_GROUP[p.alpha.index]
 
     replaced = []
 
     for fourset in _present_4sets(pairs):
-        for _, grouped_pairs in groupby(sorted(pairs, key=_akey), _akey):
+        for _, grouped_pairs in groupby(sorted(pairs, key=key), key):
             grouped_pairs = [p for p in grouped_pairs]
             for blade in FOUR_SET_COMPS[fourset].values():
                 candidates = [
@@ -114,19 +115,22 @@ def replace_partials(pairs):
                         for k in ['x', 'y', 'z']
                     }
                     have = {c.xi.val for c in candidates}
-                    if have == needed:
-                        alpha = ALPHA_TO_GROUP[ix]
-                        blade = SUB_SCRIPTS[blade]
-                        if all([c.xi.sign == 1 for c in candidates]):
-                            replaced.append(
-                                Pair(Alpha(alpha),
-                                     '∂{}Ξ{}'.format(blade, component_4set)))
-                        elif all([c.xi.sign == -1 for c in candidates]):
-                            replaced.append(
-                                Pair(Alpha(alpha, -1),
-                                     '∂{}Ξ{}'.format(blade, component_4set)))
-                        else:
-                            continue
-                        for candidate in candidates:
-                            pairs.remove(candidate)
+                    if have != needed:
+                        continue
+
+                    if all([c.xi.sign == 1 for c in candidates]):
+                        sign = 1
+                    elif all([c.xi.sign == -1 for c in candidates]):
+                        sign = -1
+                    else:
+                        continue
+
+                    alpha = ALPHA_TO_GROUP[ix]
+                    blade = SUB_SCRIPTS[blade]
+
+                    replaced.append(
+                        Pair(Alpha(alpha, sign),
+                             '∂{}Ξ{}'.format(blade, component_4set)))
+                    for candidate in candidates:
+                        pairs.remove(candidate)
     return replaced, pairs
