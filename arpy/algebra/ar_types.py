@@ -6,6 +6,9 @@ from itertools import groupby
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
 
 
+SUB_SCRIPTS = {'0': '₀', '1': '₁', '2': '₂', '3': '₃', 'p': 'ₚ'}
+
+
 class Alpha:
     '''Unit elements in the algebra'''
     def __init__(self, index, sign=None):
@@ -70,9 +73,13 @@ class Xi:
 
     def __repr__(self):
         sign = '+' if self.sign == 1 else '-'
-        partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
+        partials = (
+            '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
+            for p in reversed(self.partials)
+        )
         if self.val in ALLOWED + ALLOWED_GROUPS:
-            return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
+            display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
+            return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
         else:
             return '{}{}{}'.format(sign, ''.join(partials), self.val)
 
@@ -109,7 +116,10 @@ class XiProduct:
         sign = '+' if self.sign == 1 else '-'
         # Stripping component signs as we have taken care of the overall
         # product sign at initialisation.
-        partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
+        partials = (
+            '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
+            for p in reversed(self.partials)
+        )
         comps = ''.join(str(c)[1:] for c in self.components)
         return sign + ''.join(partials) + comps
 
