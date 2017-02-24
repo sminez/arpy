@@ -71,7 +71,7 @@ class Xi:
     def __repr__(self):
         sign = '+' if self.sign == 1 else '-'
         partials = ('∂{}'.format(p.index) for p in reversed(self.partials))
-        if self.val in ALLOWED and self.val not in ALLOWED_GROUPS:
+        if self.val in ALLOWED + ALLOWED_GROUPS:
             return '{}{}ξ{}'.format(sign, ''.join(partials), self.val)
         else:
             return '{}{}{}'.format(sign, ''.join(partials), self.val)
@@ -263,5 +263,5 @@ class MultiVector(collections.abc.Set):
 
 
 class DelMultiVector(MultiVector):
-    # _allowed_alphas = ALLOWED_GROUPS
-    _allowed_alphas = '0 123 i 0jk p 0123 i0 jk'.split()
+    _allowed_alphas = ALLOWED_GROUPS
+    # _allowed_alphas = '0 123 i 0jk p 0123 i0 jk'.split()

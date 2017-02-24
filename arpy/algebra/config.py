@@ -1,6 +1,6 @@
 # The labelling and ordering of the 16 elements of the algebra.
 # NOTE:: The order will affect the visualisation of the Cayley Table
-#        but not the results of finding products.
+#       but not the results of finding products.
 _B = ['p', '23', '31', '12']     # ΞB :: Magnetic Field and rest mass
 _T = ['0', '023', '031', '012']  # ΞΤ :: Angular Momentum Density and time
 _A = ['123', '1', '2', '3']      # ΞΑ :: Charge Current Density and hedgehog
@@ -22,6 +22,12 @@ FOUR_SET_COMPS = {
     'A': dict(zip(_dims, _A)),
     'E': dict(zip(_dims, _E))
 }
+
+bxyz_pairings = [(s[0], 'b') for s in [_B, _T, _A, _E]]
+bxyz_pairings.extend([(s[1], 'x') for s in [_B, _T, _A, _E]])
+bxyz_pairings.extend([(s[2], 'y') for s in [_B, _T, _A, _E]])
+bxyz_pairings.extend([(s[3], 'z') for s in [_B, _T, _A, _E]])
+BXYZ_LIKE = dict(bxyz_pairings)
 
 
 # How the 3-vector components are grouped and under what names
