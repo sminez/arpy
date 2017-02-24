@@ -1,14 +1,14 @@
 from itertools import groupby
-from .config import ALPHA_TO_GROUP, FOUR_SET_COMPS, FOUR_SETS, BXYZ_LIKE
+from .config import ALPHA_TO_GROUP, FOUR_SET_COMPS, FOUR_SETS, BXYZ_LIKE, \
+        SUPER_SCRIPTS, SUB_SCRIPTS, GROUP_TO_4SET
 from .ar_types import Alpha, Pair, DelMultiVector
 
 
-SUPER_SCRIPTS = {'B': 'ᴮ', 'A': 'ᴬ', 'T': 'ᵀ', 'E': 'ᴱ'}
-GROUP_TO_4SET = {'jk': 'B', 'i': 'A', '0jk': 'T', 'i0': 'E'}
-
-
 def _present_4sets(pairs):
-    '''Return all four sets with at least one component in pairs'''
+    '''
+    Return all four sets with at least one partial derivative component
+    in `pairs`
+    '''
     return set([FOUR_SETS[p.xi.partials[0].index] for p in pairs])
 
 
@@ -50,7 +50,10 @@ def replace_grad(pairs):
 
 
 def replace_div(pairs):
-    '''Div F = dFx/dx + dFy/dy + dFz/dz'''
+    '''Div F = dFx/dx + dFy/dy + dFz/dz
+    For operators build from complete 4sets there should only be one Div
+    component per 4set.
+    '''
     replaced = []
     for fourset in _present_4sets(pairs):
         comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
@@ -84,6 +87,46 @@ def replace_div(pairs):
 
 
 def replace_partials(pairs):
-    '''Partial F = d{comp} F'''
+    ''' Partial F = d{comp} F
+    Here, F is the 3vector components of a 4set.
+    '''
+    def _xkey(p):
+        return ALPHA_TO_GROUP[p.xi.val]
+
+    def _akey(p):
+        return ALPHA_TO_GROUP[p.alpha.index]
+
     replaced = []
+
+    for fourset in _present_4sets(pairs):
+        for _, grouped_pairs in groupby(sorted(pairs, key=_akey), _akey):
+            grouped_pairs = [p for p in grouped_pairs]
+            for blade in FOUR_SET_COMPS[fourset].values():
+                candidates = [
+                    p for p in grouped_pairs
+                    if p.xi.partials[0].index == blade
+                ]
+                if len(candidates) == 3:
+                    ix = candidates[0].xi.val
+                    component_4set = FOUR_SETS[ix]
+                    needed = {
+                        FOUR_SET_COMPS[component_4set][k]
+                        for k in ['x', 'y', 'z']
+                    }
+                    have = {c.xi.val for c in candidates}
+                    if have == needed:
+                        alpha = ALPHA_TO_GROUP[ix]
+                        blade = SUB_SCRIPTS[blade]
+                        if all([c.xi.sign == 1 for c in candidates]):
+                            replaced.append(
+                                Pair(Alpha(alpha),
+                                     '∂{}Ξ{}'.format(blade, component_4set)))
+                        elif all([c.xi.sign == -1 for c in candidates]):
+                            replaced.append(
+                                Pair(Alpha(alpha, -1),
+                                     '∂{}Ξ{}'.format(blade, component_4set)))
+                        else:
+                            continue
+                        for candidate in candidates:
+                            pairs.remove(candidate)
     return replaced, pairs

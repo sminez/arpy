@@ -8,6 +8,11 @@ _E = ['0123', '10', '20', '30']  # ΞE :: Electric Field and dual rest mass
 ALLOWED = _B + _T + _A + _E
 
 
+SUPER_SCRIPTS = {'B': 'ᴮ', 'A': 'ᴬ', 'T': 'ᵀ', 'E': 'ᴱ'}
+SUB_SCRIPTS = {'0': '₀', '1': '₁', '2': '₂', '3': '₃', 'p': 'ₚ'}
+GROUP_TO_4SET = {'jk': 'B', 'i': 'A', '0jk': 'T', 'i0': 'E'}
+
+
 # Map α to 4set membership
 FOUR_SETS = {comp: 'B' for comp in _B}
 FOUR_SETS.update({comp: 'T' for comp in _T})

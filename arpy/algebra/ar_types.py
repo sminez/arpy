@@ -3,10 +3,7 @@ Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 import collections.abc
 from itertools import groupby
-from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
-
-
-SUB_SCRIPTS = {'0': '₀', '1': '₁', '2': '₂', '3': '₃', 'p': 'ₚ'}
+from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, SUB_SCRIPTS
 
 
 class Alpha:
