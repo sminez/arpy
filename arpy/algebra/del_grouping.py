@@ -50,6 +50,34 @@ def replace_grad(pairs):
     ∇Ξ{}
     '''
     replaced = []
+    for fourset in _present_4sets(pairs):
+        comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
+
+        # partial from this 4set and x-partial with x-3vec component, etc
+        candidates = [
+            p for p in pairs
+            if p.xi.partials[0].index in comps
+        ]
+        sorted_candidates = sorted(candidates, key=lambda p: p.xi.val)
+        grouped = groupby(sorted_candidates, lambda p: p.xi.val)
+        for xi, candidates in grouped:
+            candidates = [c for c in candidates]
+            partials = [c.xi.partials[0].index for c in candidates]
+            if set(partials) == set(comps):
+                if all(c.xi.sign == 1 for c in candidates):
+                    sign = 1
+                elif all(c.xi.sign == -1 for c in candidates):
+                    sign = -1
+                else:
+                    continue
+                xi = candidates[0].xi.val
+                alpha = ALPHA_TO_GROUP[candidates[0].alpha.index]
+                fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+                replaced.append(
+                    Pair(Alpha(alpha, sign), '∇{}Ξ{}'.format(fourset, xi))
+                )
+                for candidate in candidates:
+                    pairs.remove(candidate)
     return replaced, pairs
 
 
@@ -63,29 +91,28 @@ def replace_div(pairs):
         comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
 
         # partial from this 4set and x-partial with x-3vec component, etc
-        div_candidates = [
+        candidates = [
             p for p in pairs
             if p.xi.partials[0].index in comps
             and BXYZ_LIKE[p.xi.val] == BXYZ_LIKE[p.xi.partials[0].index]
         ]
 
-        if len(div_candidates) == 3:
-            alpha = div_candidates[0].alpha
-            xi = GROUP_TO_4SET[ALPHA_TO_GROUP[div_candidates[0].xi.val]]
+        if len(candidates) == 3:
+            alpha = candidates[0].alpha
+            xi = GROUP_TO_4SET[ALPHA_TO_GROUP[candidates[0].xi.val]]
             # The 'A' 3Vector calculus operators are the standard ones
             fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
 
-            if all(c.xi.sign == 1 for c in div_candidates):
-                replaced.append(
-                    Pair(Alpha(alpha.index), '∇{}•Ξ{}'.format(fourset, xi))
-                )
-            elif all(c.xi.sign == -1 for c in div_candidates):
-                replaced.append(
-                    Pair(Alpha(alpha.index, -1), '∇{}•Ξ{}'.format(fourset, xi))
-                )
+            if all(c.xi.sign == 1 for c in candidates):
+                sign = 1
+            elif all(c.xi.sign == -1 for c in candidates):
+                sign = -1
             else:
                 continue
-            for candidate in div_candidates:
+            replaced.append(
+                Pair(Alpha(alpha.index, sign), '∇{}•Ξ{}'.format(fourset, xi))
+            )
+            for candidate in candidates:
                 pairs.remove(candidate)
     return replaced, pairs
 
