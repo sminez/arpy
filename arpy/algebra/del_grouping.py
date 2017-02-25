@@ -1,7 +1,27 @@
 from itertools import groupby
+from collections import namedtuple
 from .config import ALPHA_TO_GROUP, FOUR_SET_COMPS, FOUR_SETS, BXYZ_LIKE, \
         SUPER_SCRIPTS, SUB_SCRIPTS, GROUP_TO_4SET
 from .ar_types import Alpha, Pair, DelMultiVector
+
+
+term = namedtuple('term', ['d', 'xi', 'alpha', 'sign', 'pair'])
+
+# (α, ξ, ∂) -> component sign
+CURL_SIGN = {
+    ('x', 'z', 'y'): 1, ('x', 'y', 'z'): -1,
+    ('y', 'x', 'z'): 1, ('y', 'z', 'x'): -1,
+    ('z', 'y', 'x'): 1, ('z', 'x', 'y'): -1
+}
+
+
+def _filter_partials(terms, partials, n=0):
+    '''n is the index for xi.partials'''
+    filtered_terms = [
+        term(t.xi.partials[n].index, t.xi.val, t.alpha.index, t.xi.sign, t)
+        for t in terms if t.xi.partials[n].index in partials
+    ]
+    return sorted(filtered_terms, key=lambda t: ALPHA_TO_GROUP[t.xi])
 
 
 def _present_4sets(pairs):
@@ -39,9 +59,41 @@ def del_grouped(mvec):
 # paired blade that it will iterate over and pop out matching components.
 def replace_curl(pairs):
     '''Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]
-    ∇x{}
     '''
     replaced = []
+
+    for fourset in _present_4sets(pairs):
+        comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
+        candidates = []
+
+        for t in _filter_partials(pairs, comps):
+            aix, xix, dix = [BXYZ_LIKE[k] for k in [t.alpha, t.xi, t.d]]
+            curl_sign = CURL_SIGN.get((aix, xix, dix))
+            if curl_sign:
+                candidates.append({'term': t, 'curl_sign': curl_sign})
+
+        grouped_cands = groupby(candidates,
+                                lambda t: ALPHA_TO_GROUP[t['term'].xi])
+
+        for group, cands in grouped_cands:
+            cands = [c for c in cands]
+            if all([c['curl_sign'] == c['term'].sign for c in cands]):
+                sign = 1
+            elif all([c['curl_sign'] == -c['term'].sign for c in cands]):
+                sign = -1
+            else:
+                continue
+
+            _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+            alpha = ALPHA_TO_GROUP[cands[0]['term'].alpha]
+            group = GROUP_TO_4SET[group]
+            replaced.append(
+                Pair(Alpha(alpha, sign), '∇{}x{}'.format(_fourset, group))
+            )
+
+            for candidate in [c['term'].pair for c in cands]:
+                pairs.remove(candidate)
+
     return replaced, pairs
 
 
