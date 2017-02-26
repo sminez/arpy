@@ -162,7 +162,7 @@ def replace_div(pairs):
             else:
                 continue
             replaced.append(
-                Pair(Alpha(alpha.index, sign), '∇{}•Ξ{}'.format(fourset, xi))
+                Pair(Alpha(alpha.index, sign), '∇{}•{}'.format(fourset, xi))
             )
             for candidate in candidates:
                 pairs.remove(candidate)
@@ -209,7 +209,7 @@ def replace_partials(pairs):
 
                     replaced.append(
                         Pair(Alpha(alpha, sign),
-                             '∂{}Ξ{}'.format(blade, component_4set)))
+                             '∂{}{}'.format(blade, component_4set)))
                     for candidate in candidates:
                         pairs.remove(candidate)
     return replaced, pairs

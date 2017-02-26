@@ -270,5 +270,5 @@ class MultiVector(collections.abc.Set):
 
 
 class DelMultiVector(MultiVector):
-    _allowed_alphas = ALLOWED_GROUPS
+    _allowed_alphas = ALLOWED_GROUPS  # + ALLOWED
     # _allowed_alphas = '0 123 i 0jk p 0123 i0 jk'.split()
