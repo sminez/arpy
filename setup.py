@@ -6,7 +6,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='arpy',
-    version="0.0.3",
+    version="0.1.0",
     description="A library for computing with Absolute Relativity",
     url="https://bitbucket.com/sminez/arpy",
     author="Innes Anderson-Morrison",
