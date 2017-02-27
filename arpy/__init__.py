@@ -5,7 +5,7 @@ from .algebra.ar_types import Alpha, Xi, Pair, MultiVector, DelMultiVector
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
         project, prod_apply, dagger, commutator
 from .algebra.differential import AR_differential, Dmu, DG, \
-        differential_operator, _4set_differential
+        differential_operator
 from .algebra.del_grouping import del_grouped
 from .utils.lexparse import ARContext
 from .utils.visualisation import cayley, sign_cayley

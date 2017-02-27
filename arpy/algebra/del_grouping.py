@@ -15,7 +15,7 @@ CURL_SIGN = {
 }
 
 
-def _filter_partials(terms, partials, n=0):
+def _filter_on_partials(terms, partials, n=0):
     '''n is the index for xi.partials'''
     filtered_terms = [
         term(t.xi.partials[n].index, t.xi.val, t.alpha.index, t.xi.sign, t)
@@ -55,18 +55,15 @@ def del_grouped(mvec):
     return DelMultiVector(output)
 
 
-# Each of these will have a pattern to look for for each 3-vector and
-# paired blade that it will iterate over and pop out matching components.
 def replace_curl(pairs):
-    '''Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]
-    '''
+    '''Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]'''
     replaced = []
 
     for fourset in _present_4sets(pairs):
         comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
         candidates = []
 
-        for t in _filter_partials(pairs, comps):
+        for t in _filter_on_partials(pairs, comps):
             aix, xix, dix = [BXYZ_LIKE[k] for k in [t.alpha, t.xi, t.d]]
             curl_sign = CURL_SIGN.get((aix, xix, dix))
             if curl_sign:
@@ -77,6 +74,9 @@ def replace_curl(pairs):
 
         for group, cands in grouped_cands:
             cands = [c for c in cands]
+            if len(cands) != 6:
+                continue
+
             if all([c['curl_sign'] == c['term'].sign for c in cands]):
                 sign = 1
             elif all([c['curl_sign'] == -c['term'].sign for c in cands]):
@@ -98,81 +98,75 @@ def replace_curl(pairs):
 
 
 def replace_grad(pairs):
-    '''Grad f = αx[df/dx] + αy[df/dy] + αz[df/dz]
-    ∇Ξ{}
-    '''
+    '''Grad f = αx[df/dx] + αy[df/dy] + αz[df/dz]'''
     replaced = []
     for fourset in _present_4sets(pairs):
         comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
 
-        # partial from this 4set and x-partial with x-3vec component, etc
-        candidates = [
-            p for p in pairs
-            if p.xi.partials[0].index in comps
-        ]
-        sorted_candidates = sorted(candidates, key=lambda p: p.xi.val)
-        grouped = groupby(sorted_candidates, lambda p: p.xi.val)
+        candidates = _filter_on_partials(pairs, comps)
+        sorted_candidates = sorted(candidates, key=lambda t: t.xi)
+        grouped = groupby(sorted_candidates, lambda t: t.xi)
+
         for xi, candidates in grouped:
             candidates = [c for c in candidates]
-            partials = [c.xi.partials[0].index for c in candidates]
-            if set(partials) == set(comps):
-                if all(c.xi.sign == 1 for c in candidates):
+            if len(candidates) != 3:
+                continue
+
+            if set(c.d for c in candidates) == set(comps):
+                if all(c.sign == 1 for c in candidates):
                     sign = 1
-                elif all(c.xi.sign == -1 for c in candidates):
+                elif all(c.sign == -1 for c in candidates):
                     sign = -1
                 else:
                     continue
-                xi = candidates[0].xi.val
-                alpha = ALPHA_TO_GROUP[candidates[0].alpha.index]
-                fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+
+                xi = candidates[0].xi
+                alpha = ALPHA_TO_GROUP[candidates[0].alpha]
+                _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
                 replaced.append(
-                    Pair(Alpha(alpha, sign), '∇{}Ξ{}'.format(fourset, xi))
+                    Pair(Alpha(alpha, sign), '∇{}Ξ{}'.format(_fourset, xi))
                 )
+
                 for candidate in candidates:
-                    pairs.remove(candidate)
+                    pairs.remove(candidate.pair)
     return replaced, pairs
 
 
 def replace_div(pairs):
-    '''Div F = dFx/dx + dFy/dy + dFz/dz
-    For operators build from complete 4sets there should only be one Div
-    component per 4set.
-    '''
+    '''Div F = dFx/dx + dFy/dy + dFz/dz'''
     replaced = []
     for fourset in _present_4sets(pairs):
         comps = [FOUR_SET_COMPS[fourset][k] for k in ['x', 'y', 'z']]
 
         # partial from this 4set and x-partial with x-3vec component, etc
         candidates = [
-            p for p in pairs
-            if p.xi.partials[0].index in comps
-            and BXYZ_LIKE[p.xi.val] == BXYZ_LIKE[p.xi.partials[0].index]
+            c for c in _filter_on_partials(pairs, comps)
+            if BXYZ_LIKE[c.xi] == BXYZ_LIKE[c.d]
         ]
 
         if len(candidates) == 3:
             alpha = candidates[0].alpha
-            xi = GROUP_TO_4SET[ALPHA_TO_GROUP[candidates[0].xi.val]]
+            xi = GROUP_TO_4SET[ALPHA_TO_GROUP[candidates[0].xi]]
             # The 'A' 3Vector calculus operators are the standard ones
-            fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+            _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
 
-            if all(c.xi.sign == 1 for c in candidates):
+            if all(c.sign == 1 for c in candidates):
                 sign = 1
-            elif all(c.xi.sign == -1 for c in candidates):
+            elif all(c.sign == -1 for c in candidates):
                 sign = -1
             else:
                 continue
+
             replaced.append(
-                Pair(Alpha(alpha.index, sign), '∇{}•{}'.format(fourset, xi))
+                Pair(Alpha(alpha, sign), '∇{}•{}'.format(_fourset, xi))
             )
             for candidate in candidates:
-                pairs.remove(candidate)
+                pairs.remove(candidate.pair)
     return replaced, pairs
 
 
 def replace_partials(pairs):
-    ''' Partial F = d{comp} F
-    Here, F is the 3vector components of a 4set.
-    '''
+    ''' Partial F = d{comp}F'''
     def key(p):
         return ALPHA_TO_GROUP[p.alpha.index]
 
