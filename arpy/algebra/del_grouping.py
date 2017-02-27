@@ -198,7 +198,7 @@ def replace_partials(pairs):
                     else:
                         continue
 
-                    alpha = ALPHA_TO_GROUP[ix]
+                    alpha = ALPHA_TO_GROUP[candidates[0].alpha.index]
                     blade = SUB_SCRIPTS[blade]
 
                     replaced.append(
