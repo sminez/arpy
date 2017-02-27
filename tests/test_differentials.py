@@ -2,7 +2,7 @@ import pytest
 from arpy import Alpha, Xi, Pair
 from arpy.algebra.differential import component_partial
 from arpy.algebra.del_grouping import replace_div, replace_grad, \
-    replace_partials
+    replace_partials, replace_curl
 
 
 def test_new_component_partial():
@@ -16,11 +16,22 @@ def test_new_component_partial():
     assert differentiated is not original
 
 
-def test_replace_curl():
+@pytest.mark.parametrize('sign', [1, -1])
+def test_replace_curl(sign):
     '''
     A valid set of curl terms gets replaced correctly
     '''
-    pass
+    curl_like = [
+        Pair(Alpha('1'), Xi('31', partials=[Alpha('3')], sign=-sign)),
+        Pair(Alpha('1'), Xi('12', partials=[Alpha('2')], sign=sign)),
+        Pair(Alpha('2'), Xi('12', partials=[Alpha('1')], sign=-sign)),
+        Pair(Alpha('2'), Xi('23', partials=[Alpha('3')], sign=sign)),
+        Pair(Alpha('3'), Xi('23', partials=[Alpha('2')], sign=-sign)),
+        Pair(Alpha('3'), Xi('31', partials=[Alpha('1')], sign=sign))
+    ]
+    replaced, left_over = replace_curl(curl_like)
+    assert left_over == []
+    assert replaced == [Pair(Alpha('i', sign), Xi('∇xB'))]
 
 
 @pytest.mark.parametrize('sign', [1, -1])
