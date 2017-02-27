@@ -62,6 +62,22 @@ automatically!
 (If it is a bug report, please copy in and error messages you get when describing
 the problem.)
 
+
+### Running the test suite
+If you would like to run the current test suite (you're working on a patch /
+you're just curious!) then simply run the following command in the root
+directory of the repo:
+```bash
+$ python3 setup.py test
+```
+
+If you are trying to write new tests for the module then please follow the
+example of the tests written so far. I am using [pytest](http://doc.pytest.org/en/latest/)
+as the test runner and wherever possible I am trying to paramaterize test cases
+to cover all possible inputs to eliminate edge cases as far as possible.
+All tests should have a clear docstring description of what it is the test is
+attempting to prove about the code.
+
 ### Documentation
 Please see the [docs](docs/) directory for markdown files detailing the use of the
 module.
