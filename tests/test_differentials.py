@@ -29,8 +29,9 @@ def test_replace_grad(sign):
     A valid set of grad terms gets replaced correctly
     '''
     grad_like = [
-        Pair(Alpha(i), Xi('p', partials=[Alpha(i)], sign=sign))
-        for i in ['1', '2', '3']
+        Pair(Alpha('1'), Xi('p', partials=[Alpha('1')], sign=sign)),
+        Pair(Alpha('2'), Xi('p', partials=[Alpha('2')], sign=sign)),
+        Pair(Alpha('3'), Xi('p', partials=[Alpha('3')], sign=sign))
     ]
     replaced, left_over = replace_grad(grad_like)
     assert left_over == []
@@ -43,12 +44,13 @@ def test_replace_div(sign):
     A valid set of div terms gets replaced correctly
     '''
     div_like = [
-        Pair(Alpha('p'), Xi(i, partials=[Alpha(i)], sign=sign))
-        for i in ['1', '2', '3']
+        Pair(Alpha('0'), Xi('10', partials=[Alpha('1')], sign=sign)),
+        Pair(Alpha('0'), Xi('20', partials=[Alpha('2')], sign=sign)),
+        Pair(Alpha('0'), Xi('30', partials=[Alpha('3')], sign=sign))
     ]
     replaced, left_over = replace_div(div_like)
     assert left_over == []
-    assert replaced == [Pair(Alpha('p', sign), Xi('∇•A'))]
+    assert replaced == [Pair(Alpha('0', sign), Xi('∇•E'))]
 
 
 @pytest.mark.parametrize('sign', [1, -1])
@@ -57,9 +59,10 @@ def test_replace_partial(sign):
     A valid set of partial terms gets replaced correctly
     '''
     partial_like = [
-        Pair(Alpha(i), Xi(i, partials=[Alpha('p')], sign=sign))
-        for i in ['1', '2', '3']
+        Pair(Alpha('23'), Xi('23', partials=[Alpha('p')], sign=sign)),
+        Pair(Alpha('31'), Xi('31', partials=[Alpha('p')], sign=sign)),
+        Pair(Alpha('12'), Xi('12', partials=[Alpha('p')], sign=sign))
     ]
     replaced, left_over = replace_partials(partial_like)
     assert left_over == []
-    assert replaced == [Pair(Alpha('i', sign), Xi('∂ₚA'))]
+    assert replaced == [Pair(Alpha('jk', sign), Xi('∂ₚB'))]
