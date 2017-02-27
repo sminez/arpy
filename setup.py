@@ -12,6 +12,10 @@ setup(
     author="Innes Anderson-Morrison",
     author_email='innesdmorrison@gmail.com',
     install_requires=['sly'],
+    setup_requires=[
+        'pytest-cov',
+        'pytest-runner',
+    ],
     tests_require=['pytest'],
     extras_require={'test': ['pytest']},
     packages=find_packages(),
