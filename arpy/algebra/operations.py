@@ -124,13 +124,17 @@ def _full_pair_alpha(a, b, metric=METRIC):
 def _full_pair_pair(a, b, metric=METRIC):
     a, b = deepcopy(a), deepcopy(b)
     alpha = find_prod(a.alpha, b.alpha, metric)
-    if alpha.sign == -1:
-        a.xi.sign *= -1
-        b.xi.sign *= -1
-        alpha.sign = 1
-        return Pair(alpha, XiProduct([a.xi, b.xi]))
-    else:
-        return Pair(alpha, XiProduct([a.xi, b.xi]))
+    return Pair(alpha, XiProduct([a.xi, b.xi]))
+    # NOTE:: Not sure which method is correct as this is mixing
+    #        usign with magsign...
+
+    # if alpha.sign == -1:
+    #     a.xi.sign *= -1
+    #     b.xi.sign *= -1
+    #     alpha.sign = 1
+    #     return Pair(alpha, XiProduct([a.xi, b.xi]))
+    # else:
+    #     return Pair(alpha, XiProduct([a.xi, b.xi]))
 
 
 @full.add((MultiVector, MultiVector))
