@@ -1,10 +1,16 @@
-Working With The Dynamics Of A Relativistic Fluid
-=================================================
+arpy (Absolute Relativity in Python) Version 0.1
+
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
 ![Cayley Table for the Williamson Algebra](readme_icon.png)
 
-The code in this repository is a work to calculate with and simulate the dynamics
-of the relativistic fluid theorised by [Dr J.G.Williamson](http://www.gla.ac.uk/schools/engineering/staff/johnwilliamson/).
+
+## Overview
+arpy is a module for performing calculations within the theory of Absolute Relativity
+as devised by [Dr J.G.Williamson](http://www.gla.ac.uk/schools/engineering/staff/johnwilliamson/).
+
+This repository is under active development. If you have any questions or
+suggestions for features / bug fixes please [open an issue](https://bitbucket.org/sminez/arpy).
 
 ### Installing and updating arpy
 To install the module on your system you will need Python version 3.5 or
