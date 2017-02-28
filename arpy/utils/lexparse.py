@@ -1,104 +1,174 @@
 '''
 Lexing and Parsing of a more mathematical syntax for performing calculations
 with the arpy Absolute Relativity library.
-
-SLY is rather magical - docs are here:
-    http://sly.readthedocs.io/en/latest/
-    https://github.com/dabeaz/sly
 '''
-import sly
+import re
+from operator import add
 from sys import _getframe
-from ..algebra.config import METRIC, DIVISION_TYPE
-from ..algebra.ar_types import Alpha, Pair  # MultiVector
+from collections import namedtuple
+from ..algebra.config import ALLOWED, METRIC
+from ..algebra.ar_types import Alpha, Pair
 from ..algebra.operations import full, div_by, div_into, project, commutator
 
 
-class ArpyLexer(sly.Lexer):
-    tokens = {'ALPHA', 'PAIR', 'INDEX', 'VAR'}
-    ignore = ' \t'
-    literals = {',', '+', '^', '/', '\\', '(', ')', '<', '>', '[', ']'}
+tags = [
+    ('ALPHA', r'-?a[0123]{1,4}|-?ap'),
+    ('PAIR',  r'-?p[0123]{1,4}'),
+    ('VAR',   r'[a-zA-Z_][a-zA-Z_0-9]*'),
+    ('INDEX', r'[01234]')
+]
+literals = [
+    ('PAREN_OPEN',  r'\('), ('PAREN_CLOSE',  r'\)'),
+    ('ANGLE_OPEN',  r'\<'), ('ANGLE_CLOSE',  r'\>'),
+    ('SQUARE_OPEN', r'\['), ('SQUARE_CLOSE', r'\]'),
+    ('PLUS', r'\+'), ('COMMA', r','), ('WEDGE', r'\^'),
+    ('BY', r'/'), ('INTO', r'\\')
+]
 
-    ALPHA = r'-a[0123]{1,4}|a[0123]{1,4}|-?ap'
-    PAIR = r'-p[0123]{1,4}|p[0123]{1,4}'
-    VAR = r'[a-zA-Z_][a-zA-Z_0-9]*'
-    INDEX = r'[01234]'
+_tags = '|'.join('(?P<{}>{})'.format(t[0], t[1]) for t in tags + literals)
+Token = namedtuple('token', ['tag', 'val'])
+
+
+class LexError(Exception):
+    pass
+
+
+class ParseError(Exception):
+    pass
+
+
+class ArpyLexer:
+    tags = re.compile(_tags)
+    literals = [tag_regex[0] for tag_regex in literals]
 
     def __init__(self, _globals=None):
         self._globals = _globals
 
-    def ALPHA(self, token):
-        if token.value.startswith('-'):
-            token.value = Alpha(token.value[2:], -1)
-        else:
-            token.value = Alpha(token.value[1:])
-        return token
+    def lex(self, string):
+        string = re.sub(' \t\n', '', string)  # remove whitespace
 
-    def PAIR(self, token):
-        if token.value.startswith('-'):
-            token.value = Pair(Alpha(token.value[2:], -1))
-        else:
-            token.value = Pair(Alpha(token.value[1:]))
-        return token
+        for match in re.finditer(self.tags, string):
+            lex_tag = match.lastgroup
+            group = [g for g in match.groups() if g is not None]
+            text = group[1] if len(group) == 2 else match.group(lex_tag)
 
-    def INDEX(self, token):
-        token.value = int(token.value)
-        return token
+            if lex_tag == 'ALPHA':
+                if text.startswith('-'):
+                    token = Token('EXPR', Alpha(text[2:], -1))
+                else:
+                    token = Token('EXPR', Alpha(text[1:]))
+            elif lex_tag == 'PAIR':
+                if text.startswith('-'):
+                    token = Token('EXPR', Pair(Alpha(text[2:], -1)))
+                else:
+                    token = Token('EXPR', Pair(Alpha(text[1:])))
+            elif lex_tag == 'INDEX':
+                token = Token('INDEX', int(text))
+            elif lex_tag == 'VAR':
+                token = Token('EXPR', eval(text, self._globals))
+            elif lex_tag in self.literals:
+                token = Token(lex_tag, text)
+            else:
+                raise LexError('Unknown input: ' + text)
 
-    def VAR(self, token):
-        token.value = eval(token.value, self._globals)
-        return token
+            yield token
 
 
-class ArpyParser(sly.Parser):
-    tokens = ArpyLexer.tokens
+class ArpyParser:
     metric = METRIC
+    allowed = ALLOWED
+    operations = {'WEDGE': full, 'BY': div_by, 'INTO': div_into, 'PLUS': add}
 
-    precedence = (
-        ('left', '^', '/'),
-        ('left', '\\', 'ALPHA',),
-    )
+    def parse(self, tokens, raw_text):
+        previous_token = None
 
-    @_('expr')
-    def result(self, p):
-        return p.expr
+        try:
+            while True:
+                token = next(tokens)
 
-    @_('"<" expr ">" INDEX')
-    def expr(self, p):
-        return project(p.expr, p.INDEX)
+                if token.tag == 'PAREN_OPEN':
+                    token = next(tokens)
+                    sub_expression = []
+                    while token.tag != 'PAREN_CLOSE':
+                        sub_expression.append(token)
+                        token = next(tokens)
+                    new_tokens = (s for s in sub_expression)
+                    previous_token = self.parse(new_tokens, raw_text)
 
-    @_('"[" expr "," expr "]"')
-    def expr(self, p):
-        return commutator(p.expr0, p.expr1)
+                elif token.tag == 'EXPR':
+                    if previous_token:
+                        # Two consecutive expressions is a syntax error
+                        raise ParseError('Invalid input: ' + raw_text)
+                    else:
+                        # Stash the token and then loop back
+                        previous_token = token
 
-    @_('expr "^" expr')
-    def expr(self, p):
-        return full(p.expr0, p.expr1, self.metric)
+                elif token.tag in self.operations:
+                    if previous_token is None:
+                        msg = 'Missing left argument to operation in "{}"'
+                        raise ParseError(msg.format(raw_text))
+                    else:
+                        try:
+                            LHS, previous_token = previous_token, None
+                            op = self.operations.get(token.tag)
+                            RHS = self.parse(tokens, raw_text)
+                            if RHS.tag != 'EXPR':
+                                # BinOps must take a single LHS and RHS
+                                raise ParseError('Invalid input: ' + raw_text)
+                            else:
+                                LHS, RHS = LHS.val, RHS.val
+                                # Non-arpy functions don't take additional args
+                                if token.tag == 'PLUS':
+                                    val = op(LHS, RHS)
+                                    previous_token = Token('EXPR', val)
+                                else:
+                                    val = op(
+                                        LHS, RHS, metric=self.metric,
+                                        allowed=self.allowed
+                                    )
+                                    previous_token = Token('EXPR', val)
+                        except StopIteration:
+                            raise ParseError('Invalid input: ' + raw_text)
 
-    @_('expr "/" expr')
-    def expr(self, p):
-        return div_by(p.expr0, p.expr1, self.metric)
+                # TODO:: Fix these two operations!
+                # elif token.tag == 'ANGLE_OPEN':
+                #     token = next(tokens)
+                #     sub_expression = []
+                #     while token.tag != 'ANGLE_CLOSE':
+                #         sub_expression.append(token)
+                #         token = next(tokens)
+                #     new_tokens = (s for s in sub_expression)
+                #     arg = self.parse(new_tokens, raw_text)
+                #     index = next(tokens)
+                #     if index.tag != 'INDEX':
+                #         raise ParseError('Invalid input: ' + raw_text)
+                #     val = project(arg.val, index.val)
+                #     previous_token = Token('EXPR', val)
 
-    @_('expr "\\" expr')
-    def expr(self, p):
-        return div_into(p.expr0, p.expr1, self.metric)
+                # elif token.tag == 'SQUARE_OPEN':
+                #     token = next(tokens)
+                #     sub_expression = []
 
-    @_('ALPHA')
-    def expr(self, p):
-        return p.ALPHA
+                #     while token.tag != 'COMMA':
+                #         sub_expression.append(token)
+                #         token = next(tokens)
+                #     new_tokens = (s for s in sub_expression)
+                #     LHS = self.parse(new_tokens, raw_text)
 
-    @_('PAIR')
-    def expr(self, p):
-        return p.PAIR
+                #     token = next(tokens)
+                #     while token.tag != 'SQUARE_CLOSE':
+                #         sub_expression.append(token)
+                #         token = next(tokens)
+                #     new_tokens = (s for s in sub_expression)
+                #     RHS = self.parse(new_tokens, raw_text)
+                #     val = commutator(LHS.val, RHS.val)
+                #     previous_token = Token('EXPR', val)
 
-    @_('VAR')
-    def expr(self, p):
-        return p.VAR
-
-    @_('"(" expr ")"')
-    def expr(self, p):
-        return p.expr
-
-##############################################################################
+        except StopIteration:
+            if previous_token:
+                return previous_token
+            else:
+                raise ParseError('Invalid input: ' + raw_text)
 
 
 class ARContext:
@@ -110,9 +180,9 @@ class ARContext:
     >>> ar("a12 ^ a23")
     >>> α31
     '''
-    def __init__(self, metric=METRIC, division=DIVISION_TYPE):
+    def __init__(self, metric=METRIC, allowed=ALLOWED):
         self._metric = METRIC
-        self._division = DIVISION_TYPE
+        self._allowed = ALLOWED
         self._lexer = ArpyLexer()
         self._parser = ArpyParser()
 
@@ -134,22 +204,11 @@ class ARContext:
         self._parser.metric = self._metric
         print("metric has been set to '{}'".format(sign_str))
 
-    @property
-    def division(self):
-        return self._division
-
-    @division.setter
-    def division(self, div_type):
-        if div_type not in ["by", "into"]:
-            raise ValueError("Division type must be either 'by' or 'into'")
-        self._division = div_type
-
-    def __call__(self, user_input):
+    def __call__(self, text):
         # NOTE:: The following is a horrible hack that allows you to
         #        inject local variables into the parser.
         stack_frame = _getframe(1)
         self._lexer._globals = stack_frame.f_locals
-        try:
-            return self._parser.parse(self._lexer.tokenize(user_input))
-        except sly.lex.LexError as e:
-            raise SyntaxWarning(e)
+        result = self._parser.parse(self._lexer.lex(text), text)
+        # Result is an internal Token so pull of the value for returning
+        return result.val
