@@ -91,39 +91,39 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     return Alpha(target, sign)
 
 
-def inverse(a, metric=METRIC):
+def inverse(a, metric=METRIC, allowed=ALLOWED):
     '''Find the inverse of an Alpha element'''
-    return Alpha(a.index, (find_prod(a, a, metric).sign * a.sign))
+    return Alpha(a.index, (find_prod(a, a, metric, allowed).sign * a.sign))
 
 
 ##############################################################################
 @dispatch_on((0, 1))
-def full(a, b, metric=METRIC):
+def full(a, b, metric=METRIC, allowed=ALLOWED):
     '''Compute the Full product of two elements'''
     raise NotImplementedError
 
 
 @full.add((Alpha, Alpha))
-def _full_alpha_alpha(a, b, metric=METRIC):
-    return find_prod(a, b, metric)
+def _full_alpha_alpha(a, b, metric=METRIC, allowed=ALLOWED):
+    return find_prod(a, b, metric, allowed)
 
 
 @full.add((Alpha, Pair))
-def _full_alpha_pair(a, b, metric=METRIC):
-    alpha = find_prod(a, b.alpha, metric)
+def _full_alpha_pair(a, b, metric=METRIC, allowed=ALLOWED):
+    alpha = find_prod(a, b.alpha, metric, allowed)
     return Pair(alpha, b.xi)
 
 
 @full.add((Pair, Alpha))
-def _full_pair_alpha(a, b, metric=METRIC):
-    alpha = find_prod(a.alpha, b, metric)
+def _full_pair_alpha(a, b, metric=METRIC, allowed=ALLOWED):
+    alpha = find_prod(a.alpha, b, metric, allowed)
     return Pair(alpha, a.xi)
 
 
 @full.add((Pair, Pair))
-def _full_pair_pair(a, b, metric=METRIC):
+def _full_pair_pair(a, b, metric=METRIC, allowed=ALLOWED):
     a, b = deepcopy(a), deepcopy(b)
-    alpha = find_prod(a.alpha, b.alpha, metric)
+    alpha = find_prod(a.alpha, b.alpha, metric, allowed)
     return Pair(alpha, XiProduct([a.xi, b.xi]))
     # NOTE:: Not sure which method is correct as this is mixing
     #        usign with magsign...
@@ -138,43 +138,43 @@ def _full_pair_pair(a, b, metric=METRIC):
 
 
 @full.add((MultiVector, MultiVector))
-def _full_mvec_mvec(mv1, mv2, metric=METRIC):
-    return MultiVector(full(i, j) for i in mv1 for j in mv2)
+def _full_mvec_mvec(mv1, mv2, metric=METRIC, allowed=ALLOWED):
+    return MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
 
 
 ##############################################################################
 @dispatch_on((0, 1))
-def div_by(a, b, metric=METRIC):
+def div_by(a, b, metric=METRIC, allowed=ALLOWED):
     '''Divide one element by another'''
     raise NotImplementedError
 
 
 @div_by.add((Alpha, Alpha))
-def _div_by_alpha_alpha(a, b, metric=METRIC):
-    return find_prod(a, inverse(b, metric), metric)
+def _div_by_alpha_alpha(a, b, metric=METRIC, allowed=ALLOWED):
+    return find_prod(a, inverse(b, metric, allowed), metric, allowed)
 
 
 @div_by.add((Pair, Alpha))
-def _div_by_pair_alpha(a, b, metric=METRIC):
-    alpha = find_prod(a, inverse(b.alpha, metric), metric)
+def _div_by_pair_alpha(a, b, metric=METRIC, allowed=ALLOWED):
+    alpha = find_prod(a, inverse(b.alpha, metric, allowed), metric, allowed)
     return Pair(alpha, a.xi)
 
 
 ##############################################################################
 @dispatch_on((0, 1))
-def div_into(a, b, metric=METRIC):
+def div_into(a, b, metric=METRIC, allowed=ALLOWED):
     '''Divide one element into another'''
     raise NotImplementedError
 
 
 @div_into.add((Alpha, Alpha))
-def _div_into_Alpha_Alpha(a, b, metric=METRIC):
-    return find_prod(inverse(a, metric), b, metric)
+def _div_into_Alpha_Alpha(a, b, metric=METRIC, allowed=ALLOWED):
+    return find_prod(inverse(a, metric, allowed), b, metric, allowed)
 
 
 @div_into.add((Alpha, Pair))
-def _div_into_Alpha_Pair(a, b, metric=METRIC):
-    alpha = find_prod(inverse(a, metric), b.alpha, metric)
+def _div_into_Alpha_Pair(a, b, metric=METRIC, allowed=ALLOWED):
+    alpha = find_prod(inverse(a, metric, allowed), b.alpha, metric, allowed)
     return Pair(alpha, b.xi)
 
 
@@ -226,8 +226,8 @@ def _project_multivector(element, grade):
 
 ##############################################################################
 
-@dispatch_on('all')
-def prod_apply(arg1, arg2, arg3=None):
+@dispatch_on((0, 1, 2))
+def prod_apply(arg1, arg2, arg3=None, metric=METRIC, allowed=ALLOWED):
     '''
     Apply a function to the cartesian product of two multivectors
     NOTE:: The function must act on a single Multivector.
@@ -236,34 +236,45 @@ def prod_apply(arg1, arg2, arg3=None):
 
 
 @prod_apply.add((FunctionType, MultiVector, MultiVector))
-def _prod_apply_dmm(func, mv1, mv2):
+def _prod_apply_dmm(func, mv1, mv2, metric=METRIC, allowed=ALLOWED):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return MultiVector(full(i, j) for i in func(mv1) for j in mv2)
+    return MultiVector(
+        full(i, j, metric, allowed)
+        for i in func(mv1, metric=metric, allowed=allowed)
+        for j in mv2
+    )
 
 
 @prod_apply.add((MultiVector, FunctionType, MultiVector))
-def _prod_apply_mdm(mv1, func, mv2):
+def _prod_apply_mdm(mv1, func, mv2, metric=METRIC, allowed=ALLOWED):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return MultiVector(full(i, j) for i in mv1 for j in func(mv2))
+    return MultiVector(
+        full(i, j, metric, allowed)
+        for i in mv1
+        for j in func(mv2, metric=metric, allowed=allowed)
+    )
 
 
 @prod_apply.add((FunctionType, tuple, type(None)))
-def _prod_apply_d_mm(func, mvecs=(None, None), _=None):
+def _prod_apply_d_mm(func, mvecs=(None, None), _=None,
+                     metric=METRIC, allowed=ALLOWED):
     if not isinstance(mvecs[0], MultiVector) and \
             isinstance(mvecs[1], MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return func(full(mvecs[0], mvecs[1]))
+    return func(full(mvecs[0], mvecs[1], metric, allowed))
 
 
 ##############################################################################
 
-_neg = [Alpha(a) for a in ALLOWED if full(Alpha(a), Alpha(a)).sign == -1]
 
-
-def dagger(mvec):
+def dagger(mvec, metric=METRIC, allowed=ALLOWED):
     '''return ther Hermitian conjugate of the Multivector'''
+    _neg = [
+        Alpha(a) for a in allowed
+        if full(Alpha(a), Alpha(a), metric, allowed).sign == -1
+    ]
     mvec = deepcopy(mvec)
     new_vec = []
     for pair in mvec:

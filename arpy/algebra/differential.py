@@ -15,17 +15,23 @@ from .operations import div_by, div_into
 from .del_grouping import del_grouped
 
 
-def _div(alpha, wrt, metric, div):
+def _div(alpha, wrt, metric, allowed, div):
     '''Divide an alpha component based on the set division type'''
     if div == 'by':
-        return div_by(alpha, wrt, metric)
+        return div_by(alpha, wrt, metric, allowed)
     elif div == 'into':
-        return div_into(wrt, alpha, metric)
+        return div_into(wrt, alpha, metric, allowed)
+    # NOTE:: Reversed division types divide the differential alpha by that
+    #        of the multivector component.
+    elif div == 'revby':
+        return div_by(wrt, alpha, metric, allowed)
+    elif div == 'revinto':
+        return div_into(alpha, wrt, metric, allowed)
     else:
         raise ValueError('Invalid division specification: %s' % div)
 
 
-def component_partial(component, wrt, div, metric):
+def component_partial(component, wrt, div, metric, allowed):
     '''
     Symbolically differentiate a component by storing the partials and
     converting the alpha value using the correct division type.
@@ -33,12 +39,13 @@ def component_partial(component, wrt, div, metric):
     # NOTE:: using deep copy so that all of the objects inside of the
     #        component get copied as well.
     new_component = deepcopy(component)
-    new_component.alpha = _div(new_component.alpha, wrt, metric, div)
+    new_component.alpha = _div(new_component.alpha, wrt, metric, allowed, div)
     new_component.xi.partials = [wrt] + new_component.xi.partials
     return new_component
 
 
-def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC, as_del=False):
+def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC,
+                    allowed=ALLOWED, as_del=False):
     '''
     Compute the result of Differentiating a each component of a MultiVector
     with respect to a given list of unit elements under the algebra.
@@ -46,10 +53,11 @@ def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC, as_del=False):
     comps = []
     for component in mvec:
         for element in wrt:
-            comp = component_partial(component, Alpha(element), div, metric)
+            element = Alpha(element)
+            comp = component_partial(component, element, div, metric, allowed)
             comps.append(comp)
-
     result = MultiVector(comps)
+
     if as_del:
         return del_grouped(result)
     else:
@@ -58,19 +66,19 @@ def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC, as_del=False):
 
 def differential_operator(wrt):
     '''Define a new operator as a function for later use'''
-    def operator(mvec, div=DIVISION_TYPE, metric=METRIC, as_del=False):
-        return AR_differential(mvec, wrt, div, metric, as_del)
+    def operator(mvec, div=DIVISION_TYPE, metric=METRIC,
+                 allowed=ALLOWED, as_del=False):
+        return AR_differential(mvec, wrt, div, metric, allowed, as_del)
     return operator
 
 
 ##############################################################################
 # Sepcific operators #
 ######################
-def Dmu(mvec, div=DIVISION_TYPE, metric=METRIC, as_del=False):
-    '''The main operator from the paper'''
-    return AR_differential(mvec, ['0', '1', '2', '3'], div, metric, as_del)
 
-
-def DG(mvec, div=DIVISION_TYPE, metric=METRIC, as_del=False):
-    '''A full derivative with respect to all components'''
-    return AR_differential(mvec, ALLOWED, div, metric, as_del)
+# The main operator from the papers
+Dmu = Dμ = differential_operator(['0', '1', '2', '3'])
+# A `full` differential with respect to all components
+DG = differential_operator(ALLOWED)
+# With respect to the even set
+DF = differential_operator(['p', '0123'] + [a for a in ALLOWED if len(a) == 2])
