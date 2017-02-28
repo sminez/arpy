@@ -11,7 +11,7 @@ setup(
     url="https://bitbucket.com/sminez/arpy",
     author="Innes Anderson-Morrison",
     author_email='innesdmorrison@gmail.com',
-    install_requires=['sly'],
+    install_requires=[],
     setup_requires=[
         'pytest-cov',
         'pytest-runner',
