@@ -29,11 +29,7 @@ _tags = '|'.join('(?P<{}>{})'.format(t[0], t[1]) for t in tags + literals)
 Token = namedtuple('token', ['tag', 'val'])
 
 
-class LexError(Exception):
-    pass
-
-
-class ParseError(Exception):
+class AR_Error(Exception):
     pass
 
 
@@ -69,7 +65,10 @@ class ArpyLexer:
             elif lex_tag in self.literals:
                 token = Token(lex_tag, text)
             else:
-                raise LexError('Unknown input: ' + text)
+                message = (
+                    'Input contains invalid syntax for the ar() function: {}'
+                )
+                raise AR_Error(message.format(text))
 
             yield token
 
@@ -88,7 +87,9 @@ class ArpyParser:
                 sub_expression.append(token)
                 token = next(tokens)
             except StopIteration:
-                raise ParseError('Invalid subexpression')
+                expr = ''.join([t.val for t in sub_expression])
+                message = 'Unable to parse invalid subexpression: {}'
+                raise AR_Error(message.format(expr))
         return (s for s in sub_expression)
 
     def parse(self, tokens, raw_text):
@@ -104,22 +105,31 @@ class ArpyParser:
                     previous_token = self.parse(sub_expression, raw_text)
 
                 elif token.tag == 'EXPR':
-                    if previous_token:  # EXPR EXPR -> syntax error
-                        raise ParseError('Invalid input: ' + raw_text)
+                    if previous_token:
+                        msg = (
+                            'Invalid input: {}\n'
+                            '(Two expressions without an operator: {} {})'
+                        )
+                        raise AR_Error(msg.format(
+                                raw_text, previous_token.val, token.val))
                     else:
-                        previous_token = token  # Stash and loop back
+                        # Store the token and then check the next token to
+                        # determine what we should do next.
+                        previous_token = token
 
                 elif token.tag in self.operations:
                     if previous_token is None:
-                        msg = 'Missing left argument to operation in "{}"'
-                        raise ParseError(msg.format(raw_text))
+                        msg = 'Missing left argument to operation "{}" in "{}"'
+                        op_name = token.val
+                        raise AR_Error(msg.format(op_name, raw_text))
                     else:
                         LHS, previous_token = previous_token, None
                         op = self.operations.get(token.tag)
                         RHS = self.parse(tokens, raw_text)
                         if RHS.tag != 'EXPR':
-                            # BinOps take a single LHS and RHS expressin
-                            raise ParseError('Invalid input: ' + raw_text)
+                            # BinaryOps take a single LHS and RHS expression
+                            msg = 'Invalid argument for {}: {} '
+                            raise AR_Error(msg.format(op.val, RHS.val))
                         else:
                             if token.tag == 'PLUS':
                                 val = op(LHS.val, RHS.val)
@@ -136,7 +146,8 @@ class ArpyParser:
 
                     index = next(tokens)
                     if index.tag != 'INDEX':
-                        raise ParseError('Invalid input: ' + raw_text)
+                        msg = 'Missing index for projection: {}'
+                        raise AR_Error(msg.format(raw_text))
                     else:
                         val = project(arg.val, index.val)
                         previous_token = Token('EXPR', val)
@@ -153,7 +164,7 @@ class ArpyParser:
             if previous_token:
                 return previous_token
             else:
-                raise ParseError('Invalid input: ' + raw_text)
+                raise AR_Error('Unable to parse input: ' + raw_text)
 
 
 class ARContext:
