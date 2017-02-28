@@ -51,9 +51,9 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
 
     # Rule (1) :: Multiplication by αp is idempotent
     if i.index == 'p':
-        return Alpha(j.index, (i.sign * j.sign))
+        return Alpha(j.index, (i.sign * j.sign), allowed=allowed)
     elif j.index == 'p':
-        return Alpha(i.index, (i.sign * j.sign))
+        return Alpha(i.index, (i.sign * j.sign), allowed=allowed)
 
     # Rule (2) :: Squaring and popping
     sign = i.sign * j.sign
@@ -76,7 +76,7 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     target = targets[frozenset(components)]
 
     if target == components:
-        return Alpha(target, sign)
+        return Alpha(target, sign, allowed=allowed)
 
     ordering = {c: i+1 for i, c in enumerate(target)}
     current = [ordering[c] for c in components]
@@ -88,12 +88,16 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
         new_order = {j: i+1 for i, j in enumerate(sorted(current))}
         current = [new_order[k] for k in current]
 
-    return Alpha(target, sign)
+    return Alpha(target, sign, allowed=allowed)
 
 
 def inverse(a, metric=METRIC, allowed=ALLOWED):
     '''Find the inverse of an Alpha element'''
-    return Alpha(a.index, (find_prod(a, a, metric, allowed).sign * a.sign))
+    return Alpha(
+        a.index,
+        (find_prod(a, a, metric, allowed).sign * a.sign),
+        allowed=allowed
+    )
 
 
 ##############################################################################

@@ -53,7 +53,8 @@ def _4block(rows, cols, op, metric, allowed):
     block = []
     for r in rows:
         comps = [
-            op(Alpha(r), Alpha(c), metric=metric, allowed=allowed).sign
+            op(Alpha(r, allowed=allowed), Alpha(c, allowed=allowed),
+               metric=metric, allowed=allowed).sign
             for c in cols
         ]
         block_row = ' '.join(['□' if c == 1 else '■' for c in comps])

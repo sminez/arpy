@@ -8,17 +8,21 @@ from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, SUB_SCRIPTS
 
 class Alpha:
     '''Unit elements in the algebra'''
-    def __init__(self, index, sign=None):
+    def __init__(self, index, sign=None,
+                 allowed=ALLOWED, allowed_groups=ALLOWED_GROUPS):
         '''
         Handle multiple constructor methods for αs
         '''
+        self.allowed = ALLOWED
+        self.allowed_groups = ALLOWED_GROUPS
+
         if sign is None:
             if index.startswith('-'):
                 index, sign = index[1:], -1
             else:
                 sign = 1
 
-        if index not in ALLOWED and index not in ALLOWED_GROUPS:
+        if index not in allowed and index not in allowed_groups:
             raise ValueError('Invalid α index: {}'.format(index))
 
         if sign not in [1, -1]:
@@ -35,7 +39,7 @@ class Alpha:
         return (self.index == other.index) and (self.sign == other.sign)
 
     def __lt__(self, other):
-        return ALLOWED.index(self.index) < ALLOWED.index(other.index)
+        return self.allowed.index(self.index) < self.allowed.index(other.index)
 
     def __neg__(self):
         self.sign *= -1
