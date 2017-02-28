@@ -79,7 +79,20 @@ class ArpyParser:
     allowed = ALLOWED
     operations = {'WEDGE': full, 'BY': div_by, 'INTO': div_into, 'PLUS': add}
 
+    def sub_expr(self, tokens, deliminator_tag):
+        '''Pull tokens until we hit the specified deliminator.'''
+        token = next(tokens)
+        sub_expression = []
+        while token.tag != deliminator_tag:
+            try:
+                sub_expression.append(token)
+                token = next(tokens)
+            except StopIteration:
+                raise ParseError('Invalid subexpression')
+        return (s for s in sub_expression)
+
     def parse(self, tokens, raw_text):
+        '''Naive recursive decent parsing of the input.'''
         previous_token = None
 
         try:
@@ -87,82 +100,54 @@ class ArpyParser:
                 token = next(tokens)
 
                 if token.tag == 'PAREN_OPEN':
-                    token = next(tokens)
-                    sub_expression = []
-                    while token.tag != 'PAREN_CLOSE':
-                        sub_expression.append(token)
-                        token = next(tokens)
-                    new_tokens = (s for s in sub_expression)
-                    previous_token = self.parse(new_tokens, raw_text)
+                    sub_expression = self.sub_expr(tokens, 'PAREN_CLOSE')
+                    previous_token = self.parse(sub_expression, raw_text)
 
                 elif token.tag == 'EXPR':
-                    if previous_token:
-                        # Two consecutive expressions is a syntax error
+                    if previous_token:  # EXPR EXPR -> syntax error
                         raise ParseError('Invalid input: ' + raw_text)
                     else:
-                        # Stash the token and then loop back
-                        previous_token = token
+                        previous_token = token  # Stash and loop back
 
                 elif token.tag in self.operations:
                     if previous_token is None:
                         msg = 'Missing left argument to operation in "{}"'
                         raise ParseError(msg.format(raw_text))
                     else:
-                        try:
-                            LHS, previous_token = previous_token, None
-                            op = self.operations.get(token.tag)
-                            RHS = self.parse(tokens, raw_text)
-                            if RHS.tag != 'EXPR':
-                                # BinOps must take a single LHS and RHS
-                                raise ParseError('Invalid input: ' + raw_text)
-                            else:
-                                LHS, RHS = LHS.val, RHS.val
-                                # Non-arpy functions don't take additional args
-                                if token.tag == 'PLUS':
-                                    val = op(LHS, RHS)
-                                    previous_token = Token('EXPR', val)
-                                else:
-                                    val = op(
-                                        LHS, RHS, metric=self.metric,
-                                        allowed=self.allowed
-                                    )
-                                    previous_token = Token('EXPR', val)
-                        except StopIteration:
+                        LHS, previous_token = previous_token, None
+                        op = self.operations.get(token.tag)
+                        RHS = self.parse(tokens, raw_text)
+                        if RHS.tag != 'EXPR':
+                            # BinOps take a single LHS and RHS expressin
                             raise ParseError('Invalid input: ' + raw_text)
+                        else:
+                            if token.tag == 'PLUS':
+                                val = op(LHS.val, RHS.val)
+                            else:
+                                val = op(
+                                    LHS.val, RHS.val, metric=self.metric,
+                                    allowed=self.allowed
+                                )
+                            previous_token = Token('EXPR', val)
 
-                # TODO:: Fix these two operations!
-                # elif token.tag == 'ANGLE_OPEN':
-                #     token = next(tokens)
-                #     sub_expression = []
-                #     while token.tag != 'ANGLE_CLOSE':
-                #         sub_expression.append(token)
-                #         token = next(tokens)
-                #     new_tokens = (s for s in sub_expression)
-                #     arg = self.parse(new_tokens, raw_text)
-                #     index = next(tokens)
-                #     if index.tag != 'INDEX':
-                #         raise ParseError('Invalid input: ' + raw_text)
-                #     val = project(arg.val, index.val)
-                #     previous_token = Token('EXPR', val)
+                elif token.tag == 'ANGLE_OPEN':
+                    sub_expression = self.sub_expr(tokens, 'ANGLE_CLOSE')
+                    arg = self.parse(sub_expression, raw_text)
 
-                # elif token.tag == 'SQUARE_OPEN':
-                #     token = next(tokens)
-                #     sub_expression = []
+                    index = next(tokens)
+                    if index.tag != 'INDEX':
+                        raise ParseError('Invalid input: ' + raw_text)
+                    else:
+                        val = project(arg.val, index.val)
+                        previous_token = Token('EXPR', val)
 
-                #     while token.tag != 'COMMA':
-                #         sub_expression.append(token)
-                #         token = next(tokens)
-                #     new_tokens = (s for s in sub_expression)
-                #     LHS = self.parse(new_tokens, raw_text)
-
-                #     token = next(tokens)
-                #     while token.tag != 'SQUARE_CLOSE':
-                #         sub_expression.append(token)
-                #         token = next(tokens)
-                #     new_tokens = (s for s in sub_expression)
-                #     RHS = self.parse(new_tokens, raw_text)
-                #     val = commutator(LHS.val, RHS.val)
-                #     previous_token = Token('EXPR', val)
+                elif token.tag == 'SQUARE_OPEN':
+                    sub_expression = self.sub_expr(tokens, 'COMMA')
+                    LHS = self.parse(sub_expression, raw_text)
+                    sub_expression = self.sub_expr(tokens, 'SQUARE_CLOSE')
+                    RHS = self.parse(sub_expression, raw_text)
+                    val = commutator(LHS.val, RHS.val)
+                    previous_token = Token('EXPR', val)
 
         except StopIteration:
             if previous_token:
