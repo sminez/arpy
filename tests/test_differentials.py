@@ -1,5 +1,5 @@
 import pytest
-from arpy import Alpha, Xi, Pair
+from arpy import Alpha, Xi, Pair, ALLOWED
 from arpy.algebra.differential import component_partial
 from arpy.algebra.del_grouping import replace_div, replace_grad, \
     replace_partials, replace_curl
@@ -12,7 +12,9 @@ def test_new_component_partial():
     '''
     original = Pair('012')
     wrt = Alpha('2')
-    differentiated = component_partial(original, wrt, 'by', (-1, 1, 1, 1))
+    differentiated = component_partial(
+        original, wrt, 'by', (-1, 1, 1, 1), ALLOWED
+    )
     assert differentiated is not original
 
 

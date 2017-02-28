@@ -7,6 +7,8 @@ In Cartesian coordinates Dμ is:
 
 All other differential operators follow the same restrictions of
 Absolute Relativity and should only operate on MultiVectors.
+
+NOTE:: Specific operators (such as Dmu) are defined in the __init__ file.
 '''
 from copy import deepcopy
 from .config import ALLOWED, DIVISION_TYPE, METRIC
@@ -70,15 +72,3 @@ def differential_operator(wrt):
                  allowed=ALLOWED, as_del=False):
         return AR_differential(mvec, wrt, div, metric, allowed, as_del)
     return operator
-
-
-##############################################################################
-# Sepcific operators #
-######################
-
-# The main operator from the papers
-Dmu = Dμ = differential_operator(['0', '1', '2', '3'])
-# A `full` differential with respect to all components
-DG = differential_operator(ALLOWED)
-# With respect to the even set
-DF = differential_operator(['p', '0123'] + [a for a in ALLOWED if len(a) == 2])
