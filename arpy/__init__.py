@@ -41,21 +41,21 @@ ar = ARContext(METRIC, DIVISION_TYPE)
 # All values that will be imported when the user does `from arpy import *`
 __all__ = [
     # Config initialised values
-    ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, ALPHA_TO_GROUP,
-    ALLOWED_GROUPS, FOUR_SET_COMPS, FOUR_SETS, BXYZ_LIKE,
+    'ALLOWED', 'XI_GROUPS', 'METRIC', 'DIVISION_TYPE', 'ALPHA_TO_GROUP',
+    'ALLOWED_GROUPS', 'FOUR_SET_COMPS', 'FOUR_SETS', 'BXYZ_LIKE',
     # Data structures
-    Alpha, Xi, Pair, MultiVector, DelMultiVector,
+    'Alpha', 'Xi', 'Pair', 'MultiVector', 'DelMultiVector',
     # Non differential operators
-    find_prod, inverse, full, div_by, div_into,
-    project, prod_apply, dagger, commutator,
+    'find_prod', 'inverse', 'full', 'div_by', 'div_into',
+    'project', 'prod_apply', 'dagger', 'commutator',
     # Differential operators
-    Dmu, Dμ, DG, DF, DB, DT, DA, DE,
+    'Dmu', 'Dμ', 'DG', 'DF', 'DB', 'DT', 'DA', 'DE',
     # Differential operator helpers
-    AR_differential, differential_operator, del_grouped,
+    'AR_differential', 'differential_operator', 'del_grouped',
     # Visulaisation functions
-    cayley, sign_cayley, sign_distribution,
+    'cayley', 'sign_cayley', 'sign_distribution',
     # Pre-defined MultiVectors
-    XiG, XiB, XiT, XiA, XiE,
+    'XiG', 'XiB', 'XiT', 'XiA', 'XiE',
     # The a pre-defined ar() context function
-    ar
+    'ar'
 ]
