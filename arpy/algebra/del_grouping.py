@@ -1,3 +1,7 @@
+'''
+arpy (Absolute Relativity in Python)
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+'''
 from itertools import groupby
 from collections import namedtuple
 from .config import ALPHA_TO_GROUP, FOUR_SET_COMPS, FOUR_SETS, BXYZ_LIKE, \

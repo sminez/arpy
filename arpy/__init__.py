@@ -1,3 +1,6 @@
+# arpy (Absolute Relativity in Python)
+# Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
         ALPHA_TO_GROUP, ALLOWED_GROUPS, FOUR_SET_COMPS, FOUR_SETS, \
         BXYZ_LIKE

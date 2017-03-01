@@ -1,4 +1,7 @@
 '''
+arpy (Absolute Relativity in Python)
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+
 A selection of different implementations for symbolically computing
 the 4-vector 4-differential Dμ and other Differential operators.
 

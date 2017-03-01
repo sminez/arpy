@@ -1,4 +1,7 @@
 '''
+arpy (Absolute Relativity in Python)
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+
 Multiplying αs
 ==============
 This is based on a set of simplification rules based on allowed manipulations

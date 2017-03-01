@@ -1,3 +1,7 @@
+'''
+arpy (Absolute Relativity in Python)
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+'''
 # The labelling and ordering of the 16 elements of the algebra.
 # NOTE:: The order will affect the visualisation of the Cayley Table
 #       but not the results of finding products.

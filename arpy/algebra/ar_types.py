@@ -1,4 +1,7 @@
 '''
+arpy (Absolute Relativity in Python)
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+
 Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 import collections.abc
