@@ -16,7 +16,7 @@ NOTE:: Specific operators (such as Dmu) are defined in the __init__ file.
 from copy import deepcopy
 from .config import ALLOWED, DIVISION_TYPE, METRIC
 from .ar_types import Alpha
-from .multivector import MultiVector
+from .multivector import MultiVector, DelMultiVector
 from .operations import div_by, div_into
 from .del_grouping import del_grouped
 
@@ -65,7 +65,7 @@ def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC,
     result = MultiVector(comps)
 
     if as_del:
-        return MultiVector(del_grouped(result))
+        return DelMultiVector(del_grouped(result))
     else:
         return result
 
