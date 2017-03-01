@@ -45,13 +45,13 @@ def del_grouped(mvec):
     alpha_grouped = groupby(mvec, lambda p: ALPHA_TO_GROUP[p.alpha.index])
     for group, components in alpha_grouped:
         components = [c for c in components]
-        replaced, components = replace_curl(components)
+        replaced, components = replace_partials(components)
         output.extend(replaced)
         replaced, components = replace_grad(components)
         output.extend(replaced)
         replaced, components = replace_div(components)
         output.extend(replaced)
-        replaced, components = replace_partials(components)
+        replaced, components = replace_curl(components)
         output.extend(replaced)
 
         for component in components:

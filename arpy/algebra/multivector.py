@@ -1,3 +1,7 @@
+'''
+arpy (Absolute Relativity in Python)
+Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+'''
 import collections.abc
 from itertools import groupby
 from .ar_types import Alpha, Pair
@@ -93,39 +97,35 @@ class MultiVector(collections.abc.Set):
             else:
                 return xi
 
-    def simplified(self, on='xi', ix=0):
+    def simplified(self, ix=0):
         '''
         Display the multivector with simplified Xi values.
         '''
-        ix2 = 1 if ix == 0 else 1
-        if on == 'xi':
-            def key(x):
-                return (x.xi.components[ix], ALPHA_TO_GROUP[x.alpha.index])
-        elif on == 'alpha':
-            def key(x):
-                return (ALPHA_TO_GROUP[x.alpha.index], x.xi.components[ix])
-        else:
-            raise ValueError('"on" must be one of "xi" or "alpha"')
+        def key(x):
+            return ALPHA_TO_GROUP[x.alpha.index]
 
-        g = groupby(sorted(self, key=key), key)
+        ix2 = 1 if ix == 0 else 1
+        alpha_grouped = groupby(sorted(self, key=key), key)
         seen = []
 
         print('{')
-        for key, full in g:
-            comps = [Pair(f.alpha, f.xi.components[ix2]) for f in full]
-            comps = sorted(del_grouped(comps), key=lambda x: x.alpha.index)
-            agrouped = groupby(comps, lambda x: x.alpha.index)
-            if key[0] not in seen:
-                print('  {}'.format(key[0]))
-                seen.append(key[0])
-            for alpha, components in agrouped:
-                components = [c for c in components]
-                for component in components:
+        for key, full in alpha_grouped:
+            full = sorted(full, key=lambda x: x.xi.components[ix])
+            xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
+            for common_xi, comps in xi_grouped:
+                comps = [Pair(c.alpha, c.xi.components[ix2]) for c in comps]
+                comps = sorted(del_grouped(comps), key=lambda x: x.alpha.index)
+                for component in comps:
                     if component.alpha.sign == -1:
                         component.alpha.sign = 1
                         component.xi.sign *= -1
-                comp_str = ' '.join([str(c.xi) for c in components])
-                print('    {}: {}'.format(Alpha(alpha), comp_str))
+
+                if comps[0].alpha not in seen:
+                    print('  {}:'.format(comps[0].alpha))
+                    seen.append(comps[0].alpha)
+
+                comp_str = ', '.join([str(c.xi) for c in comps])
+                print('      {}[{}]'.format(common_xi, comp_str))
         print('}')
 
 

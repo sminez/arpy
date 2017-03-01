@@ -1,8 +1,6 @@
 '''
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
-
-Classes, functions and default representations of Ξ vectors in the algebra.
 '''
 from .config import ALLOWED, ALLOWED_GROUPS, SUB_SCRIPTS
 
@@ -74,7 +72,7 @@ class Xi:
             return self.val < other.val
 
     def __repr__(self):
-        sign = '+' if self.sign == 1 else '-'
+        sign = '' if self.sign == 1 else '-'
         partials = (
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
@@ -115,14 +113,14 @@ class XiProduct:
         return same_sign and same_components
 
     def __repr__(self):
-        sign = '+' if self.sign == 1 else '-'
+        sign = '' if self.sign == 1 else '-'
         # Stripping component signs as we have taken care of the overall
         # product sign at initialisation.
         partials = (
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
-        comps = ''.join(str(c)[1:] for c in self.components)
+        comps = ''.join(str(c) for c in self.components)
         return sign + ''.join(partials) + comps
 
 
