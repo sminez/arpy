@@ -4,9 +4,10 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
 from itertools import groupby
 from collections import namedtuple
+
+from .ar_types import Alpha, Pair
 from .config import ALPHA_TO_GROUP, FOUR_SET_COMPS, FOUR_SETS, BXYZ_LIKE, \
         SUPER_SCRIPTS, SUB_SCRIPTS, GROUP_TO_4SET
-from .ar_types import Alpha, Pair, DelMultiVector
 
 
 term = namedtuple('term', ['d', 'xi', 'alpha', 'sign', 'pair'])
@@ -56,7 +57,7 @@ def del_grouped(mvec):
         for component in components:
             component.alpha.index = ALPHA_TO_GROUP[component.alpha.index]
         output.extend(components)
-    return DelMultiVector(output)
+    return output
 
 
 def replace_curl(pairs):

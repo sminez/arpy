@@ -37,8 +37,9 @@ we are done.
 from copy import deepcopy
 from types import FunctionType
 from .config import ALLOWED, METRIC
+from .multivector import MultiVector
 from ..utils.concepts.dispatch import dispatch_on
-from .ar_types import Alpha, Pair, MultiVector, XiProduct
+from .ar_types import Alpha, Pair, XiProduct
 
 
 def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
