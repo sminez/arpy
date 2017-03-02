@@ -125,7 +125,7 @@ def replace_grad(pairs):
                 else:
                     continue
 
-                xi = candidates[0].xi
+                xi = SUB_SCRIPTS[candidates[0].xi]
                 alpha = ALPHA_TO_GROUP[candidates[0].alpha]
                 _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
                 replaced.append(
