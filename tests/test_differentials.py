@@ -48,7 +48,7 @@ def test_replace_grad(sign):
     ]
     replaced, left_over = replace_grad(grad_like)
     assert left_over == []
-    assert replaced == [Pair(Alpha('i', sign), Xi('∇Ξp'))]
+    assert replaced == [Pair(Alpha('i', sign), Xi('∇Ξₚ'))]
 
 
 @pytest.mark.parametrize('sign', [1, -1])
