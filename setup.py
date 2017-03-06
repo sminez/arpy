@@ -8,7 +8,7 @@ setup(
     name='arpy',
     version="0.1.2",
     description="A library for computing with Absolute Relativity",
-    url="https://bitbucket.com/sminez/arpy",
+    url="https://github.com/sminez/arpy",
     author="Innes Anderson-Morrison",
     author_email='innesdmorrison@gmail.com',
     install_requires=[],

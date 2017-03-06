@@ -60,11 +60,10 @@ $ python3 -m qtconsole --JupyterWidget.font_size=18
 
 
 ### Reporting issues and requesting features
-BitBucket has a built in issue tracker that makes it much easier to keep on top
+Github has a built in issue tracker that makes it much easier to keep on top
 of changes and bug fixes. In either case, please [create anew issue](https://github.com/sminez/arpy/issues)
-using this link or by going to the `Issues` panel on the left of the page in
-BitBucket. Please remember to tag Innes as the Assignee so that he gets notified
-automatically!
+using this link or by going to the `Issues` panel at the top of the page in
+Github.
 
 (If it is a bug report, please copy in and error messages you get when describing
 the problem.)
