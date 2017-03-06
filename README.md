@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/sminez/arpy/badge.svg)](https://coveralls.io/github/sminez/arpy)
+
 arpy (Absolute Relativity in Python) Version 0.1
 
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
