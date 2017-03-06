@@ -26,7 +26,7 @@ to do. To update using git run the following commands from the root directory of
 this repo (where this README file is located):
 
 ```bash
-$ git pull   # You will be prompted for your BitBucket login details
+$ git pull
 $ git checkout master
 $ sudo python3 setup.py install
 ```
