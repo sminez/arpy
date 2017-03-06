@@ -1,0 +1,15 @@
+language: python
+
+python:
+  - "3.5"
+  - "3.6"
+
+install:
+  - python setup.py install
+  - pip install coveralls[yaml]
+
+script:
+  - python3 setup.py test
+
+after_success:
+  - coveralls

@@ -10,7 +10,7 @@ arpy is a module for performing calculations within the theory of Absolute Relat
 as devised by [Dr J.G.Williamson](http://www.gla.ac.uk/schools/engineering/staff/johnwilliamson/).
 
 This repository is under active development. If you have any questions or
-suggestions for features / bug fixes please [open an issue](https://bitbucket.org/sminez/arpy).
+suggestions for features / bug fixes please [open an issue](https://github.com/sminez/arpy/issues).
 
 ### Installing and updating arpy
 To install the module on your system you will need Python version 3.5 or
@@ -18,11 +18,10 @@ greater. From this directory run `sudo python3 setup.py install` and the script
 will take care of the rest.
 
 In order to update the the latest version of the code it is _strongly_ advised
-to [clone this repo using git](https://confluence.atlassian.com/bitbucket/create-and-clone-a-repository-800695642.html#Createandclonearepository-CloningaGitrepository)
-rather than manually downloading the zip each time - though the second option
-_is_ possible if using git is not something you want to do. To update using git
-run the following commands from the root directory of this repo (where this
-README file is located):
+to clone this repo using git rather than manually downloading the zip each time
+- though the second option _is_ possible if using git is not something you want
+to do. To update using git run the following commands from the root directory of
+this repo (where this README file is located):
 
 ```bash
 $ git pull   # You will be prompted for your BitBucket login details
@@ -30,9 +29,11 @@ $ git checkout master
 $ sudo python3 setup.py install
 ```
 
-To update via .zip, go to the [downloads page](https://bitbucket.org/sminez/arpy/downloads/)
-and click on `Download repository`. This will give you a zip file that you can
-extract and run the `sudo python3 setup.py install` command in.
+To update via .zip, go to the [releases page](https://github.com/sminez/arpy/releases)
+and click on select the release version you are after. There should be some
+information available to describe any changes at each release stage.
+This will give you a zip file that you can extract and run the
+`sudo python3 setup.py install` command in.
 
 After either method, the module can be imported into a Python repl session in
 the usual way. While it is generally regarded as bad practice when developing
@@ -60,7 +61,7 @@ $ python3 -m qtconsole --JupyterWidget.font_size=18
 
 ### Reporting issues and requesting features
 BitBucket has a built in issue tracker that makes it much easier to keep on top
-of changes and bug fixes. In either case, please [create anew issue](https://bitbucket.org/sminez/arpy/issues/new)
+of changes and bug fixes. In either case, please [create anew issue](https://github.com/sminez/arpy/issues)
 using this link or by going to the `Issues` panel on the left of the page in
 BitBucket. Please remember to tag Innes as the Assignee so that he gets notified
 automatically!
