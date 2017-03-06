@@ -14,12 +14,6 @@ metrics = [                             # All possible +- metrics
 
 # Pre-zipped combinations of indices for paramatizing tests
 imetric = [(i, metric) for (i, metric) in zip(ALLOWED, metrics)]
-ijmetric = [(i, j, m) for i in ALLOWED for j in ALLOWED for m in metrics]
-txyz_ijmetric = [
-    (c[0], c[1], m)
-    for c in combinations(txyz, 2) for m in metrics
-]
-txyz_ijkmetric = [
-    (c[0], c[1], c[2], m)
-    for c in combinations(txyz, 3) for m in metrics
-]
+ij = [(c[0], c[1]) for c in combinations(txyz, 2)]
+ijk = [(c[0], c[1], c[2]) for c in combinations(txyz, 3)]
+ij_alphas = [(c[0], c[1]) for c in combinations(ALLOWED, 2)]

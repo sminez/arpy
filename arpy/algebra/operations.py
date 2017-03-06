@@ -294,8 +294,8 @@ def dagger(mvec, metric=METRIC, allowed=ALLOWED):
 
 ##############################################################################
 
-@dispatch_on('all')
-def commutator(a, b):
+@dispatch_on((0, 1))
+def commutator(a, b, metric=METRIC, allowed=ALLOWED):
     '''
     Computes the group commutator [a, b] = (a . b . a^-1 . b^-1) for Alphas.
     '''
@@ -303,10 +303,10 @@ def commutator(a, b):
 
 
 @commutator.add((Alpha, Alpha))
-def _group_commutator(a, b):
-    product = full(a, b)
-    product = full(product, inverse(a))
-    product = full(product, inverse(b))
+def _group_commutator(a, b, metric=METRIC, allowed=ALLOWED):
+    product = full(a, b, metric, allowed)
+    product = full(product, inverse(a), metric, allowed)
+    product = full(product, inverse(b), metric, allowed)
     return product
 
 
