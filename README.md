@@ -1,4 +1,4 @@
-[![Coverage Status](https://coveralls.io/repos/github/sminez/arpy/badge.svg)](https://coveralls.io/github/sminez/arpy)
+[![Build Status](https://travis-ci.org/sminez/arpy.svg?branch=master)](https://travis-ci.org/sminez/arpy) [![Coverage Status](https://coveralls.io/repos/github/sminez/arpy/badge.svg)](https://coveralls.io/github/sminez/arpy)
 
 arpy (Absolute Relativity in Python) Version 0.1
 
