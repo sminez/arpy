@@ -6,7 +6,7 @@ import collections.abc
 from itertools import groupby
 from .ar_types import Alpha, Pair
 from .del_grouping import del_grouped
-from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
+from .config import ALLOWED, ALLOWED_GROUPS
 
 
 class MultiVector(collections.abc.Set):
@@ -97,24 +97,26 @@ class MultiVector(collections.abc.Set):
             else:
                 return xi
 
-    def simplified(self, ix=0):
+    def simplified(self, as_del=False, ix=0):
         '''
         Display the multivector with simplified Xi values.
         '''
         def key(x):
-            return ALPHA_TO_GROUP[x.alpha.index]
+            return x.alpha.index
 
         ix2 = 1 if ix == 0 else 1
         alpha_grouped = groupby(sorted(self, key=key), key)
         seen = []
 
         print('{')
-        for key, full in alpha_grouped:
+        for _, full in alpha_grouped:
             full = sorted(full, key=lambda x: x.xi.components[ix])
             xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
             for common_xi, comps in xi_grouped:
                 comps = [Pair(c.alpha, c.xi.components[ix2]) for c in comps]
-                comps = sorted(del_grouped(comps), key=lambda x: x.alpha.index)
+                if as_del:
+                    comps = del_grouped(comps)
+                comps = sorted(comps, key=key)
                 for component in comps:
                     if component.alpha.sign == -1:
                         component.alpha.sign = 1
@@ -125,7 +127,7 @@ class MultiVector(collections.abc.Set):
                     seen.append(comps[0].alpha)
 
                 comp_str = ', '.join([str(c.xi) for c in comps])
-                print('      {}[{}]'.format(common_xi, comp_str))
+                print('    {}( {} )'.format(str(common_xi).ljust(6), comp_str))
         print('}')
 
 
