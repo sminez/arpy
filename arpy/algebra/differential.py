@@ -75,4 +75,6 @@ def differential_operator(wrt):
     def operator(mvec, div=DIVISION_TYPE, metric=METRIC,
                  allowed=ALLOWED, as_del=False):
         return AR_differential(mvec, wrt, div, metric, allowed, as_del)
+    alphas = ['α{}'.format(w) for w in wrt]
+    operator.__doc__ = 'Differnetiate with respect to: {}'.format(alphas)
     return operator
