@@ -6,7 +6,7 @@ import collections.abc
 from itertools import groupby
 from .ar_types import Alpha, Pair
 from .del_grouping import del_grouped
-from .config import ALLOWED, ALLOWED_GROUPS
+from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
 
 
 class MultiVector(collections.abc.Set):
@@ -97,7 +97,29 @@ class MultiVector(collections.abc.Set):
             else:
                 return xi
 
-    def simplified(self, as_del=False, ix=0):
+    def BTAE_grouped(self):
+        '''
+        Print an BTAE grouped representation of the MultiVector
+        NOTE:: This deliberately does not return a new MultiVector as we
+               should always be working with strict alpha values not grouped.
+        '''
+        by_alpha = groupby(self, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
+        BTAE = [
+            (group, tuple(c.xi for c in components))
+            for (group, components) in by_alpha
+        ]
+        print('{')
+        for group, comps in BTAE:
+            print('  α{}'.format(group).ljust(7), comps)
+        print('}')
+
+    def del_notation(self):
+        '''
+        Print a del grouped version of the multivector
+        '''
+        print(DelMultiVector(self))
+
+    def simplified(self, ix=0):
         '''
         Display the multivector with simplified Xi values.
         '''
@@ -114,8 +136,6 @@ class MultiVector(collections.abc.Set):
             xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
             for common_xi, comps in xi_grouped:
                 comps = [Pair(c.alpha, c.xi.components[ix2]) for c in comps]
-                if as_del:
-                    comps = del_grouped(comps)
                 comps = sorted(comps, key=key)
                 for component in comps:
                     if component.alpha.sign == -1:
@@ -134,3 +154,22 @@ class MultiVector(collections.abc.Set):
 class DelMultiVector(MultiVector):
     _allowed_alphas = ALLOWED_GROUPS  # + ALLOWED
     # _allowed_alphas = '0 123 i 0jk p 0123 i0 jk'.split()
+
+    def __init__(self, components=[]):
+        # Given a list of pairs, build the mulitvector by binding the ξ values
+        self.components = {Alpha(a): [] for a in self._allowed_alphas}
+
+        for comp in del_grouped(components):
+            if isinstance(comp, (str, Alpha)):
+                comp = Pair(comp)
+            if not isinstance(comp, Pair):
+                raise ValueError('Arguments must be Alphas, Pairs or Strings')
+            if comp.alpha.index in self._allowed_alphas:
+                try:
+                    self.components[comp.alpha].append(comp.xi)
+                except KeyError:
+                    # Negative Alpha value
+                    alpha, xi = comp.alpha, comp.xi
+                    alpha.sign = 1
+                    xi.sign *= -1
+                    self.components[alpha].append(xi)
