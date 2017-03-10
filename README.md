@@ -87,5 +87,5 @@ All tests should have a clear docstring description of what it is the test is
 attempting to prove about the code.
 
 ### Documentation
-Please see the [docs](docs/) directory for markdown files detailing the use of the
-module.
+Please see the [wiki](https://github.com/sminez/arpy/wiki) for documentation and
+examples. Feel free to open an issue requesting additional information!
