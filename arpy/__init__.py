@@ -19,11 +19,12 @@ from .utils.visualisation import cayley, sign_cayley, sign_distribution
 ##############################################################################
 # Multi-vectors to work with based on the 4Set components #
 ###########################################################
-XiG = MultiVector([Pair(a) for a in ALLOWED])
-XiB = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
-XiT = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
-XiA = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
-XiE = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
+B = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
+T = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
+A = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
+E = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
+G = MultiVector([Pair(a) for a in ALLOWED])
+F = B + E
 
 
 ##############################################################################
