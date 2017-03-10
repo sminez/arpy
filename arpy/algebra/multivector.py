@@ -6,7 +6,7 @@ import collections.abc
 from itertools import groupby
 from .ar_types import Alpha, Pair
 from .del_grouping import del_grouped
-from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP
+from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE
 
 
 class MultiVector(collections.abc.Set):
@@ -119,7 +119,7 @@ class MultiVector(collections.abc.Set):
         '''
         print(DelMultiVector(self))
 
-    def simplified(self, ix=0):
+    def simplified(self, ix=0, bxyz=False, sign=False):
         '''
         Display the multivector with simplified Xi values.
         '''
@@ -130,12 +130,16 @@ class MultiVector(collections.abc.Set):
         alpha_grouped = groupby(sorted(self, key=key), key)
         seen = []
 
+        # try:
         print('{')
         for _, full in alpha_grouped:
             full = sorted(full, key=lambda x: x.xi.components[ix])
             xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
             for common_xi, comps in xi_grouped:
-                comps = [Pair(c.alpha, c.xi.components[ix2]) for c in comps]
+                comps = [
+                    Pair(c.alpha, c.xi.components[ix2])
+                    for c in comps
+                ]
                 comps = sorted(comps, key=key)
                 for component in comps:
                     if component.alpha.sign == -1:
@@ -146,9 +150,21 @@ class MultiVector(collections.abc.Set):
                     print('  {}:'.format(comps[0].alpha))
                     seen.append(comps[0].alpha)
 
-                comp_str = ', '.join([str(c.xi) for c in comps])
-                print('    {}( {} )'.format(str(common_xi).ljust(6), comp_str))
+                if bxyz:
+                    x = str(BXYZ_LIKE[common_xi.val]).ljust(3)
+                    if sign:
+                        signs = [c.xi.bxyz()[0] for c in comps]
+                        blocks = ['■' if s == '-' else '□' for s in signs]
+                        comp_str = ' '.join(blocks)
+                    else:
+                        comp_str = ', '.join([c.xi.bxyz() for c in comps])
+                else:
+                    x = str(common_xi).ljust(6)
+                    comp_str = ', '.join([str(c.xi) for c in comps])
+                print('    {}( {} )'.format(x, comp_str))
         print('}')
+        # except:
+        #     print('Unable to simplify MultiVector Xi values')
 
 
 class DelMultiVector(MultiVector):

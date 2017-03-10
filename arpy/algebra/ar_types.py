@@ -2,7 +2,7 @@
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
-from .config import ALLOWED, ALLOWED_GROUPS, SUB_SCRIPTS
+from .config import ALLOWED, ALLOWED_GROUPS, SUB_SCRIPTS, BXYZ_LIKE
 
 
 class Alpha:
@@ -82,6 +82,14 @@ class Xi:
             return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
         else:
             return '{}{}{}'.format(sign, ''.join(partials), self.val)
+
+    def bxyz(self):
+        '''Return a string representing only {b,x,y,z} information'''
+        sign = '+' if self.sign == 1 else '-'
+        partials = [BXYZ_LIKE[p.index] for p in self.partials]
+        partial_str = ''.join(['∂{}'.format(p) for p in reversed(partials)])
+        val = BXYZ_LIKE[self.val]
+        return sign + partial_str + '[' + val + ']'
 
 
 class XiProduct:
