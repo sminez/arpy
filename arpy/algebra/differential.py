@@ -18,7 +18,6 @@ from .config import ALLOWED, DIVISION_TYPE, METRIC
 from .ar_types import Alpha
 from .multivector import MultiVector, DelMultiVector
 from .operations import div_by, div_into
-from .del_grouping import del_grouped
 
 
 def _div(alpha, wrt, metric, allowed, div):
@@ -65,7 +64,7 @@ def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC,
     result = MultiVector(comps)
 
     if as_del:
-        return DelMultiVector(del_grouped(result))
+        return DelMultiVector(result)
     else:
         return result
 
