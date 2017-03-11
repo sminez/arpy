@@ -62,7 +62,7 @@ __all__ = [
     # Visulaisation functions
     'cayley', 'sign_cayley', 'sign_distribution',
     # Pre-defined MultiVectors
-    'XiG', 'XiB', 'XiT', 'XiA', 'XiE',
+    'G', 'F', 'B', 'T', 'A', 'E',
     # The a pre-defined ar() context function
     'ar'
 ]
