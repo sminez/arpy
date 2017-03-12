@@ -24,7 +24,9 @@ T = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
 A = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
 E = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
 G = MultiVector([Pair(a) for a in ALLOWED])
-F = B + E
+F = B + E - MultiVector(['p', '0123'])
+Fp = F + MultiVector('p')
+Fpq = Fp + MultiVector('0123')
 
 
 ##############################################################################
@@ -32,12 +34,12 @@ F = B + E
 ###################################
 Dmu = Dμ = differential_operator(['0', '1', '2', '3'])
 DG = differential_operator(ALLOWED)
-DF = differential_operator(XI_GROUPS['jk'] + XI_GROUPS['i0'])
+DF = differential_operator(F)
 
-DB = differential_operator(XI_GROUPS['jk'] + ['p'])
-DT = differential_operator(XI_GROUPS['0jk'] + ['0'])
-DA = differential_operator(XI_GROUPS['i'] + ['123'])
-DE = differential_operator(XI_GROUPS['i0'] + ['0123'])
+DB = differential_operator(B)
+DT = differential_operator(T)
+DA = differential_operator(A)
+DE = differential_operator(E)
 
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
@@ -62,7 +64,7 @@ __all__ = [
     # Visulaisation functions
     'cayley', 'sign_cayley', 'sign_distribution',
     # Pre-defined MultiVectors
-    'G', 'F', 'B', 'T', 'A', 'E',
+    'G', 'F', 'Fp', 'Fpq', 'B', 'T', 'A', 'E',
     # The a pre-defined ar() context function
     'ar'
 ]

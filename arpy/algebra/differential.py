@@ -71,9 +71,20 @@ def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC,
 
 def differential_operator(wrt):
     '''Define a new operator as a function for later use'''
+    if isinstance(wrt, MultiVector):
+        wrt = [pair.alpha.index for pair in wrt]
+    elif not all([val in ALLOWED for val in wrt]):
+        err = (
+            'Invalid alpha indices: {}\n'
+            '>> differential_operator takes either a MultiVector or'
+            ' a list of valid Alpha indices as input.'
+        )
+        raise ValueError(err.format(wrt))
+
     def operator(mvec, div=DIVISION_TYPE, metric=METRIC,
                  allowed=ALLOWED, as_del=False):
         return AR_differential(mvec, wrt, div, metric, allowed, as_del)
+
     alphas = ['α{}'.format(w) for w in wrt]
     operator.__doc__ = 'Differnetiate with respect to: {}'.format(alphas)
     return operator
