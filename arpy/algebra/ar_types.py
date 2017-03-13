@@ -121,15 +121,16 @@ class XiProduct:
         return same_sign and same_components
 
     def __repr__(self):
-        sign = '' if self.sign == 1 else '-'
-        # Stripping component signs as we have taken care of the overall
-        # product sign at initialisation.
         partials = (
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
-        comps = ''.join(str(c) for c in self.components)
-        return sign + ''.join(partials) + comps
+        comps = [str(c) for c in self.components]
+        num_negatives = sum([1 for c in comps if c[0] == '-'])
+        prod_sign = -1 if num_negatives % 2 == 0 else 1
+        sign = '' if self.sign * prod_sign == 1 else '-'
+        comps = [c[1:] if c[0] == '-' else c for c in comps]
+        return sign + ''.join(partials) + ''.join(comps)
 
 
 class Pair:
