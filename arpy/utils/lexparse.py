@@ -7,7 +7,7 @@ with the arpy Absolute Relativity library.
 '''
 import re
 from operator import add
-from sys import _getframe
+from sys import _getframe, stderr
 from collections import namedtuple
 from ..algebra.config import ALLOWED, METRIC
 from ..algebra.ar_types import Alpha, Pair
@@ -25,7 +25,7 @@ literals = [
     ('ANGLE_OPEN',  r'\<'), ('ANGLE_CLOSE',  r'\>'),
     ('SQUARE_OPEN', r'\['), ('SQUARE_CLOSE', r'\]'),
     ('PLUS', r'\+'), ('COMMA', r','), ('WEDGE', r'\^'),
-    ('BY', r'/'), ('INTO', r'\\')
+    ('BY', r'/'), ('INTO', r'\\'), ('DOT', r'\.')
 ]
 
 _tags = '|'.join('(?P<{}>{})'.format(t[0], t[1]) for t in tags + literals)
@@ -45,11 +45,13 @@ class ArpyLexer:
 
     def lex(self, string):
         string = re.sub(' \t\n', '', string)  # remove whitespace
+        matched_text = []
 
         for match in re.finditer(self.tags, string):
             lex_tag = match.lastgroup
             group = [g for g in match.groups() if g is not None]
             text = group[1] if len(group) == 2 else match.group(lex_tag)
+            matched_text.append(text)
 
             if lex_tag == 'ALPHA':
                 if text.startswith('-'):
@@ -64,14 +66,21 @@ class ArpyLexer:
             elif lex_tag == 'INDEX':
                 token = Token('INDEX', int(text))
             elif lex_tag == 'VAR':
-                token = Token('EXPR', eval(text, self._globals))
+                try:
+                    token = Token('EXPR', eval(text, self._globals))
+                except NameError:
+                    stderr.write(
+                        '"{}" is not currently defined\n'.format(text)
+                    )
+                    raise AR_Error()
             elif lex_tag in self.literals:
                 token = Token(lex_tag, text)
             else:
                 message = (
-                    'Input contains invalid syntax for the ar() function: {}'
+                    'Input contains invalid syntax for the ar() function: {}\n'
                 )
-                raise AR_Error(message.format(text))
+                stderr.write(message.format(text))
+                raise AR_Error()
 
             yield token
 
@@ -90,12 +99,12 @@ class ArpyParser:
                 sub_expression.append(token)
                 token = next(tokens)
             except StopIteration:
-                expr = ''.join([t.val for t in sub_expression])
-                message = 'Unable to parse invalid subexpression: {}'
-                raise AR_Error(message.format(expr))
+                message = 'Invalid subexpression: missing "{}"\n'
+                stderr.write(message.format(deliminator_tag))
+                raise AR_Error()
         return (s for s in sub_expression)
 
-    def parse(self, tokens, raw_text):
+    def parse(self, tokens, raw_text, compound=[]):
         '''Naive recursive decent parsing of the input.'''
         previous_token = None
 
@@ -105,16 +114,24 @@ class ArpyParser:
 
                 if token.tag == 'PAREN_OPEN':
                     sub_expression = self.sub_expr(tokens, 'PAREN_CLOSE')
-                    previous_token = self.parse(sub_expression, raw_text)
+                    sub_expr_token = self.parse(sub_expression, raw_text)
+                    if previous_token:
+                        val = full(
+                            previous_token.val, sub_expr_token.val,
+                            metric=self.metric, allowed=self.allowed
+                        )
+                        previous_token = Token('EXPR', val)
+                    else:
+                        previous_token = sub_expr_token
 
                 elif token.tag == 'EXPR':
                     if previous_token:
-                        msg = (
-                            'Invalid input: {}\n'
-                            '(Two expressions without an operator: {} {})'
+                        # default to forming the full product
+                        val = full(
+                            previous_token.val, token.val,
+                            metric=self.metric, allowed=self.allowed
                         )
-                        raise AR_Error(msg.format(
-                                raw_text, previous_token.val, token.val))
+                        previous_token = Token('EXPR', val)
                     else:
                         # Store the token and then check the next token to
                         # determine what we should do next.
@@ -122,17 +139,22 @@ class ArpyParser:
 
                 elif token.tag in self.operations:
                     if previous_token is None:
-                        msg = 'Missing left argument to operation "{}" in "{}"'
-                        op_name = token.val
-                        raise AR_Error(msg.format(op_name, raw_text))
+                        msg = 'Missing left argument to "{}" in "{}"\n'
+                        stderr.write(msg.format(token.val, raw_text))
+                        raise AR_Error()
                     else:
                         LHS, previous_token = previous_token, None
                         op = self.operations.get(token.tag)
                         RHS = self.parse(tokens, raw_text)
+                        if RHS is None:
+                            err = 'Missing right argument to "{}" in "{}"\n'
+                            stderr.write(err.format(token.val, raw_text))
+                            raise AR_Error()
                         if RHS.tag != 'EXPR':
                             # BinaryOps take a single LHS and RHS expression
-                            msg = 'Invalid argument for {}: {} '
-                            raise AR_Error(msg.format(op.val, RHS.val))
+                            msg = 'Invalid argument for {}: {}\n'
+                            stderr.write(msg.format(token.val, RHS.val))
+                            raise AR_Error()
                         else:
                             if token.tag == 'PLUS':
                                 val = op(LHS.val, RHS.val)
@@ -149,8 +171,9 @@ class ArpyParser:
 
                     index = next(tokens)
                     if index.tag != 'INDEX':
-                        msg = 'Missing index for projection: {}'
-                        raise AR_Error(msg.format(raw_text))
+                        msg = 'Missing index for projection: {}\n'
+                        stderr.write(msg.format(raw_text))
+                        raise AR_Error()
                     else:
                         val = project(arg.val, index.val)
                         previous_token = Token('EXPR', val)
@@ -163,11 +186,18 @@ class ArpyParser:
                     val = commutator(LHS.val, RHS.val)
                     previous_token = Token('EXPR', val)
 
+                else:
+                    stderr.write('Invalid input: {}\n'.format(raw_text))
+                    return None
+
         except StopIteration:
             if previous_token:
                 return previous_token
             else:
-                raise AR_Error('Unable to parse input: ' + raw_text)
+                stderr.write('Unable to parse input: {}\n'.format(raw_text))
+                return None
+        except AR_Error:
+            return None
 
 
 class ARContext:
@@ -208,6 +238,11 @@ class ARContext:
         #        inject local variables into the parser.
         stack_frame = _getframe(1)
         self._lexer._globals = stack_frame.f_locals
-        result = self._parser.parse(self._lexer.lex(text), text)
-        # Result is an internal Token so pull of the value for returning
-        return result.val
+        try:
+            result = self._parser.parse(self._lexer.lex(text), text)
+        except AR_Error:
+            return None
+        if result:
+            # Result is an internal Token so pull of the value for returning
+            # If there was an error we have printed the error and returned None
+            return result.val

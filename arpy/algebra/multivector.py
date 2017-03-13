@@ -17,6 +17,9 @@ class MultiVector(collections.abc.Set):
         # Given a list of pairs, build the mulitvector by binding the ξ values
         self.components = {Alpha(a): [] for a in self._allowed_alphas}
 
+        if isinstance(components, str):  # Allow for single string input
+            components = components.split()
+
         for comp in components:
             if isinstance(comp, (str, Alpha)):
                 comp = Pair(comp)

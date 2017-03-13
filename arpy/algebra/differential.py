@@ -14,10 +14,59 @@ Absolute Relativity and should only operate on MultiVectors.
 NOTE:: Specific operators (such as Dmu) are defined in the __init__ file.
 '''
 from copy import deepcopy
-from .config import ALLOWED, DIVISION_TYPE, METRIC
+from .config import ALLOWED, DIVISION_TYPE, METRIC, SUB_SCRIPTS
 from .ar_types import Alpha
 from .multivector import MultiVector, DelMultiVector
-from .operations import div_by, div_into
+from .operations import div_by, div_into, inverse, full
+
+
+class AR_differential:
+    '''Differential operator: can be used inside of ar()'''
+    def __init__(self, wrt):
+        if isinstance(wrt, MultiVector):
+            self.wrt = [pair.alpha for pair in wrt]
+        else:
+            if isinstance(wrt, str):
+                wrt = wrt.split()
+
+            if isinstance(wrt, list):
+                # Conversion to Alpha catches invalid indices
+                self.wrt = [Alpha(comp) for comp in wrt]
+            else:
+                raise ValueError(
+                    'Differential operators must be initialised with either'
+                    ' a MultiVector, list or string of alpha indices')
+
+        alphas = ', '.join([str(a) for a in self.wrt])
+        self.__doc__ = 'Differnetiate with respect to: {}'.format(alphas)
+
+    def __call__(self, mvec, div=DIVISION_TYPE, metric=METRIC,
+                 allowed=ALLOWED, as_del=False):
+        '''
+        Compute the result of Differentiating a each component of a MultiVector
+        with respect to a given list of unit elements under the algebra.
+        '''
+        comps = []
+        for comp in mvec:
+            for element in self.wrt:
+                result = component_partial(comp, element, div, metric, allowed)
+                comps.append(result)
+        derivative = MultiVector(comps)
+
+        if as_del:
+            return DelMultiVector(derivative)
+        else:
+            return derivative
+
+    def __repr__(self):
+        elements = [
+            '{}∂{}'.format(
+                str(inverse(a)),
+                ''.join(SUB_SCRIPTS[i] for i in a.index)
+            )
+            for a in self.wrt
+        ]
+        return '{ ' + ' '.join(elements) + ' }'
 
 
 def _div(alpha, wrt, metric, allowed, div):
@@ -26,12 +75,6 @@ def _div(alpha, wrt, metric, allowed, div):
         return div_by(alpha, wrt, metric, allowed)
     elif div == 'into':
         return div_into(wrt, alpha, metric, allowed)
-    # NOTE:: Reversed division types divide the differential alpha by that
-    #        of the multivector component.
-    elif div == 'revby':
-        return div_by(wrt, alpha, metric, allowed)
-    elif div == 'revinto':
-        return div_into(alpha, wrt, metric, allowed)
     else:
         raise ValueError('Invalid division specification: %s' % div)
 
@@ -49,42 +92,16 @@ def component_partial(component, wrt, div, metric, allowed):
     return new_component
 
 
-def AR_differential(mvec, wrt, div=DIVISION_TYPE, metric=METRIC,
-                    allowed=ALLOWED, as_del=False):
-    '''
-    Compute the result of Differentiating a each component of a MultiVector
-    with respect to a given list of unit elements under the algebra.
-    '''
-    comps = []
-    for component in mvec:
-        for element in wrt:
-            element = Alpha(element)
-            comp = component_partial(component, element, div, metric, allowed)
-            comps.append(comp)
-    result = MultiVector(comps)
-
-    if as_del:
-        return DelMultiVector(result)
-    else:
-        return result
-
-
 def differential_operator(wrt):
     '''Define a new operator as a function for later use'''
-    if isinstance(wrt, MultiVector):
-        wrt = [pair.alpha.index for pair in wrt]
-    elif not all([val in ALLOWED for val in wrt]):
-        err = (
-            'Invalid alpha indices: {}\n'
-            '>> differential_operator takes either a MultiVector or'
-            ' a list of valid Alpha indices as input.'
-        )
-        raise ValueError(err.format(wrt))
+    return AR_differential(wrt)
 
-    def operator(mvec, div=DIVISION_TYPE, metric=METRIC,
-                 allowed=ALLOWED, as_del=False):
-        return AR_differential(mvec, wrt, div, metric, allowed, as_del)
 
-    alphas = ['α{}'.format(w) for w in wrt]
-    operator.__doc__ = 'Differnetiate with respect to: {}'.format(alphas)
-    return operator
+@full.add((AR_differential, MultiVector))
+def _full_differential_mvec(diff, mvec, metric=METRIC, allowed=ALLOWED):
+    return diff(mvec, metric=metric, allowed=allowed)
+
+
+@full.add((MultiVector, AR_differential))
+def _full_mvec_differential_mvec(mvec, diff, metric=METRIC, allowed=ALLOWED):
+    return diff(mvec, metric=metric, allowed=allowed, div='by')
