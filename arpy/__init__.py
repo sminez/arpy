@@ -32,7 +32,7 @@ Fpq = Fp + MultiVector('0123')
 ##############################################################################
 # Sepcific Differnetial operators #
 ###################################
-Dmu = Dμ = differential_operator(['0', '1', '2', '3'])
+Dmu = d = differential_operator(['0', '1', '2', '3'])
 DG = differential_operator(ALLOWED)
 DF = differential_operator(F)
 
@@ -58,7 +58,7 @@ __all__ = [
     'find_prod', 'inverse', 'full', 'div_by', 'div_into',
     'project', 'prod_apply', 'dagger', 'commutator',
     # Differential operators
-    'Dmu', 'Dμ', 'DG', 'DF', 'DB', 'DT', 'DA', 'DE',
+    'Dmu', 'd', 'DG', 'DF', 'DB', 'DT', 'DA', 'DE',
     # Differential operator helpers
     'AR_differential', 'differential_operator', 'del_grouped',
     # Visulaisation functions
