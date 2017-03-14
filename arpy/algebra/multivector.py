@@ -3,6 +3,7 @@ arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
 import collections.abc
+from copy import deepcopy
 from itertools import groupby
 from .ar_types import Alpha, Pair
 from .del_grouping import del_grouped
@@ -25,9 +26,11 @@ class MultiVector(collections.abc.Set):
                 comp = Pair(comp)
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
+
             if comp.alpha.index in self._allowed_alphas:
                 try:
-                    self.components[comp.alpha].append(comp.xi)
+                    _comp = deepcopy(comp)
+                    self.components[comp.alpha].append(_comp.xi)
                 except KeyError:
                     # Negative Alpha value
                     alpha, xi = comp.alpha, comp.xi
@@ -93,12 +96,16 @@ class MultiVector(collections.abc.Set):
             if raise_key_error:
                 raise KeyError
         if len(xi) == 1:
-            return xi[0]
+            return '( ' + xi[0] + ' )'
         else:
             if for_print:
-                return '(' + ', '.join(str(x) for x in xi) + ')'
+                return '( ' + ', '.join(str(x) for x in xi) + ' )'
             else:
                 return xi
+
+    def copy(self):
+        '''Return a copy of this multivector'''
+        return deepcopy(self)
 
     def BTAE_grouped(self):
         '''
@@ -133,41 +140,49 @@ class MultiVector(collections.abc.Set):
         alpha_grouped = groupby(sorted(self, key=key), key)
         seen = []
 
-        # try:
-        print('{')
-        for _, full in alpha_grouped:
-            full = sorted(full, key=lambda x: x.xi.components[ix])
-            xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
-            for common_xi, comps in xi_grouped:
-                comps = [
-                    Pair(c.alpha, c.xi.components[ix2])
-                    for c in comps
-                ]
-                comps = sorted(comps, key=key)
-                for component in comps:
-                    if component.alpha.sign == -1:
-                        component.alpha.sign = 1
-                        component.xi.sign *= -1
+        try:
+            print('{')
+            for _, full in alpha_grouped:
+                full = sorted(full, key=lambda x: x.xi.components[ix])
+                xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
+                for common_xi, comps in xi_grouped:
+                    comps = [
+                        Pair(c.alpha, c.xi.components[ix2])
+                        for c in comps
+                    ]
+                    comps = sorted(comps, key=key)
+                    for component in comps:
+                        if component.alpha.sign == -1:
+                            component.alpha.sign = 1
+                            component.xi.sign *= -1
 
-                if comps[0].alpha not in seen:
-                    print('  {}:'.format(comps[0].alpha))
-                    seen.append(comps[0].alpha)
+                    if comps[0].alpha not in seen:
+                        print('  {}:'.format(comps[0].alpha))
+                        seen.append(comps[0].alpha)
 
-                if bxyz:
-                    x = str(BXYZ_LIKE[common_xi.val]).ljust(3)
-                    if sign:
-                        signs = [c.xi.bxyz()[0] for c in comps]
-                        blocks = ['■' if s == '-' else '□' for s in signs]
-                        comp_str = ' '.join(blocks)
+                    if bxyz:
+                        x = str(BXYZ_LIKE[common_xi.val]).ljust(3)
+                        if sign:
+                            signs = [c.xi.bxyz()[0] for c in comps]
+                            blocks = ['■' if s == '-' else '□' for s in signs]
+                            comp_str = ' '.join(blocks)
+                        else:
+                            comp_str = ', '.join([c.xi.bxyz() for c in comps])
                     else:
-                        comp_str = ', '.join([c.xi.bxyz() for c in comps])
-                else:
-                    x = str(common_xi).ljust(6)
-                    comp_str = ', '.join([str(c.xi) for c in comps])
-                print('    {}( {} )'.format(x, comp_str))
-        print('}')
-        # except:
-        #     print('Unable to simplify MultiVector Xi values')
+                        x = str(common_xi).ljust(6)
+                        comp_str = ', '.join([str(c.xi) for c in comps])
+                    print('    {}( {} )'.format(x, comp_str))
+            print('}')
+        except:
+            print('Unable to simplify MultiVector Xi values')
+
+    @property
+    def v(self):
+        self.del_notation()
+
+    @property
+    def s(self, ix=0, bxyz=False, sign=False):
+        self.simplified(ix, bxyz, sign)
 
 
 class DelMultiVector(MultiVector):
