@@ -127,7 +127,7 @@ class XiProduct:
         )
         comps = [str(c) for c in self.components]
         num_negatives = sum([1 for c in comps if c[0] == '-'])
-        prod_sign = -1 if num_negatives % 2 == 0 else 1
+        prod_sign = -1 if num_negatives % 2 == 1 else 1
         sign = '' if self.sign * prod_sign == 1 else '-'
         comps = [c[1:] if c[0] == '-' else c for c in comps]
         return sign + ''.join(partials) + ''.join(comps)
