@@ -96,7 +96,7 @@ class MultiVector(collections.abc.Set):
             if raise_key_error:
                 raise KeyError
         if len(xi) == 1:
-            return '( ' + xi[0] + ' )'
+            return '( ' + str(xi[0]) + ' )'
         else:
             if for_print:
                 return '( ' + ', '.join(str(x) for x in xi) + ' )'
