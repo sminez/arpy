@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
         ALPHA_TO_GROUP, ALLOWED_GROUPS, FOUR_SET_COMPS, FOUR_SETS, \
@@ -17,16 +17,23 @@ from .utils.visualisation import cayley, sign_cayley, sign_distribution
 
 
 ##############################################################################
+# Multi-vectors to work with based on the 3/4-vectors #
+#######################################################
+A = MultiVector('0 1 2 3')                            # The potentials
+B = MultiVector(XI_GROUPS['jk'])                      # The Magnetic field
+E = MultiVector(XI_GROUPS['i0'])                      # The Electric field
+F = B + E                                             # The Farady tensor
+T = MultiVector([a for a in ALLOWED if len(a) == 3])  # The trivectors
+G = MultiVector(ALLOWED)                              # The general multivector
+##############################################################################
 # Multi-vectors to work with based on the 4Set components #
 ###########################################################
-B = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
-T = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
-A = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
-E = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
-G = MultiVector([Pair(a) for a in ALLOWED])
-F = B + E - MultiVector(['p', '0123'])
+B4 = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
+T4 = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
+A4 = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
+E4 = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
 Fp = F + MultiVector('p')
-Fpq = Fp + MultiVector('0123')
+F4 = Fp + MultiVector('0123')
 
 
 ##############################################################################
@@ -36,10 +43,10 @@ Dmu = d = differential_operator(['0', '1', '2', '3'])
 DG = differential_operator(ALLOWED)
 DF = differential_operator(F)
 
-DB = differential_operator(B)
-DT = differential_operator(T)
-DA = differential_operator(A)
-DE = differential_operator(E)
+DB = differential_operator(B4)
+DT = differential_operator(T4)
+DA = differential_operator(A4)
+DE = differential_operator(E4)
 
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
@@ -64,7 +71,8 @@ __all__ = [
     # Visulaisation functions
     'cayley', 'sign_cayley', 'sign_distribution',
     # Pre-defined MultiVectors
-    'G', 'F', 'Fp', 'Fpq', 'B', 'T', 'A', 'E',
+    'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
+    'B4', 'T4', 'A4', 'E4', 'F4',
     # The a pre-defined ar() context function
     'ar'
 ]
