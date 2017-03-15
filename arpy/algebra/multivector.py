@@ -5,9 +5,10 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 import collections.abc
 from copy import deepcopy
 from itertools import groupby
-from .ar_types import Alpha, Pair
+from .ar_types import Alpha, Pair, Xi
 from .del_grouping import del_grouped
-from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE
+from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE, \
+    XI_GROUPS
 
 
 class MultiVector(collections.abc.Set):
@@ -42,6 +43,18 @@ class MultiVector(collections.abc.Set):
         comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
                  for a in self._allowed_alphas if self.components[Alpha(a)]]
         return '{\n' + '\n'.join(comps) + '\n}'
+
+    def show(self, ordering):
+        '''Print the components of the MultiVector in a specified ordering'''
+        if isinstance(ordering, str):
+            ordering = ordering.split()
+
+        if not all([o in self._allowed_alphas for o in ordering]):
+            raise ValueError('Invalid index in ordering')
+
+        comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
+                 for a in ordering if self.components[Alpha(a)]]
+        print('{\n' + '\n'.join(comps) + '\n}')
 
     def __len__(self):
         # All allowed values are initialised with [] so we are
@@ -175,6 +188,33 @@ class MultiVector(collections.abc.Set):
             print('}')
         except:
             print('Unable to simplify MultiVector Xi values')
+
+    def relabel(self, index, replacement):
+        '''
+        Manually relabel the components of a multivector.
+        This is intended for simplifying results following manual analysis.
+        '''
+        if index.startswith('-'):
+            index = index[1:]
+            xi_sign = -1
+        else:
+            xi_sign = 1
+
+        if replacement.startswith('-'):
+            replacement = replacement[1:]
+            xi_sign *= -1
+
+        if index in ALLOWED:
+            new_xi = Xi(replacement, sign=xi_sign)
+            self.components[Alpha(index)] = [new_xi]
+        else:
+            try:
+                indices = zip(['x', 'y', 'z'], XI_GROUPS[index])
+                for comp, index in indices:
+                    new_xi = Xi(replacement + comp, sign=xi_sign)
+                    self.components[Alpha(index)] = [new_xi]
+            except KeyError:
+                raise ValueError('{} is not a valid index'.format(index))
 
     @property
     def v(self):
