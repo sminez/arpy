@@ -32,7 +32,12 @@ class Alpha:
 
     def __repr__(self):
         neg = '-' if self.sign == -1 else ''
-        return '{}α{}'.format(neg, ''.join(SUB_SCRIPTS[i] for i in self.index))
+        try:
+            return '{}α{}'.format(
+                neg, ''.join(SUB_SCRIPTS[i] for i in self.index)
+            )
+        except:
+            return '{}α{}'.format(neg, self.index)
 
     def __eq__(self, other):
         return (self.index == other.index) and (self.sign == other.sign)
