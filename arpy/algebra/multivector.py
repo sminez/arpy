@@ -89,9 +89,15 @@ class MultiVector(collections.abc.Set):
             key = Alpha(key)
         if not isinstance(key, Alpha):
             raise KeyError
+        return [Pair(key, xi) for xi in self.components[key]]
 
-        xis = self.components[key]
-        return [Pair(key, x) for x in xis]
+    def __delitem__(self, key):
+        if isinstance(key, str):
+            key = Alpha(key)
+        if not isinstance(key, Alpha):
+            raise KeyError
+
+        self.components[key] = []
 
     def __iter__(self):
         for alpha in self._allowed_alphas:
@@ -209,12 +215,17 @@ class MultiVector(collections.abc.Set):
             self.components[Alpha(index)] = [new_xi]
         else:
             try:
-                indices = zip(['x', 'y', 'z'], XI_GROUPS[index])
+                indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
                     self.components[Alpha(index)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
+
+    def relabel_many(self, pairs):
+        '''Relabel each case in pairs: (index, replacement)'''
+        for index, replacement in pairs:
+            self.relabel(index, replacement)
 
     @property
     def v(self):
