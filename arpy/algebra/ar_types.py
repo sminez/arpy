@@ -68,7 +68,9 @@ class Xi:
         return [self]
 
     def __eq__(self, other):
-        return (self.val == other.val) and (self.partials == other.partials)
+        return (self.val == other.val) and \
+                (self.partials == other.partials) and \
+                (self.sign == other.sign)
 
     def __lt__(self, other):
         try:
