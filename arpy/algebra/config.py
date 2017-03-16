@@ -6,8 +6,8 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 # NOTE:: The order will affect the visualisation of the Cayley Table
 #       but not the results of finding products.
 _B = ['p', '23', '31', '12']     # ΞB :: Magnetic Field and rest mass
-_T = ['0', '023', '031', '012']  # ΞΤ :: Angular Momentum Density and time
-_A = ['123', '1', '2', '3']      # ΞΑ :: Charge Current Density and hedgehog
+_T = ['0', '023', '031', '012']  # ΞΤ :: Angular-Momentum/Charge density
+_A = ['123', '1', '2', '3']      # ΞΑ :: Current Density and hedgehog
 _E = ['0123', '10', '20', '30']  # ΞE :: Electric Field and dual rest mass
 ALLOWED = _B + _T + _A + _E
 
