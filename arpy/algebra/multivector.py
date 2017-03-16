@@ -1,6 +1,10 @@
 '''
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+
+NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
+       returns the Hermitian conjugate) is written in the arpy __init__ file!
+       (I am fully aware of how horrible this is...)
 '''
 import collections.abc
 from copy import deepcopy
@@ -74,6 +78,20 @@ class MultiVector(collections.abc.Set):
             comps.extend(p for p in other)
 
         return MultiVector(comps)
+
+    def __eq__(self, other):
+        for alpha in self.components:
+            if self.components[alpha] != other.components[alpha]:
+                return False
+        return True
+
+    def __neg__(self):
+        # -mvec to negate all Xis
+        negated = deepcopy(self)
+        for xis in negated.components.values():
+            for xi in xis:
+                xi.sign *= -1
+        return negated
 
     def __contains__(self, other):
         if isinstance(other, Alpha):

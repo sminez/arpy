@@ -3,6 +3,7 @@
 
 __version__ = '0.1.4'
 
+from copy import deepcopy
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
         ALPHA_TO_GROUP, ALLOWED_GROUPS, FOUR_SET_COMPS, FOUR_SETS, \
         BXYZ_LIKE
@@ -17,12 +18,27 @@ from .utils.visualisation import cayley, sign_cayley, sign_distribution
 
 
 ##############################################################################
+# Horrible hack to get arround cyclic imports #
+###############################################
+def invert_multivector(self):
+    # ~mvec as a shortcut for the Hermitian conjugate
+    inverted = deepcopy(self)
+    for alpha, xis in inverted.components.items():
+        if full(alpha, alpha).sign == -1:
+            for xi in xis:
+                xi.sign *= -1
+    return inverted
+
+MultiVector.__invert__ = invert_multivector
+
+
+##############################################################################
 # Multi-vectors to work with based on the 3/4-vectors #
 #######################################################
 A = MultiVector('0 1 2 3')                            # The potentials
 B = MultiVector(XI_GROUPS['jk'])                      # The Magnetic field
 E = MultiVector(XI_GROUPS['i0'])                      # The Electric field
-F = B + E                                             # The Farady tensor
+F = E + (-B)                                          # The Farady tensor
 T = MultiVector([a for a in ALLOWED if len(a) == 3])  # The trivectors
 G = MultiVector(ALLOWED)                              # The general multivector
 ##############################################################################
