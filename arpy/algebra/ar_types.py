@@ -108,13 +108,17 @@ class XiProduct:
 
     @property
     def sign(self):
-        s = self.sign_base
+        s = 1
         for comp in self.components:
             s *= comp.sign
-        return s
+        return s * self.sign_base
 
     @sign.setter
     def sign(self, val):
+        if val not in [1, -1]:
+            raise ValueError()
+        if self.sign == -1:
+            val = -val
         self.sign_base = val
 
     @property
@@ -133,10 +137,8 @@ class XiProduct:
             for p in reversed(self.partials)
         )
         comps = [str(c) for c in self.components]
-        num_negatives = sum([1 for c in comps if c[0] == '-'])
-        prod_sign = -1 if num_negatives % 2 == 1 else 1
-        sign = '' if self.sign * prod_sign == 1 else '-'
         comps = [c[1:] if c[0] == '-' else c for c in comps]
+        sign = '' if self.sign == 1 else '-'
         return sign + ''.join(partials) + ''.join(comps)
 
 

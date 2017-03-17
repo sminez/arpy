@@ -33,12 +33,12 @@ class MultiVector(collections.abc.Set):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
 
             if comp.alpha.index in self._allowed_alphas:
+                _comp = deepcopy(comp)
                 try:
-                    _comp = deepcopy(comp)
-                    self.components[comp.alpha].append(_comp.xi)
+                    self.components[_comp.alpha].append(_comp.xi)
                 except KeyError:
                     # Negative Alpha value
-                    alpha, xi = comp.alpha, comp.xi
+                    alpha, xi = _comp.alpha, _comp.xi
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
