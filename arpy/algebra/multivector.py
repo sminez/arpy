@@ -218,6 +218,8 @@ class MultiVector(collections.abc.Set):
         Manually relabel the components of a multivector.
         This is intended for simplifying results following manual analysis.
         '''
+        new_mvec = deepcopy(self)
+
         if index.startswith('-'):
             index = index[1:]
             xi_sign = -1
@@ -230,20 +232,23 @@ class MultiVector(collections.abc.Set):
 
         if index in ALLOWED:
             new_xi = Xi(replacement, sign=xi_sign)
-            self.components[Alpha(index)] = [new_xi]
+            new_mvec.components[Alpha(index)] = [new_xi]
         else:
             try:
                 indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
-                    self.components[Alpha(index)] = [new_xi]
+                    new_mvec.components[Alpha(index)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
+        return new_mvec
 
     def relabel_many(self, pairs):
         '''Relabel each case in pairs: (index, replacement)'''
+        new_mvec = deepcopy(self)
         for index, replacement in pairs:
-            self.relabel(index, replacement)
+            new_mvec = new_mvec.relabel(index, replacement)
+        return new_mvec
 
     @property
     def v(self):
