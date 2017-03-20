@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 from copy import deepcopy
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
