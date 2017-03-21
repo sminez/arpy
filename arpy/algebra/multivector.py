@@ -80,6 +80,9 @@ class MultiVector(collections.abc.Set):
 
         return MultiVector(comps)
 
+    def __sub__(self, other):
+        return self + -other
+
     def __eq__(self, other):
         if not isinstance(other, MultiVector):
             return False
@@ -129,7 +132,9 @@ class MultiVector(collections.abc.Set):
                 pass
 
     def _simplify(self):
-        '''Cancel like terms'''
+        '''Remove terms that cancel following a calculation'''
+        # TODO: mvec x mvec = 0
+        # Cancel terms with their negative
         for xis in self.components.values():
             i = 0
             while True:
