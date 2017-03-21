@@ -141,8 +141,8 @@ class XiProduct:
 
     @property
     def val(self):
-        # ordered list of indices
-        return [c.val for c in self.components]
+        # ordered tuple of indices
+        return tuple(c.val for c in self.components)
 
     def __eq__(self, other):
         if not isinstance(other, XiProduct):

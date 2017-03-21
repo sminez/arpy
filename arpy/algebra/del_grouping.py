@@ -24,7 +24,8 @@ def _filter_on_partials(terms, partials, n=0):
     '''n is the index for xi.partials'''
     filtered_terms = [
         term(t.xi.partials[n].index, t.xi.val, t.alpha.index, t.xi.sign, t)
-        for t in terms if t.xi.partials[n].index in partials
+        for t in terms if t.xi.partials and t.xi.partials[n].index in partials
+        and not isinstance(t.xi.val, tuple)
     ]
     return sorted(filtered_terms, key=lambda t: ALPHA_TO_GROUP[t.xi])
 
@@ -34,7 +35,8 @@ def _present_4sets(pairs):
     Return all four sets with at least one partial derivative component
     in `pairs`
     '''
-    return set([FOUR_SETS[p.xi.partials[0].index] for p in pairs])
+    return set([FOUR_SETS[p.xi.partials[0].index]
+                for p in pairs if p.xi.partials])
 
 
 def del_grouped(mvec):
@@ -183,7 +185,8 @@ def replace_partials(pairs):
             for blade in FOUR_SET_COMPS[fourset].values():
                 candidates = [
                     p for p in grouped_pairs
-                    if p.xi.partials[0].index == blade
+                    if p.xi.partials
+                    and p.xi.partials[0].index == blade
                 ]
                 if len(candidates) == 3:
                     ix = candidates[0].xi.val
