@@ -80,6 +80,8 @@ class MultiVector(collections.abc.Set):
         return MultiVector(comps)
 
     def __eq__(self, other):
+        if not isinstance(other, MultiVector):
+            return False
         for alpha in self.components:
             if self.components[alpha] != other.components[alpha]:
                 return False
@@ -281,3 +283,11 @@ class DelMultiVector(MultiVector):
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
+
+    def __eq__(self, other):
+        if not isinstance(other, DelMultiVector):
+            return False
+        for alpha in self.components:
+            if self.components[alpha] != other.components[alpha]:
+                return False
+        return True
