@@ -147,7 +147,9 @@ def _full_pair_pair(a, b, metric=METRIC, allowed=ALLOWED):
 
 @full.add((MultiVector, MultiVector))
 def _full_mvec_mvec(mv1, mv2, metric=METRIC, allowed=ALLOWED):
-    return MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
+    prod = MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
+    prod._simplify()
+    return prod
 
 # NOTE:: Definitions of the full product involving differnetials are found in
 #        differential.py due to import conflicts.

@@ -42,6 +42,7 @@ class MultiVector(collections.abc.Set):
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
+        self._simplify()
 
     def __repr__(self):
         comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
@@ -126,6 +127,25 @@ class MultiVector(collections.abc.Set):
                     yield Pair(alpha, xi)
             except KeyError:
                 pass
+
+    def _simplify(self):
+        '''Cancel like terms'''
+        for xis in self.components.values():
+            i = 0
+            while True:
+                try:
+                    current = xis[i]
+                    rest = xis[i+1:]
+                    for r in rest:
+                        if current == -r:
+                            xis.remove(current)
+                            xis.remove(r)
+                            break
+                    else:
+                        # Triggered if we don't break
+                        i += 1
+                except IndexError:
+                    break
 
     def _nice_xi(self, alpha, raise_key_error=False, for_print=True):
         '''Single element xi lists return their value raw'''
