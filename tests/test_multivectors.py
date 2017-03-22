@@ -1,3 +1,4 @@
+import pytest
 from arpy import MultiVector, Alpha, Pair
 
 
@@ -9,10 +10,18 @@ m3 = MultiVector('1 2 12')
 def test_multivector_construction():
     '''Alternate construction methods are equal'''
     assert MultiVector('3 1 2') == m1
+    assert MultiVector('-1 -2 -3') == -m1
     assert MultiVector(['1', '2', '3']) == m1
+    assert MultiVector(('1', '2', '3')) == m1
+    assert MultiVector({'1', '2', '3'}) == m1
     assert MultiVector([Alpha(i) for i in '123']) == m1
     assert MultiVector(Alpha(i) for i in '123') == m1
     assert MultiVector(Pair(i) for i in '123') == m1
+    assert MultiVector(m1) == m1
+
+    with pytest.raises(ValueError):
+        MultiVector([1, 2, 3, 4])
+        MultiVector('foo')
 
 
 def test_simplification():
@@ -30,3 +39,12 @@ def test_addition():
     assert m1 + m1 == MultiVector('1 2 3 1 2 3')
     assert m1 + m2 == MultiVector('1 1 2 2 3')
     assert m1 + m2 + m3 == MultiVector('1 1 1 2 2 2 3 12')
+
+
+def test_contains():
+    '''We can test for membership in a MultiVector'''
+    assert Alpha('2') in m1
+    assert Pair('2') in m1
+    assert Alpha('12') not in m1
+    assert Pair('12') not in m1
+    assert 'Maxwell' not in m1

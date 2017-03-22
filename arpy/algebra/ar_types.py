@@ -63,8 +63,13 @@ class Xi:
         if isinstance(val, Alpha):
             val = val.index
 
-        self.val = val
-        self.sign = sign
+        if isinstance(val, str) and val.startswith('-'):
+            self.sign = sign * -1
+            self.val = val[1:]
+        else:
+            self.val = val
+            self.sign = sign
+
         self.partials = partials if partials else []
 
     def __hash__(self):
@@ -179,7 +184,10 @@ class Pair:
     '''A Pair may be any object along with an Alpha value'''
     def __init__(self, a, x=None):
         if x is None:
-            x = Xi(a)
+            if isinstance(a, str) and a.startswith('-'):
+                x = Xi(a[1:])
+            else:
+                x = Xi(a)
 
         if isinstance(a, Alpha):
             self.alpha = a
