@@ -78,10 +78,14 @@ class MultiVector(collections.abc.Set):
         elif isinstance(other, MultiVector):
             comps.extend(p for p in other)
 
-        return MultiVector(comps)
+        res = MultiVector(comps)
+        res._simplify()
+        return res
 
     def __sub__(self, other):
-        return self + -other
+        res = self + -other
+        res._simplify()
+        return res
 
     def __eq__(self, other):
         if not isinstance(other, MultiVector):

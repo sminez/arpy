@@ -1,6 +1,5 @@
 import pytest
 from arpy import ar, Alpha, Pair, full
-from arpy.utils.lexparse import AR_Error
 
 
 def test_creation():
