@@ -48,3 +48,55 @@ def test_contains():
     assert Alpha('12') not in m1
     assert Pair('12') not in m1
     assert 'Maxwell' not in m1
+
+
+def test_iteration_pairs():
+    '''We can iterate over a MultiVector and get pairs'''
+    for p in m3:
+        assert isinstance(p, Pair)
+
+
+def test_get_item():
+    '''Dict syntax should return a list of pairs'''
+    assert m1['1'] == [Pair('1')]
+    assert m1['2'] == [Pair('2')]
+    assert m1['3'] == [Pair('3')]
+
+
+def test_del_item():
+    '''We can delete Xis on a given index'''
+    m = MultiVector('1 2 3 1 2 3')
+    del m['1']
+    assert m == MultiVector('2 2 3 3')
+    del m['2']
+    assert m == MultiVector('3 3')
+    del m['3']
+    assert m == MultiVector()
+
+
+def test_copy():
+    '''Copy returns a new object'''
+    new_mvec = m1.copy()
+    assert new_mvec is not m1
+
+
+def test_relabel():
+    '''Relabelling gives a new MultiVector with correct components'''
+    relabelled = m1.relabel('1', 'foo')
+    assert relabelled is not m1
+    assert relabelled == MultiVector([Pair('1', 'foo'), '2', '3'])
+    relabelled_again = relabelled.relabel_many([('2', 'bar'), ('3', 'baz')])
+    assert relabelled_again is not relabelled
+    assert relabelled_again is not m1
+    assert relabelled_again == MultiVector(
+        [Pair('1', 'foo'), Pair('2', 'bar'), Pair('3', 'baz')]
+    )
+
+
+def test_len():
+    '''The length of a Multivector is the number of Xi components'''
+    assert len(m1) == 3
+    assert len(m2) == 2
+    assert len(m3) == 3
+    large = MultiVector('1 1 2 3 12 12 31 p p p')
+    assert len(large) == 10

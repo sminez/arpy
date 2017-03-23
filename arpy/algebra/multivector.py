@@ -22,6 +22,7 @@ class MultiVector(collections.abc.Set):
     def __init__(self, components=[]):
         # Given a list of pairs, build the mulitvector by binding the ξ values
         self.components = {Alpha(a): [] for a in self._allowed_alphas}
+        self.replacements = []
 
         if isinstance(components, str):  # Allow for single string input
             components = components.split()
@@ -64,7 +65,7 @@ class MultiVector(collections.abc.Set):
     def __len__(self):
         # All allowed values are initialised with [] so we are
         # only counting componets that have a Xi value set.
-        return len([v for v in self.components.values() if v != []])
+        return sum([len(v) for v in self.components.values()])
 
     def __add__(self, other):
         # Allow for the addition of Multivectors and Pairs.
@@ -246,8 +247,9 @@ class MultiVector(collections.abc.Set):
 
     def relabel(self, index, replacement):
         '''
-        Manually relabel the components of a multivector.
-        This is intended for simplifying results following manual analysis.
+        Manually relabel the components of a multivector. This is intended
+        for simplifying results following manual analysis and returns a new
+        MultiVector when called.
         '''
         new_mvec = deepcopy(self)
 
@@ -263,15 +265,22 @@ class MultiVector(collections.abc.Set):
 
         if index in ALLOWED:
             new_xi = Xi(replacement, sign=xi_sign)
+            current_comps = deepcopy(new_mvec.components[Alpha(index)])
+            replacements = [(index, new_xi, current_comps)]
             new_mvec.components[Alpha(index)] = [new_xi]
         else:
             try:
+                replacements = []
                 indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
+                    current_comps = deepcopy(new_mvec.components[Alpha(index)])
+                    replacements.append((index, new_xi, current_comps))
                     new_mvec.components[Alpha(index)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
+
+        new_mvec.replacements.extend(replacements)
         return new_mvec
 
     def relabel_many(self, pairs):
@@ -279,6 +288,20 @@ class MultiVector(collections.abc.Set):
         new_mvec = deepcopy(self)
         for index, replacement in pairs:
             new_mvec = new_mvec.relabel(index, replacement)
+        return new_mvec
+
+    def undo_replacements(self):
+        '''Generate a new MultiVector without the current replacements'''
+        new_mvec = deepcopy(self)
+
+        if self.replacements == []:
+            return new_mvec
+
+        for (index, replacement, originals) in self.replacements:
+            # TODO
+            # check for new derivatives
+            # this will also need to look inside of products
+            pass
         return new_mvec
 
     @property
