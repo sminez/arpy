@@ -9,7 +9,7 @@ NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
 import collections.abc
 from copy import deepcopy
 from itertools import groupby
-from .ar_types import Alpha, Pair, Xi
+from .ar_types import Alpha, Pair, Xi, XiProduct
 from .del_grouping import del_grouped
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE, \
     XI_GROUPS
@@ -266,7 +266,7 @@ class MultiVector(collections.abc.Set):
         if index in ALLOWED:
             new_xi = Xi(replacement, sign=xi_sign)
             current_comps = deepcopy(new_mvec.components[Alpha(index)])
-            replacements = [(index, new_xi, current_comps)]
+            replacements = [(new_xi, current_comps)]
             new_mvec.components[Alpha(index)] = [new_xi]
         else:
             try:
@@ -275,7 +275,7 @@ class MultiVector(collections.abc.Set):
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
                     current_comps = deepcopy(new_mvec.components[Alpha(index)])
-                    replacements.append((index, new_xi, current_comps))
+                    replacements.append((new_xi, current_comps))
                     new_mvec.components[Alpha(index)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
@@ -290,18 +290,36 @@ class MultiVector(collections.abc.Set):
             new_mvec = new_mvec.relabel(index, replacement)
         return new_mvec
 
-    def undo_replacements(self):
+    def remove_labels(self):
         '''Generate a new MultiVector without the current replacements'''
         new_mvec = deepcopy(self)
 
-        if self.replacements == []:
+        if new_mvec.replacements == []:
             return new_mvec
 
-        for (index, replacement, originals) in self.replacements:
-            # TODO
-            # check for new derivatives
-            # this will also need to look inside of products
-            pass
+        for (replacement, originals) in new_mvec.replacements:
+            for index, xis in new_mvec.components.items():
+                for xi in xis:
+                    if isinstance(xi, Xi) and (xi.val == replacement.val):
+                        vals = deepcopy(originals)
+                        for comp in vals:
+                            comp.partials.extend(xi.partials)
+                            comp.sign *= xi.sign
+                            new_mvec.components[index].append(comp)
+                        new_mvec.components[index].remove(xi)
+                    if isinstance(xi, XiProduct) and \
+                        (replacement.val in [x.val for x in xi.components]):
+                        ix = xi.components.index(replacement)
+                        to_replace = xi.components[ix]
+                        vals = deepcopy(originals)
+                        for comp in vals:
+                            comp.paritals.extend(to_replace.partials)
+                            comp.sign *= to_replace.sign
+                            new_prod = deepcopy(xi)
+                            new_prod[ix] = comp
+                            new_mvec.components[index].append(new_prod)
+                        new_mvec.components[index].remove(xi)
+        new_mvec.replacements = []
         return new_mvec
 
     @property

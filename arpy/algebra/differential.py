@@ -53,6 +53,7 @@ class AR_differential:
                 comps.append(result)
         derivative = MultiVector(comps)
         derivative._simplify()
+        derivative.replacements.extend(mvec.replacements)
 
         if as_del:
             return DelMultiVector(derivative)
