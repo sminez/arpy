@@ -2,6 +2,7 @@
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
+from copy import deepcopy
 from .config import ALLOWED, ALLOWED_GROUPS, SUB_SCRIPTS, BXYZ_LIKE
 
 
@@ -40,14 +41,17 @@ class Alpha:
             return '{}α{}'.format(neg, self.index)
 
     def __eq__(self, other):
+        if not isinstance(other, Alpha):
+            return False
         return (self.index == other.index) and (self.sign == other.sign)
 
     def __lt__(self, other):
         return self.allowed.index(self.index) < self.allowed.index(other.index)
 
     def __neg__(self):
-        self.sign *= -1
-        return self
+        neg = deepcopy(self)
+        neg.sign *= -1
+        return neg
 
     def __hash__(self):
         return hash((self.index, self.sign))
@@ -59,24 +63,40 @@ class Xi:
         if isinstance(val, Alpha):
             val = val.index
 
-        self.val = val
-        self.sign = sign
+        if isinstance(val, str) and val.startswith('-'):
+            self.sign = sign * -1
+            self.val = val[1:]
+        else:
+            self.val = val
+            self.sign = sign
+
         self.partials = partials if partials else []
+
+    def __hash__(self):
+        return hash((self.val, self.sign, tuple(self.partials)))
 
     @property
     def components(self):
         return [self]
 
     def __eq__(self, other):
+        if not isinstance(other, Xi):
+            return False
+
         return (self.val == other.val) and \
-                (self.partials == other.partials) and \
-                (self.sign == other.sign)
+               (self.partials == other.partials) and \
+               (self.sign == other.sign)
 
     def __lt__(self, other):
         try:
             return ALLOWED.index(self.val) < ALLOWED.index(other.val)
         except:
             return self.val < other.val
+
+    def __neg__(self):
+        neg = deepcopy(self)
+        neg.sign *= -1
+        return neg
 
     def __repr__(self):
         sign = '' if self.sign == 1 else '-'
@@ -106,6 +126,9 @@ class XiProduct:
         self.partials = []
         self.sign_base = 1
 
+    def __hash__(self):
+        return hash((self.components, tuple(self.partials), self.sign_base))
+
     @property
     def sign(self):
         s = 1
@@ -123,13 +146,28 @@ class XiProduct:
 
     @property
     def val(self):
-        # Expressing the product values as a dotted list of indices
-        return '.'.join(c.val for c in self.components)
+        # ordered tuple of indices
+        return tuple(c.val for c in self.components)
 
     def __eq__(self, other):
+        if not isinstance(other, XiProduct):
+            return False
+
         same_sign = (self.sign == other.sign)
-        same_components = (self.components == other.components)
-        return same_sign and same_components
+        same_partials = self.partials == other.partials
+        self_comps = [c for c in deepcopy(self.components)]
+        for c in self_comps:
+            c.sign = 1
+        other_comps = [c for c in deepcopy(other.components)]
+        for c in other_comps:
+            c.sign = 1
+        same_components = (set(self_comps) == set(other_comps))
+        return same_sign and same_partials and same_components
+
+    def __neg__(self):
+        neg = deepcopy(self)
+        neg.sign_base *= -1
+        return neg
 
     def __repr__(self):
         partials = (
@@ -139,14 +177,17 @@ class XiProduct:
         comps = [str(c) for c in self.components]
         comps = [c[1:] if c[0] == '-' else c for c in comps]
         sign = '' if self.sign == 1 else '-'
-        return sign + ''.join(partials) + ''.join(comps)
+        return sign + ''.join(partials) + '.'.join(comps)
 
 
 class Pair:
     '''A Pair may be any object along with an Alpha value'''
     def __init__(self, a, x=None):
         if x is None:
-            x = Xi(a)
+            if isinstance(a, str) and a.startswith('-'):
+                x = Xi(a[1:])
+            else:
+                x = Xi(a)
 
         if isinstance(a, Alpha):
             self.alpha = a

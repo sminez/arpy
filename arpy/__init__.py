@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 from copy import deepcopy
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
@@ -38,7 +38,7 @@ MultiVector.__invert__ = invert_multivector
 A = MultiVector('0 1 2 3')                            # The potentials
 B = MultiVector(XI_GROUPS['jk'])                      # The Magnetic field
 E = MultiVector(XI_GROUPS['i0'])                      # The Electric field
-F = E + (-B)                                          # The Farady tensor
+F = E + B                                             # The Farady tensor
 T = MultiVector([a for a in ALLOWED if len(a) == 3])  # The trivectors
 G = MultiVector(ALLOWED)                              # The general multivector
 ##############################################################################

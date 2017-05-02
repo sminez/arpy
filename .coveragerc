@@ -1,0 +1,2 @@
+[run]
+omit = arpy/utils/concepts/*, arpy/utils/visualisation.py

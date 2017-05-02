@@ -147,7 +147,10 @@ def _full_pair_pair(a, b, metric=METRIC, allowed=ALLOWED):
 
 @full.add((MultiVector, MultiVector))
 def _full_mvec_mvec(mv1, mv2, metric=METRIC, allowed=ALLOWED):
-    return MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
+    prod = MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
+    prod._simplify()
+    prod.replacements.extend(mv1.replacements + mv2.replacements)
+    return prod
 
 # NOTE:: Definitions of the full product involving differnetials are found in
 #        differential.py due to import conflicts.
@@ -167,7 +170,7 @@ def _div_by_alpha_alpha(a, b, metric=METRIC, allowed=ALLOWED):
 
 @div_by.add((Pair, Alpha))
 def _div_by_pair_alpha(a, b, metric=METRIC, allowed=ALLOWED):
-    alpha = find_prod(a, inverse(b, metric, allowed), metric, allowed)
+    alpha = find_prod(a.alpha, inverse(b, metric, allowed), metric, allowed)
     return Pair(alpha, a.xi)
 
 
@@ -232,7 +235,9 @@ def _project_multivector(element, grade):
             ix = component.alpha.index
             if len(ix) == grade and ix != 'p':
                 correct_grade.append(component)
-    return MultiVector(correct_grade)
+    res = MultiVector(correct_grade)
+    res.replacements.extend(element.replacement)
+    return res
 
 
 ##############################################################################
@@ -292,7 +297,9 @@ def dagger(mvec, metric=METRIC, allowed=ALLOWED):
         if pair.alpha in _neg:
             pair.alpha.sign *= -1
         new_vec.append(pair)
-    return MultiVector(new_vec)
+    res = MultiVector(new_vec)
+    res.replacements.extend(mvec.replacements)
+    return res
 
 
 ##############################################################################

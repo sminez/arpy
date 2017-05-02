@@ -1,39 +1,41 @@
-import pytest
-from utils import metrics, ap, neg_ap
+from utils import metrics
 from arpy import Alpha, Pair, MultiVector, find_prod, inverse, dagger, \
     commutator, project, ALLOWED
 
+ap = Alpha('p')
+neg_ap = Alpha('-p')
 
-@pytest.mark.parametrize('metric', metrics)
-def test_inverse(metric):
+
+def test_inverse():
     '''
     Inverting an α and multiplying by the original should give αp
     '''
-    for index in ALLOWED:
-        alpha = Alpha(index)
-        inverse_alpha = inverse(alpha, metric=metric)
-        assert find_prod(alpha, inverse_alpha, metric=metric) == ap
+    for metric in metrics:
+        for index in ALLOWED:
+            alpha = Alpha(index)
+            inverse_alpha = inverse(alpha, metric=metric)
+            assert find_prod(alpha, inverse_alpha, metric=metric) == ap
 
 
-@pytest.mark.parametrize('metric', metrics)
-def test_dagger(metric):
+def test_dagger():
     '''Dagger negates elements that square to -1'''
-    alphas = [
-        Alpha(a, find_prod(Alpha(a), Alpha(a), metric=metric).sign)
-        for a in ALLOWED
-    ]
-    negated = MultiVector([Pair(a) for a in alphas])
-    assert negated == dagger(MultiVector(ALLOWED), metric=metric)
+    for metric in metrics:
+        alphas = [
+            Alpha(a, find_prod(Alpha(a), Alpha(a), metric=metric).sign)
+            for a in ALLOWED
+        ]
+        negated = MultiVector([Pair(a) for a in alphas])
+        assert negated == dagger(MultiVector(ALLOWED), metric=metric)
 
 
-@pytest.mark.parametrize('metric', metrics)
-def test_commutator(metric):
+def test_commutator():
     '''Commutator results should always be +-αp'''
-    for i in ALLOWED:
-        ai = Alpha(i)
-        for j in ALLOWED:
-            aj = Alpha(j)
-            assert commutator(ai, aj, metric=metric) in [ap, neg_ap]
+    for metric in metrics:
+        for i in ALLOWED:
+            ai = Alpha(i)
+            for j in ALLOWED:
+                aj = Alpha(j)
+                assert commutator(ai, aj, metric=metric) in [ap, neg_ap]
 
 
 def test_project_alpha():

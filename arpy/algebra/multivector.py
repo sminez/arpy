@@ -9,10 +9,14 @@ NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
 import collections.abc
 from copy import deepcopy
 from itertools import groupby
-from .ar_types import Alpha, Pair, Xi
+from collections import namedtuple
+from .ar_types import Alpha, Pair, Xi, XiProduct
 from .del_grouping import del_grouped
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE, \
     XI_GROUPS
+
+
+MvecLabel = namedtuple('MvecLabel', 'label originals')
 
 
 class MultiVector(collections.abc.Set):
@@ -22,6 +26,7 @@ class MultiVector(collections.abc.Set):
     def __init__(self, components=[]):
         # Given a list of pairs, build the mulitvector by binding the ξ values
         self.components = {Alpha(a): [] for a in self._allowed_alphas}
+        self.replacements = []
 
         if isinstance(components, str):  # Allow for single string input
             components = components.split()
@@ -42,6 +47,7 @@ class MultiVector(collections.abc.Set):
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
+        self._simplify()
 
     def __repr__(self):
         comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
@@ -63,7 +69,7 @@ class MultiVector(collections.abc.Set):
     def __len__(self):
         # All allowed values are initialised with [] so we are
         # only counting componets that have a Xi value set.
-        return len([v for v in self.components.values() if v != []])
+        return sum([len(v) for v in self.components.values()])
 
     def __add__(self, other):
         # Allow for the addition of Multivectors and Pairs.
@@ -77,9 +83,18 @@ class MultiVector(collections.abc.Set):
         elif isinstance(other, MultiVector):
             comps.extend(p for p in other)
 
-        return MultiVector(comps)
+        res = MultiVector(comps)
+        res._simplify()
+        return res
+
+    def __sub__(self, other):
+        res = self + -other
+        res._simplify()
+        return res
 
     def __eq__(self, other):
+        if not isinstance(other, MultiVector):
+            return False
         for alpha in self.components:
             if self.components[alpha] != other.components[alpha]:
                 return False
@@ -124,6 +139,29 @@ class MultiVector(collections.abc.Set):
                     yield Pair(alpha, xi)
             except KeyError:
                 pass
+
+    def _simplify(self):
+        '''Remove terms that cancel following a calculation'''
+        # TODO: mvec x mvec = 0
+        # Cancel terms with their negative
+        # XXX: optimise! This is quadratic in len(components.values())
+        #      Maybe groupby would work?
+        for xis in self.components.values():
+            i = 0
+            while True:
+                try:
+                    current = xis[i]
+                    rest = xis[i+1:]
+                    for r in rest:
+                        if current == -r:
+                            xis.remove(current)
+                            xis.remove(r)
+                            break
+                    else:
+                        # Triggered if we don't break
+                        i += 1
+                except IndexError:
+                    break
 
     def _nice_xi(self, alpha, raise_key_error=False, for_print=True):
         '''Single element xi lists return their value raw'''
@@ -215,9 +253,12 @@ class MultiVector(collections.abc.Set):
 
     def relabel(self, index, replacement):
         '''
-        Manually relabel the components of a multivector.
-        This is intended for simplifying results following manual analysis.
+        Manually relabel the components of a multivector. This is intended
+        for simplifying results following manual analysis and returns a new
+        MultiVector when called.
         '''
+        new_mvec = deepcopy(self)
+
         if index.startswith('-'):
             index = index[1:]
             xi_sign = -1
@@ -230,20 +271,70 @@ class MultiVector(collections.abc.Set):
 
         if index in ALLOWED:
             new_xi = Xi(replacement, sign=xi_sign)
-            self.components[Alpha(index)] = [new_xi]
+            originals = deepcopy(new_mvec.components[Alpha(index)])
+            replacements = [MvecLabel(new_xi, originals)]
+            new_mvec.components[Alpha(index)] = [new_xi]
         else:
             try:
+                replacements = []
                 indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
-                    self.components[Alpha(index)] = [new_xi]
+                    originals = deepcopy(new_mvec.components[Alpha(index)])
+                    replacements.append(MvecLabel(new_xi, originals))
+                    new_mvec.components[Alpha(index)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
 
+        new_mvec.replacements.extend(replacements)
+        return new_mvec
+
     def relabel_many(self, pairs):
         '''Relabel each case in pairs: (index, replacement)'''
+        new_mvec = deepcopy(self)
         for index, replacement in pairs:
-            self.relabel(index, replacement)
+            new_mvec = new_mvec.relabel(index, replacement)
+        return new_mvec
+
+    def remove_labels(self):
+        '''Generate a new MultiVector without the current replacements'''
+        def replace_or_keep(alpha, xi, return_pairs=True):
+            for r in self.replacements:
+                if (xi.val == r.label.val):
+                    vals = deepcopy(r.originals)
+                    new_comps = []
+                    for comp in vals:
+                        comp.partials.extend(xi.partials)
+                        comp.sign *= xi.sign
+                        if return_pairs:
+                            new_comps.append(Pair(alpha, comp))
+                        else:
+                            new_comps.append(comp)
+                    return new_comps
+            if return_pairs:
+                return [Pair(alpha, xi)]
+            else:
+                return [xi]
+
+        if self.replacements == []:
+            return deepcopy(self)
+
+        new_comps = []
+
+        for pair in self:
+            if isinstance(pair.xi, Xi):
+                new_comps.extend(replace_or_keep(pair.alpha, pair.xi))
+
+            elif isinstance(pair.xi, XiProduct):
+                new_pair_components = []
+                for component in pair.xi.components:
+                    new_pair_components.extend(
+                        replace_or_keep(pair.alpha, component, False)
+                    )
+                pair.xi.components = tuple(new_pair_components)
+                new_comps.append(pair)
+
+        return MultiVector(new_comps)
 
     @property
     def v(self):
@@ -276,3 +367,11 @@ class DelMultiVector(MultiVector):
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
+
+    def __eq__(self, other):
+        if not isinstance(other, DelMultiVector):
+            return False
+        for alpha in self.components:
+            if self.components[alpha] != other.components[alpha]:
+                return False
+        return True
