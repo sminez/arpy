@@ -137,7 +137,7 @@ class MultiVector(collections.abc.Set):
             except KeyError:
                 pass
 
-    def simplify(self):
+    def cancel_terms(self):
         '''Remove terms that cancel following a calculation'''
         # TODO: mvec x mvec = 0
         # Cancel terms with their negative
