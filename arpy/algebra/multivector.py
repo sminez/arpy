@@ -9,10 +9,14 @@ NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
 import collections.abc
 from copy import deepcopy
 from itertools import groupby
+from collections import namedtuple
 from .ar_types import Alpha, Pair, Xi, XiProduct
 from .del_grouping import del_grouped
 from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE, \
     XI_GROUPS
+
+
+MvecLabel = namedtuple('MvecLabel', 'label originals')
 
 
 class MultiVector(collections.abc.Set):
@@ -140,6 +144,8 @@ class MultiVector(collections.abc.Set):
         '''Remove terms that cancel following a calculation'''
         # TODO: mvec x mvec = 0
         # Cancel terms with their negative
+        # XXX: optimise! This is quadratic in len(components.values())
+        #      Maybe groupby would work?
         for xis in self.components.values():
             i = 0
             while True:
@@ -265,8 +271,8 @@ class MultiVector(collections.abc.Set):
 
         if index in ALLOWED:
             new_xi = Xi(replacement, sign=xi_sign)
-            current_comps = deepcopy(new_mvec.components[Alpha(index)])
-            replacements = [(new_xi, current_comps)]
+            originals = deepcopy(new_mvec.components[Alpha(index)])
+            replacements = [MvecLabel(new_xi, originals)]
             new_mvec.components[Alpha(index)] = [new_xi]
         else:
             try:
@@ -274,8 +280,8 @@ class MultiVector(collections.abc.Set):
                 indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
-                    current_comps = deepcopy(new_mvec.components[Alpha(index)])
-                    replacements.append((new_xi, current_comps))
+                    originals = deepcopy(new_mvec.components[Alpha(index)])
+                    replacements.append(MvecLabel(new_xi, originals))
                     new_mvec.components[Alpha(index)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
@@ -292,35 +298,43 @@ class MultiVector(collections.abc.Set):
 
     def remove_labels(self):
         '''Generate a new MultiVector without the current replacements'''
-        new_mvec = deepcopy(self)
+        def replace_or_keep(alpha, xi, return_pairs=True):
+            for r in self.replacements:
+                if (xi.val == r.label.val):
+                    vals = deepcopy(r.originals)
+                    new_comps = []
+                    for comp in vals:
+                        comp.partials.extend(xi.partials)
+                        comp.sign *= xi.sign
+                        if return_pairs:
+                            new_comps.append(Pair(alpha, comp))
+                        else:
+                            new_comps.append(comp)
+                    return new_comps
+            if return_pairs:
+                return [Pair(alpha, xi)]
+            else:
+                return [xi]
 
-        if new_mvec.replacements == []:
-            return new_mvec
+        if self.replacements == []:
+            return deepcopy(self)
 
-        for (replacement, originals) in new_mvec.replacements:
-            for index, xis in new_mvec.components.items():
-                for xi in xis:
-                    if isinstance(xi, Xi) and (xi.val == replacement.val):
-                        vals = deepcopy(originals)
-                        for comp in vals:
-                            comp.partials.extend(xi.partials)
-                            comp.sign *= xi.sign
-                            new_mvec.components[index].append(comp)
-                        new_mvec.components[index].remove(xi)
-                    if isinstance(xi, XiProduct) and \
-                        (replacement.val in [x.val for x in xi.components]):
-                        ix = xi.components.index(replacement)
-                        to_replace = xi.components[ix]
-                        vals = deepcopy(originals)
-                        for comp in vals:
-                            comp.paritals.extend(to_replace.partials)
-                            comp.sign *= to_replace.sign
-                            new_prod = deepcopy(xi)
-                            new_prod[ix] = comp
-                            new_mvec.components[index].append(new_prod)
-                        new_mvec.components[index].remove(xi)
-        new_mvec.replacements = []
-        return new_mvec
+        new_comps = []
+
+        for pair in self:
+            if isinstance(pair.xi, Xi):
+                new_comps.extend(replace_or_keep(pair.alpha, pair.xi))
+
+            elif isinstance(pair.xi, XiProduct):
+                new_pair_components = []
+                for component in pair.xi.components:
+                    new_pair_components.extend(
+                        replace_or_keep(pair.alpha, component, False)
+                    )
+                pair.xi.components = tuple(new_pair_components)
+                new_comps.append(pair)
+
+        return MultiVector(new_comps)
 
     @property
     def v(self):
