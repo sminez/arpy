@@ -52,7 +52,6 @@ class AR_differential:
                 result = component_partial(comp, element, div, metric, allowed)
                 comps.append(result)
         derivative = MultiVector(comps)
-        derivative._simplify()
         derivative.replacements.extend(mvec.replacements)
 
         if as_del:
@@ -102,12 +101,10 @@ def differential_operator(wrt):
 @full.add((AR_differential, MultiVector))
 def _full_differential_mvec(diff, mvec, metric=METRIC, allowed=ALLOWED):
     res = diff(mvec, metric=metric, allowed=allowed)
-    res._simplify()
     return res
 
 
 @full.add((MultiVector, AR_differential))
 def _full_mvec_differential_mvec(mvec, diff, metric=METRIC, allowed=ALLOWED):
     res = diff(mvec, metric=metric, allowed=allowed, div='by')
-    res._simplify()
     return res

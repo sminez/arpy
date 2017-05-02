@@ -148,7 +148,6 @@ def _full_pair_pair(a, b, metric=METRIC, allowed=ALLOWED):
 @full.add((MultiVector, MultiVector))
 def _full_mvec_mvec(mv1, mv2, metric=METRIC, allowed=ALLOWED):
     prod = MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
-    prod._simplify()
     prod.replacements.extend(mv1.replacements + mv2.replacements)
     return prod
 

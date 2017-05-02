@@ -47,7 +47,6 @@ class MultiVector(collections.abc.Set):
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
-        self._simplify()
 
     def __repr__(self):
         comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
@@ -84,12 +83,10 @@ class MultiVector(collections.abc.Set):
             comps.extend(p for p in other)
 
         res = MultiVector(comps)
-        res._simplify()
         return res
 
     def __sub__(self, other):
         res = self + -other
-        res._simplify()
         return res
 
     def __eq__(self, other):
@@ -140,7 +137,7 @@ class MultiVector(collections.abc.Set):
             except KeyError:
                 pass
 
-    def _simplify(self):
+    def simplify(self):
         '''Remove terms that cancel following a calculation'''
         # TODO: mvec x mvec = 0
         # Cancel terms with their negative
