@@ -27,11 +27,17 @@ def test_multivector_construction():
 def test_simplification():
     '''MultiVector auto simplification works'''
     # Like MultiVectors cancel entirely
-    assert m1 - m1 == MultiVector()
+    res1 = m1 - m1
+    res1.cancel_terms()
+    assert res1 == MultiVector()
     # Unmatched terms are unaffected
-    assert m1 - m2 == MultiVector('3')
+    res2 = m1 - m2
+    res2.cancel_terms()
+    assert res2 == MultiVector('3')
     # Subtraction works along with simplification
-    assert m1 - m3 == MultiVector([Alpha('3'), Alpha('-12')])
+    res3 = m1 - m3
+    res3.cancel_terms()
+    assert res3 == MultiVector([Alpha('3'), Alpha('-12')])
 
 
 def test_addition():
