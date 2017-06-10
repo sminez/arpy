@@ -43,8 +43,11 @@ def test_project_alpha():
     Projecting an Alpha should return the value if and only if the
     number of indices on the Alpha is the grade we are projecting
     '''
-    # NOTE:: (deggen) The project function is in arpy/algebra/operations.py
-    pass
+    a = Alpha("01")
+    assert project(a, 2) == a
+    assert project(a, 0) == None
+    assert project(ap, 0) == ap
+    assert project(ap, 1) == None
 
 
 def test_project_pair():
@@ -52,7 +55,13 @@ def test_project_pair():
     Projecting a Pair should return the value if and only if the
     number of indices on the Pair's Alpha is the grade we are projecting
     '''
-    pass
+    pear = Pair("01")
+    perfectpear = Pair("p")
+    assert project(pear, 2) == pear
+    assert project(pear, 0) == None
+    assert project(perfectpear, 0) == perfectpear
+    assert project(perfectpear, 1) == None
+
 
 
 def test_project_multivector():
@@ -63,4 +72,9 @@ def test_project_multivector():
     # NOTE:: (Deggen) The `new MultiVector` part is important! ;)
     #        Have a look at test_new_component_partial in the
     #        test_differentials file.
-    pass
+    multipop = MultiVector(components=[Alpha("01")])
+    pmultipop = MultiVector(components=[Alpha("p")])
+    assert project(multipop, 2) == multipop
+    assert project(multipop, 0) == MultiVector()
+    assert project(pmultipop, 0) == pmultipop
+    assert project(pmultipop, 2) == MultiVector()

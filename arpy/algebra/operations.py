@@ -204,8 +204,11 @@ def project(element, grade):
 
 @project.add(Alpha)
 def _project_alpha(element, grade):
-    if grade == 0 and element.index == 'p':
-        return element
+    if element.index == 'p':
+        if grade == 0:
+            return element
+        else:
+            return None
     elif len(element.index) == grade:
         return element
     else:
@@ -214,8 +217,11 @@ def _project_alpha(element, grade):
 
 @project.add(Pair)
 def _project_pair(element, grade):
-    if grade == 0 and element.alpha.index == 'p':
-        return element
+    if element.alpha.index == 'p':
+        if grade == 0:
+            return element
+        else:
+            return None
     elif len(element.alpha.index) == grade:
         return element
     else:
@@ -235,7 +241,7 @@ def _project_multivector(element, grade):
             if len(ix) == grade and ix != 'p':
                 correct_grade.append(component)
     res = MultiVector(correct_grade)
-    res.replacements.extend(element.replacement)
+    res.replacements.extend(element.replacements)
     return res
 
 
