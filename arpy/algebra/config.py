@@ -8,7 +8,7 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 _B = ['p', '23', '31', '12']     # ΞB :: Magnetic Field and rest mass
 _T = ['0', '023', '031', '012']  # ΞΤ :: Angular-Momentum/Charge density
 _A = ['123', '1', '2', '3']      # ΞΑ :: Current Density and hedgehog
-_E = ['0123', '10', '20', '30']  # ΞE :: Electric Field and dual rest mass
+_E = ['0123', '01', '02', '03']  # ΞE :: Electric Field and dual rest mass
 ALLOWED = _B + _T + _A + _E
 
 

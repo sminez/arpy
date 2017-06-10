@@ -35,12 +35,18 @@ MultiVector.__invert__ = invert_multivector
 ##############################################################################
 # Multi-vectors to work with based on the 3/4-vectors #
 #######################################################
+P = MultiVector('p')                                  # Pivot
+H = MultiVector('123')                                # Hedgehog
+Q = MultiVector('0123')                               # Quedgehog
+t = MultiVector('0')                                  # Time
+
 A = MultiVector('0 1 2 3')                            # The potentials
 B = MultiVector(XI_GROUPS['jk'])                      # The Magnetic field
 E = MultiVector(XI_GROUPS['i0'])                      # The Electric field
 F = E + B                                             # The Farady tensor
 T = MultiVector([a for a in ALLOWED if len(a) == 3])  # The trivectors
 G = MultiVector(ALLOWED)                              # The general multivector
+
 ##############################################################################
 # Multi-vectors to work with based on the 4Set components #
 ###########################################################
