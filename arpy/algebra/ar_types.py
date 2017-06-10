@@ -40,6 +40,10 @@ class Alpha:
         except:
             return '{}α{}'.format(neg, self.index)
 
+    def __tex__(self):
+        neg = '-' if self.sign == -1 else ''
+        return neg + '\\alpha_{' + self.index + '}'
+
     def __eq__(self, other):
         if not isinstance(other, Alpha):
             return False
@@ -110,6 +114,16 @@ class Xi:
         else:
             return '{}{}{}'.format(sign, ''.join(partials), self.val)
 
+    def __tex__(self):
+        sign = '' if self.sign == 1 else '-'
+        partials = ''.join(
+            '\\partial_{' + p.index + '}' for p in reversed(self.partials)
+        )
+        if self.val in ALLOWED + ALLOWED_GROUPS:
+            return sign + partials + '\\xi_{' + self.val + '}'
+        else:
+            return sign + partials + self.val
+
     def bxyz(self):
         '''Return a string representing only {b,x,y,z} information'''
         sign = '+' if self.sign == 1 else '-'
@@ -178,6 +192,15 @@ class XiProduct:
         comps = [c[1:] if c[0] == '-' else c for c in comps]
         sign = '' if self.sign == 1 else '-'
         return sign + ''.join(partials) + '.'.join(comps)
+
+    def __tex__(self):
+        partials = ''.join(
+            '\\partial{}'.format(p.index) for p in reversed(self.partials)
+        )
+        comps = [str(c) for c in self.components]
+        comps = '.'.join(c[1:] if c[0] == '-' else c for c in comps)
+        sign = '' if self.sign == 1 else '-'
+        return sign + partials + comps
 
 
 class Pair:
