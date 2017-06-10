@@ -235,7 +235,7 @@ def _project_multivector(element, grade):
             if len(ix) == grade and ix != 'p':
                 correct_grade.append(component)
     res = MultiVector(correct_grade)
-    res.replacements.extend(element.replacement)
+    res.replacements.extend(element.replacements)
     return res
 
 
