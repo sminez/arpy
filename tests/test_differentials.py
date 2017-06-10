@@ -57,9 +57,9 @@ def test_replace_div(sign):
     A valid set of div terms gets replaced correctly
     '''
     div_like = [
-        Pair(Alpha('0'), Xi('10', partials=[Alpha('1')], sign=sign)),
-        Pair(Alpha('0'), Xi('20', partials=[Alpha('2')], sign=sign)),
-        Pair(Alpha('0'), Xi('30', partials=[Alpha('3')], sign=sign))
+        Pair(Alpha('0'), Xi('01', partials=[Alpha('1')], sign=sign)),
+        Pair(Alpha('0'), Xi('02', partials=[Alpha('2')], sign=sign)),
+        Pair(Alpha('0'), Xi('03', partials=[Alpha('3')], sign=sign))
     ]
     replaced, left_over = replace_div(div_like)
     assert left_over == []
