@@ -21,11 +21,10 @@ MvecLabel = namedtuple('MvecLabel', 'label originals')
 
 class MultiVector(collections.abc.Set):
     '''A custom container type for working efficiently with multivectors'''
-    _allowed_alphas = ALLOWED
-
-    def __init__(self, components=[]):
+    def __init__(self, components=[], allowed=ALLOWED):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self.components = {Alpha(a): [] for a in self._allowed_alphas}
+        self._allowed_alphas = allowed
+        self.components = {Alpha(a, allowed=allowed): [] for a in allowed}
         self.replacements = []
 
         if isinstance(components, str):  # Allow for single string input
@@ -33,11 +32,11 @@ class MultiVector(collections.abc.Set):
 
         for comp in components:
             if isinstance(comp, (str, Alpha)):
-                comp = Pair(comp)
+                comp = Pair(comp, allowed=allowed)
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
 
-            if comp.alpha.index in self._allowed_alphas:
+            if comp.alpha.index in allowed:
                 _comp = deepcopy(comp)
                 try:
                     self.components[_comp.alpha].append(_comp.xi)
@@ -358,19 +357,18 @@ class MultiVector(collections.abc.Set):
 
 
 class DelMultiVector(MultiVector):
-    _allowed_alphas = ALLOWED_GROUPS  # + ALLOWED
-    # _allowed_alphas = '0 123 i 0jk p 0123 i0 jk'.split()
 
-    def __init__(self, components=[]):
+    def __init__(self, components=[], allowed=ALLOWED):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self.components = {Alpha(a): [] for a in self._allowed_alphas}
+        self._allowed_alphas = ALLOWED_GROUPS  # + ALLOWED
+        self.components = {Alpha(a, allowed=allowed): [] for a in allowed}
 
         for comp in del_grouped(components):
             if isinstance(comp, (str, Alpha)):
-                comp = Pair(comp)
+                comp = Pair(comp, allowed=allowed)
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
-            if comp.alpha.index in self._allowed_alphas:
+            if comp.alpha.index in allowed:
                 try:
                     self.components[comp.alpha].append(comp.xi)
                 except KeyError:

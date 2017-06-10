@@ -205,7 +205,7 @@ class XiProduct:
 
 class Pair:
     '''A Pair may be any object along with an Alpha value'''
-    def __init__(self, a, x=None):
+    def __init__(self, a, x=None, allowed=ALLOWED):
         if x is None:
             if isinstance(a, str) and a.startswith('-'):
                 x = Xi(a[1:])
@@ -213,9 +213,11 @@ class Pair:
                 x = Xi(a)
 
         if isinstance(a, Alpha):
+            if a.index not in allowed:
+                raise ValueError("{} not in {}".format(a.index, allowed))
             self.alpha = a
         else:
-            self.alpha = Alpha(a)
+            self.alpha = Alpha(a, allowed=allowed)
 
         if not isinstance(x, (Xi, XiProduct)):
             x = Xi(x)
