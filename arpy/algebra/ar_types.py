@@ -115,7 +115,7 @@ class Xi:
             return '{}{}{}'.format(sign, ''.join(partials), self.val)
 
     def __tex__(self):
-        sign = '' if self.sign == 1 else '-'
+        sign = '+' if self.sign == 1 else '-'
         partials = ''.join(
             '\\partial_{' + p.index + '}' for p in reversed(self.partials)
         )

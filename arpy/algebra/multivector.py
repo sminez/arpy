@@ -56,7 +56,7 @@ class MultiVector(collections.abc.Set):
     def __tex__(self):
         comps = [
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
-                Alpha(a), tex=True)
+                Alpha(a), tex=True) + r'+ \nonumber\\'
             for a in self._allowed_alphas if self.components[Alpha(a)]
         ]
         return '{\n' + '\n'.join(comps) + '\n}'
@@ -184,7 +184,7 @@ class MultiVector(collections.abc.Set):
         else:
             if for_print:
                 if tex:
-                    return '( ' + ', '.join(x.__tex__() for x in xi) + ' )'
+                    return '( ' + ' '.join(x.__tex__() for x in xi) + ' )'
                 else:
                     return '( ' + ', '.join(str(x) for x in xi) + ' )'
             else:
