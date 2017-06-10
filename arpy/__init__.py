@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 from copy import deepcopy
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
@@ -14,6 +14,7 @@ from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
 from .algebra.differential import AR_differential, differential_operator
 from .algebra.del_grouping import del_grouped
 from .utils.lexparse import ARContext
+from .utils.utils import Tex
 from .utils.visualisation import cayley, sign_cayley, sign_distribution
 
 
@@ -89,6 +90,6 @@ __all__ = [
     # Pre-defined MultiVectors
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
-    # The a pre-defined ar() context function
-    'ar'
+    # The a pre-defined ar() context function and Tex output
+    'ar', 'Tex'
 ]

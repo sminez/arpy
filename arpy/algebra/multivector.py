@@ -53,6 +53,14 @@ class MultiVector(collections.abc.Set):
                  for a in self._allowed_alphas if self.components[Alpha(a)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
+    def __tex__(self):
+        comps = [
+            ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
+                Alpha(a), tex=True)
+            for a in self._allowed_alphas if self.components[Alpha(a)]
+        ]
+        return '{\n' + '\n'.join(comps) + '\n}'
+
     def show(self, ordering):
         '''Print the components of the MultiVector in a specified ordering'''
         if isinstance(ordering, str):
@@ -160,7 +168,8 @@ class MultiVector(collections.abc.Set):
                 except IndexError:
                     break
 
-    def _nice_xi(self, alpha, raise_key_error=False, for_print=True):
+    def _nice_xi(self, alpha, raise_key_error=False,
+                 for_print=True, tex=False):
         '''Single element xi lists return their value raw'''
         try:
             xi = self.components[alpha]
@@ -168,10 +177,16 @@ class MultiVector(collections.abc.Set):
             if raise_key_error:
                 raise KeyError
         if len(xi) == 1:
-            return '( ' + str(xi[0]) + ' )'
+            if tex:
+                return '( ' + xi[0].__tex__() + ' )'
+            else:
+                return '( ' + str(xi[0]) + ' )'
         else:
             if for_print:
-                return '( ' + ', '.join(str(x) for x in xi) + ' )'
+                if tex:
+                    return '( ' + ', '.join(x.__tex__() for x in xi) + ' )'
+                else:
+                    return '( ' + ', '.join(str(x) for x in xi) + ' )'
             else:
                 return xi
 
