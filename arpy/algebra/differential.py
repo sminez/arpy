@@ -22,7 +22,7 @@ from .operations import div_by, div_into, inverse, full
 
 class AR_differential:
     '''Differential operator: can be used inside of ar()'''
-    def __init__(self, wrt):
+    def __init__(self, wrt, allowed=ALLOWED):
         if isinstance(wrt, MultiVector):
             self.wrt = [pair.alpha for pair in wrt]
         else:
@@ -31,7 +31,7 @@ class AR_differential:
 
             if isinstance(wrt, list):
                 # Conversion to Alpha catches invalid indices
-                self.wrt = [Alpha(comp) for comp in wrt]
+                self.wrt = [Alpha(comp, allowed=allowed) for comp in wrt]
             else:
                 raise ValueError(
                     'Differential operators must be initialised with either'
@@ -51,7 +51,7 @@ class AR_differential:
             for element in self.wrt:
                 result = component_partial(comp, element, div, metric, allowed)
                 comps.append(result)
-        derivative = MultiVector(comps)
+        derivative = MultiVector(comps, allowed=allowed)
         derivative.replacements.extend(mvec.replacements)
 
         if as_del:

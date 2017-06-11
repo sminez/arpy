@@ -48,15 +48,19 @@ class MultiVector(collections.abc.Set):
                     self.components[alpha].append(xi)
 
     def __repr__(self):
-        comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
-                 for a in self._allowed_alphas if self.components[Alpha(a)]]
+        comps = [
+            '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
+                Alpha(a, allowed=self._allowed_alphas)))
+            for a in self._allowed_alphas
+            if self.components[Alpha(a, allowed=self._allowed)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
         comps = [
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
-                Alpha(a), tex=True) + r'+ \nonumber\\'
-            for a in self._allowed_alphas if self.components[Alpha(a)]
+                Alpha(a, allowed=self._allowed), tex=True) + r'+ \nonumber\\'
+            for a in self._allowed_alphas
+            if self.components[Alpha(a, allowed=self._allowed)]
         ]
         return '{\n' + '\n'.join(comps) + '\n}'
 
@@ -68,8 +72,11 @@ class MultiVector(collections.abc.Set):
         if not all([o in self._allowed_alphas for o in ordering]):
             raise ValueError('Invalid index in ordering')
 
-        comps = ['  α{}{}'.format(str(a).ljust(5), self._nice_xi(Alpha(a)))
-                 for a in ordering if self.components[Alpha(a)]]
+        comps = [
+            '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
+                Alpha(a, allowed=self._allowed_alphas)))
+            for a in ordering
+            if self.components[Alpha(a, allowed=self._allowed_alphas)]]
         print('{\n' + '\n'.join(comps) + '\n}')
 
     def __len__(self):
@@ -123,14 +130,14 @@ class MultiVector(collections.abc.Set):
     def __getitem__(self, key):
         if isinstance(key, str):
             # Allow retreval by string as well as Alpha
-            key = Alpha(key)
+            key = Alpha(key, allowed=self._allowed_alphas)
         if not isinstance(key, Alpha):
             raise KeyError
         return [Pair(key, xi) for xi in self.components[key]]
 
     def __delitem__(self, key):
         if isinstance(key, str):
-            key = Alpha(key)
+            key = Alpha(key, allowed=self._allowed_alphas)
         if not isinstance(key, Alpha):
             raise KeyError
 
@@ -138,8 +145,9 @@ class MultiVector(collections.abc.Set):
 
     def __iter__(self):
         for alpha in self._allowed_alphas:
+            key = Alpha(alpha, allowed=self._allowed_alphas)
             try:
-                for xi in self.components[Alpha(alpha)]:
+                for xi in self.components[key]:
                     yield Pair(alpha, xi)
             except KeyError:
                 pass
@@ -280,9 +288,10 @@ class MultiVector(collections.abc.Set):
             replacement = replacement[1:]
             xi_sign *= -1
 
-        if index in ALLOWED:
+        if index in self._allowed_alphas:
             new_xi = Xi(replacement, sign=xi_sign)
-            originals = deepcopy(new_mvec.components[Alpha(index)])
+            originals = deepcopy(new_mvec.components[
+                Alpha(index, allowed=self._allowed_alphas)])
             replacements = [MvecLabel(new_xi, originals)]
             new_mvec.components[Alpha(index)] = [new_xi]
         else:
@@ -291,9 +300,12 @@ class MultiVector(collections.abc.Set):
                 indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
-                    originals = deepcopy(new_mvec.components[Alpha(index)])
+                    originals = deepcopy(
+                        new_mvec.components[
+                            Alpha(index, allowed=self._allowed_alphas)])
                     replacements.append(MvecLabel(new_xi, originals))
-                    new_mvec.components[Alpha(index)] = [new_xi]
+                    new_mvec.components[
+                        Alpha(index, allowed=self._allowed_alphas)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
 
@@ -318,12 +330,14 @@ class MultiVector(collections.abc.Set):
                         comp.partials.extend(xi.partials)
                         comp.sign *= xi.sign
                         if return_pairs:
-                            new_comps.append(Pair(alpha, comp))
+                            new_comps.append(
+                                Pair(alpha, comp, allowed=self._allowed_alphas)
+                            )
                         else:
                             new_comps.append(comp)
                     return new_comps
             if return_pairs:
-                return [Pair(alpha, xi)]
+                return [Pair(alpha, xi, allowed=self._allowed_alphas)]
             else:
                 return [xi]
 
@@ -345,7 +359,7 @@ class MultiVector(collections.abc.Set):
                 pair.xi.components = tuple(new_pair_components)
                 new_comps.append(pair)
 
-        return MultiVector(new_comps)
+        return MultiVector(new_comps, allowed=self._allowed_alphas)
 
     @property
     def v(self):
