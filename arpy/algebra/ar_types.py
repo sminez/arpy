@@ -214,8 +214,6 @@ class Pair:
                 x = Xi(a)
 
         if isinstance(a, Alpha):
-            if a.index not in allowed:
-                raise ValueError("{} not in {}".format(a.index, allowed))
             self.alpha = a
         else:
             self.alpha = Alpha(a, allowed=allowed)
