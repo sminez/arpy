@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 from copy import deepcopy
 from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
@@ -29,6 +29,7 @@ def invert_multivector(self):
             for xi in xis:
                 xi.sign *= -1
     return inverted
+
 
 MultiVector.__invert__ = invert_multivector
 
@@ -99,3 +100,10 @@ __all__ = [
     # The a pre-defined ar() context function and Tex output
     'ar', 'Tex'
 ]
+
+
+print('\nNow running arpy version:\t', __version__)
+print('=======================================')
+print('Allowed αs:\t', ', '.join([str(Alpha(a)) for a in ALLOWED]))
+print('Division:\t', DIVISION_TYPE)
+print('Metric:\t\t', ''.join(['+' if i == 1 else '-' for i in METRIC]))

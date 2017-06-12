@@ -52,7 +52,7 @@ class MultiVector(collections.abc.Set):
             '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
                 Alpha(a, allowed=self._allowed_alphas)))
             for a in self._allowed_alphas
-            if self.components[Alpha(a, allowed=self._allowed)]]
+            if self.components[Alpha(a, allowed=self._allowed_alphas)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
@@ -179,7 +179,7 @@ class MultiVector(collections.abc.Set):
                  for_print=True, tex=False):
         '''Single element xi lists return their value raw'''
         try:
-            xi = self.components[alpha]
+            xi = sorted(self.components[alpha], key=lambda x: x.partials)
         except KeyError:
             if raise_key_error:
                 raise KeyError

@@ -33,10 +33,11 @@ class Alpha:
 
     def __repr__(self):
         neg = '-' if self.sign == -1 else ''
+        return '{}α{}'.format(neg, self.index)
+        # Below will use unicode subscript output but it's hard to read :(
         try:
             return '{}α{}'.format(
-                neg, ''.join(SUB_SCRIPTS[i] for i in self.index)
-            )
+                neg, ''.join(SUB_SCRIPTS[i] for i in self.index))
         except:
             return '{}α{}'.format(neg, self.index)
 
