@@ -148,7 +148,7 @@ class MultiVector(collections.abc.Set):
             key = Alpha(alpha, allowed=self._allowed_alphas)
             try:
                 for xi in self.components[key]:
-                    yield Pair(alpha, xi)
+                    yield Pair(alpha, xi, allowed=self._allowed_alphas)
             except KeyError:
                 pass
 
@@ -372,10 +372,11 @@ class MultiVector(collections.abc.Set):
 
 class DelMultiVector(MultiVector):
 
-    def __init__(self, components=[], allowed=ALLOWED):
+    def __init__(self, components=[], allowed=ALLOWED_GROUPS):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self._allowed_alphas = ALLOWED_GROUPS  # + ALLOWED
-        self.components = {Alpha(a, allowed=allowed): [] for a in allowed}
+        self._allowed_alphas = ALLOWED_GROUPS
+        self.components = {
+            Alpha(a, allowed=self._allowed_alphas): [] for a in allowed}
 
         for comp in del_grouped(components):
             if isinstance(comp, (str, Alpha)):

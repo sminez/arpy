@@ -24,20 +24,20 @@ def cayley(op=full, padding=6):
         print(comp)
 
 
-def sign_cayley(op=full):
+def sign_cayley(op=full, metric=METRIC, allowed=ALLOWED):
     '''
     Print +-1 signs for the current Cayley table to the terminal allowing
     for specification of the operation used to compute the table.
 
     Any function that accepts two Alphas can be passed as op.
     '''
+    a = allowed
     divider = '      ' + ''.join('+---------' for _ in range(4)) + '+'
     comps = (
         ' '.join([
-            '■' if op(Alpha(a), Alpha(b)).sign == -1 else '□'
-            for b in ALLOWED
-        ])
-        for a in ALLOWED
+            '■' if op(Alpha(x, allowed=a), Alpha(y, allowed=a)).sign == -1 else '□'
+            for y in ALLOWED])
+        for x in ALLOWED
     )
 
     print('          ', '         '.join(['B', 'A', 'T', 'E']))
@@ -45,7 +45,7 @@ def sign_cayley(op=full):
 
     for i, comp in enumerate(comps):
         comp = '| '.join(comp[n:n+8] for n in range(0, len(comp), 8))
-        print(str(Alpha(ALLOWED[i])).ljust(5), '|', comp, '|')
+        print(str(Alpha(allowed[i])).ljust(5), '|', comp, '|')
         # Divide after each 4-Set
         if (i + 1) % 4 == 0:
             print(divider)
