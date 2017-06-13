@@ -194,7 +194,13 @@ class MultiVector(collections.abc.Set):
                 if tex:
                     return '( ' + ' '.join(x.__tex__() for x in xi) + ' )'
                 else:
-                    return '( ' + ', '.join(str(x) for x in xi) + ' )'
+                    xis = [str(x) for x in xi]
+                    for i, x in enumerate(xis):
+                        if not x.startswith('-'):
+                            xis[i] = '+ ' + x
+                        else:
+                            xis[i] = '- ' + x[1:]
+                    return '( ' + ' '.join(xis) + ' )'
             else:
                 return xi
 
