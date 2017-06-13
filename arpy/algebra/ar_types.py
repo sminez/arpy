@@ -185,22 +185,38 @@ class XiProduct:
         return neg
 
     def __repr__(self):
+        superscripts = dict(zip('0123456789', '⁰¹²³⁴⁵⁶⁷⁸⁹'))
         partials = (
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
+        # Allow nicer formatting for powers
         comps = [str(c) for c in self.components]
         comps = [c[1:] if c[0] == '-' else c for c in comps]
+
+        if all((c == comps[0] for c in comps)):
+            power = str(len(comps))
+            power = ''.join(superscripts[c] for c in power)
+            comps = '{}{}'.format(comps[0], power)
+        else:
+            comps = '.'.join(comps)
+
         sign = '' if self.sign == 1 else '-'
-        return sign + ''.join(partials) + '.'.join(comps)
+        return sign + ''.join(partials) + comps
 
     def __tex__(self):
         partials = ''.join(
             '\\partial{}'.format(p.index) for p in reversed(self.partials)
         )
-        comps = [str(c) for c in self.components]
-        comps = '.'.join(c[1:] if c[0] == '-' else c for c in comps)
-        sign = '' if self.sign == 1 else '-'
+        comps = [c.__tex__()[1:] for c in self.components]
+
+        if all((c == comps[0] for c in comps)):
+            power = str(len(comps))
+            comps = '{' + comps[0] + '}^{' + power + '}'
+        else:
+            comps = '.'.join(comps)
+
+        sign = '+' if self.sign == 1 else '-'
         return sign + partials + comps
 
 
