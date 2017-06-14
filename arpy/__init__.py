@@ -78,6 +78,15 @@ DE = differential_operator(E4)
 ar = ARContext(METRIC, DIVISION_TYPE)
 
 
+def arpy_info():
+    '''Display some information about arpy'''
+    print('\nNow running arpy version:\t', __version__)
+    print('=======================================')
+    print('Allowed αs:\t', ', '.join([str(Alpha(a)) for a in ALLOWED]))
+    print('Division:\t', DIVISION_TYPE)
+    print('Metric:\t\t', ''.join(['+' if i == 1 else '-' for i in METRIC]))
+
+
 # All values that will be imported when the user does `from arpy import *`
 __all__ = [
     # Config initialised values
@@ -98,12 +107,5 @@ __all__ = [
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
     # The a pre-defined ar() context function and Tex output
-    'ar', 'Tex'
+    'ar', 'Tex', 'arpy_info'
 ]
-
-
-print('\nNow running arpy version:\t', __version__)
-print('=======================================')
-print('Allowed αs:\t', ', '.join([str(Alpha(a)) for a in ALLOWED]))
-print('Division:\t', DIVISION_TYPE)
-print('Metric:\t\t', ''.join(['+' if i == 1 else '-' for i in METRIC]))
