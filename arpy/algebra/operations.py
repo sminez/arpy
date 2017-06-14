@@ -35,6 +35,7 @@ elements and re-label them with indices 1->(n-1) and repeat the process until
 we are done.
 '''
 from copy import deepcopy
+from functools import wraps
 from types import FunctionType
 from .config import ALLOWED, METRIC
 from .multivector import MultiVector
@@ -42,14 +43,51 @@ from ..utils.concepts.dispatch import dispatch_on
 from .ar_types import Alpha, Pair, XiProduct
 
 
+def product_cache(func):
+    '''
+    A simple caching decorator that knows how to convert the args of
+    find_prod into a hashable for returning previous results.
+    NOTE: The functools lru_cache doesn't work as lists are not
+          hashable.
+    '''
+    cache = dict()
+    cache_hits = {'hits': 0, 'misses': 0}
+
+    @wraps(func)
+    def wrapped(i, j, metric=METRIC, allowed=ALLOWED):
+        '''
+        Check the cache for a result and call through to find_prod if
+        we don't have one.
+        '''
+        args = (i, j, tuple(metric), tuple(allowed))
+        result = cache.get(args)
+
+        if result:
+            # Return the result from the cache
+            cache_hits['hits'] += 1
+            return result
+        else:
+            # Compute the result and store it in the cache
+            cache_hits['misses'] += 1
+            result = func(i, j, metric=metric, allowed=allowed)
+            cache[args] = result
+            return result
+
+    # Make the cache and metrics available on the wrapped function
+    wrapped.cache = cache
+    wrapped.cache_hits = cache_hits
+    return wrapped
+
+
+@product_cache
 def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     '''
     Compute the product of two alpha values in the algebra. This uses some
     optimisations and observations that I've made in order to speed up the
     computation.
     '''
-    # NOTE:: These are here so that they the user can change metric and allowed
-    #        without having to reload the module.
+    # NOTE:: These are here so that they the user can change metric and
+    #        allowed without having to reload the module.
     metric = {k: v for k, v in zip('0123', metric)}
     targets = {frozenset(a): a for a in allowed}
 
