@@ -33,31 +33,39 @@ def invert_multivector(self):
 
 MultiVector.__invert__ = invert_multivector
 
+# Indices for alphas
+_h = [a for a in ALLOWED if len(a) == 3 and '0' not in a][0]
+_q = [a for a in ALLOWED if len(a) == 4][0]
+_B = [a for a in ALLOWED if len(a) == 2 and '0' not in a]
+_T = [a for a in ALLOWED if len(a) == 3 and '0' in a]
+_A = ['0', '1', '2', '3']
+_E = [a for a in ALLOWED if len(a) == 2 and '0' in a]
 
 ##############################################################################
 # Multi-vectors to work with based on the 3/4-vectors #
 #######################################################
-P = MultiVector('p')                                  # Pivot
-H = MultiVector('123')                                # Hedgehog
-Q = MultiVector('0123')                               # Quedgehog
-t = MultiVector('0')                                  # Time
 
-A = MultiVector('0 1 2 3')                            # The potentials
-B = MultiVector(XI_GROUPS['jk'])                      # The Magnetic field
-E = MultiVector(XI_GROUPS['i0'])                      # The Electric field
-F = E + B                                             # The Farady tensor
-T = MultiVector([a for a in ALLOWED if len(a) == 3])  # The trivectors
-G = MultiVector(ALLOWED)                              # The general multivector
+p = MultiVector('p')
+h = MultiVector(_h)
+q = MultiVector(_q)
+t = MultiVector('0')
+
+A = MultiVector(_A)
+B = MultiVector(_B)
+E = MultiVector(_E)
+F = E + B
+T = MultiVector(_T)
+G = MultiVector(ALLOWED)
 
 ##############################################################################
 # Multi-vectors to work with based on the 4Set components #
 ###########################################################
-B4 = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
-T4 = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
-A4 = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
-E4 = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
-Fp = F + MultiVector('p')
-F4 = Fp + MultiVector('0123')
+B4 = MultiVector(['p'] + _B)
+T4 = MultiVector(['0'] + _T)
+A4 = MultiVector([_h] + _A)
+E4 = MultiVector([_q] + _E)
+Fp = F + p
+F4 = F + p + q
 
 
 ##############################################################################
@@ -75,7 +83,7 @@ DE = differential_operator(E4)
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
 #        properties of the original context using .metric and .division
-ar = ARContext(METRIC, DIVISION_TYPE)
+ar = ARContext(METRIC, ALLOWED)
 
 
 def arpy_info():

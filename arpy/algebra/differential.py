@@ -93,9 +93,9 @@ def component_partial(component, wrt, div, metric, allowed):
     return new_component
 
 
-def differential_operator(wrt):
+def differential_operator(wrt, allowed=ALLOWED):
     '''Define a new operator as a function for later use'''
-    return AR_differential(wrt)
+    return AR_differential(wrt, allowed=allowed)
 
 
 @full.add((AR_differential, MultiVector))

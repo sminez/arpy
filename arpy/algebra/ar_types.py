@@ -109,11 +109,8 @@ class Xi:
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
-        if self.val in ALLOWED + ALLOWED_GROUPS:
-            display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
-            return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
-        else:
-            return '{}{}{}'.format(sign, ''.join(partials), self.val)
+        display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
+        return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
 
     def __tex__(self):
         sign = '+' if self.sign == 1 else '-'
