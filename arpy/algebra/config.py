@@ -2,6 +2,14 @@
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
+
+
+class Config:
+    '''The arpy paramater configuration object'''
+    def __init__(self):
+        '''Bind in all parameters'''
+
+
 # The labelling and ordering of the 16 elements of the algebra.
 # NOTE:: The order will affect the visualisation of the Cayley Table
 #       but not the results of finding products.

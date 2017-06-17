@@ -85,6 +85,9 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     Compute the product of two alpha values in the algebra. This uses some
     optimisations and observations that I've made in order to speed up the
     computation.
+
+    NOTE: find_prod ALWAYS returns a new alpha as we don't want to mutate
+          the values passed in as that will mess up any future calculations!
     '''
     # NOTE:: These are here so that they the user can change metric and
     #        allowed without having to reload the module.
