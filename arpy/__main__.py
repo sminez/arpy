@@ -7,12 +7,12 @@ The file is fed through and ARContext with some aditional pre-parsing in
 order to deal with assignment and paramater setting. All Variables are printed
 when at the head of the output and calculations are labelled.
 '''
-# import sys
 import argparse
 from collections import namedtuple
 from .utils.lexparse import ARContext
 from .algebra.config import ALLOWED, METRIC
-from . import *
+
+from . import *  # Bring in all of arpy
 
 
 description = '''\
@@ -53,6 +53,7 @@ class CalculationError(Exception):
 
 comment = namedtuple('comment', 'lnum text')
 step = namedtuple('step', 'lnum var args')
+context_update = namedtuple('context_update', 'lnum param val')
 
 
 def parse_calculation_file(fname):
@@ -66,28 +67,36 @@ def parse_calculation_file(fname):
         return tuple(metric)
 
     # Set paramaters to default to start
-    metric, allowed = METRIC, ALLOWED
+    metric, allowed = None, None
     lines = []
 
     with open(fname, 'r') as f:
         for lnum, line in enumerate(f):
+            lnum += 1
             # Skip blank lines
             if line == '\n':
                 continue
+
             # Check and set paramaters
             elif line.startswith('// METRIC:'):
-                metric = convert_metric(line.split('// METRIC: ')[1])
-                lines.append(comment(lnum, line[:-1]))
+                m = convert_metric(line.split('// METRIC: ')[1])
+                if metric is None:
+                    metric = m
+                lines.append(comment(lnum, line.strip()))
+                lines.append(context_update(lnum, 'metric', m))
+
             elif line.startswith('// ALLOWED:'):
-                allowed = line.split('// ALLOWED: ')[1].split()
-                lines.append(comment(lnum, line[:-1]))
+                a = line.split('// ALLOWED: ')[1].split()
+                if allowed is None:
+                    allowed = a
+                lines.append(comment(lnum, line.strip()))
+                lines.append(context_update(lnum, 'allowed', a))
+
             # extract comments
             elif line.startswith('#'):
-                if line.startswith('# '):
-                    text = line.split('# ')[1]
-                else:
-                    text = line.split('#')[1]
-                lines.append(comment(lnum, text[:-1]))
+                text = line.split('#')[1].strip()
+                lines.append(comment(lnum, text))
+
             # extract steps
             else:
                 if '=' not in line:
@@ -95,7 +104,17 @@ def parse_calculation_file(fname):
                     raise CalculationError(tmp.format(lnum, line))
                 else:
                     var, args = line.split(' = ')
-                    lines.append(step(lnum, var, args[:-1]))
+                    lines.append(step(lnum, var, args.strip()))
+
+    # Fall back to defaults if metric/allowed were not specified
+    if allowed is None:
+        allowed = ALLOWED
+        lines = comment(0, '// ALLOWED: ' + ' '.join(ALLOWED))
+
+    if metric is None:
+        metric = METRIC
+        m = ''.join('+' if x == 1 else '-' for x in METRIC)
+        lines = comment(0, '// METRIC: ' + m)
 
     context = ARContext(metric=metric, allowed=allowed)
     return context, lines
@@ -134,6 +153,15 @@ context, lines = parse_calculation_file(args.script)
 for l in lines:
     if isinstance(l, comment):
         print(l.text)
+
+    elif isinstance(l, context_update):
+        # The update will have a matching comment line to show when
+        # it occured in the calculation.
+        if l.param == 'metric':
+            context.metric = l.val
+        elif l.param == 'allowed':
+            context.allowed = l.val
+
     elif isinstance(l, step):
         exec('{} = context("{}")'.format(l.var, l.args))
         print('{} = {}'.format(l.var, l.args))

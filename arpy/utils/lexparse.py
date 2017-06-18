@@ -280,16 +280,20 @@ class ARContext:
 
     @metric.setter
     def metric(self, signs):
-        if not all(sign in ["+", "-"] for sign in signs):
+        if all(sign in ["+", "-"] for sign in signs):
+            if len(signs) != 4:
+                raise ValueError(
+                    "metric should be a 4 element string.\n"
+                    "i.e. 'ar.metric = \"+---\"'"
+                )
+            metric = tuple(1 if s == "+" else -1 for s in signs)
+        elif all(sign in [1, -1] for sign in signs):
+            metric = signs
+        else:
             raise TypeError("metric must be comprised of +/- only")
-        if len(signs) != 4:
-            raise ValueError(
-                "metric should be a 4 element string.\n"
-                "i.e. 'ar.metric = \"+---\"'"
-            )
-        self._metric = tuple(1 if s == "+" else -1 for s in signs)
-        self._parser.metric = self._metric
-        print("metric has been set to '{}'".format(signs))
+
+        self._metric = metric
+        self._parser.metric = metric
 
     @property
     def allowed(self):
