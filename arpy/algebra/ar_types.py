@@ -5,7 +5,6 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 from copy import deepcopy
 from .config import config as cfg
 from ..utils.utils import SUB_SCRIPTS
-# ALLOWED, ALLOWED_GROUPS, SUB_SCRIPTS, BXYZ_LIKE
 
 
 class Alpha:
