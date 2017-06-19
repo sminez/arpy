@@ -16,7 +16,7 @@ class ARConfig:
 
         # Generate the config and bind to the calling scope
         self.update_config()
-        self.update_env(lvl=3)  # See arpy __init__ for details
+        # update_env in the __init__
 
     def reset(self):
         '''Reset the metric and allowed to their default values'''
