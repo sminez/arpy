@@ -3,10 +3,9 @@
 
 __version__ = '0.1.7'
 
+import types
 from copy import deepcopy
-from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
-        ALPHA_TO_GROUP, ALLOWED_GROUPS, FOUR_SET_COMPS, FOUR_SETS, \
-        BXYZ_LIKE
+from .algebra.config import config, ARConfig
 from .algebra.ar_types import Alpha, Xi, Pair
 from .algebra.multivector import MultiVector, DelMultiVector
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
@@ -19,10 +18,10 @@ from .utils.visualisation import cayley, sign_cayley, sign_distribution
 
 
 ##############################################################################
-# Horrible hack to get arround cyclic imports #
-###############################################
+# Horrible hacks to get arround cyclic imports #
+################################################
 def invert_multivector(self):
-    # ~mvec as a shortcut for the Hermitian conjugate
+    '''~mvec as a shortcut for the Hermitian conjugate'''
     inverted = deepcopy(self)
     for alpha, xis in inverted.components.items():
         if full(alpha, alpha).sign == -1:
@@ -33,73 +32,95 @@ def invert_multivector(self):
 
 MultiVector.__invert__ = invert_multivector
 
-# Indices for alphas
-_h = [a for a in ALLOWED if len(a) == 3 and '0' not in a][0]
-_q = [a for a in ALLOWED if len(a) == 4][0]
-_B = [a for a in ALLOWED if len(a) == 2 and '0' not in a]
-_T = [a for a in ALLOWED if len(a) == 3 and '0' in a]
-_A = ['0', '1', '2', '3']
-_E = [a for a in ALLOWED if len(a) == 2 and '0' in a]
+
+def update_env(self):
+    '''Update the list of predefined operators and multivectors'''
+    # Multi-vectors to work with based on the 3-vectors
+    self.p = MultiVector('p')
+    self.h = MultiVector(self._h)
+    self.q = MultiVector(self._q)
+    self.t = MultiVector('0')
+
+    self.A = MultiVector(self._A)
+    self.B = MultiVector(self._B)
+    self.E = MultiVector(self._E)
+    self.F = self.E + self.B
+    self.T = MultiVector(self._T)
+    self.G = MultiVector(self.allowed)
+
+    self.B4 = MultiVector(['p'] + self._B)
+    self.T4 = MultiVector(['0'] + self._T)
+    self.A4 = MultiVector([self._h] + self._A)
+    self.E4 = MultiVector([self._q] + self._E)
+    self.Fp = self.F + self.p
+    self.F4 = self.F + self.p + self.q
+
+    # Differential operators
+    self.Dmu = self.d = differential_operator(['0', '1', '2', '3'])
+    self.DG = differential_operator(self.allowed)
+    self.DF = differential_operator(self.F)
+
+    self.DB = differential_operator(self.B4)
+    self.DT = differential_operator(self.T4)
+    self.DA = differential_operator(self.A4)
+    self.DE = differential_operator(self.E4)
+
+
+# Add the update_env method to ARConfig _and_ the config instance
+ARConfig.update_env = update_env
+config.update_env = types.MethodType(update_env, config)
 
 ##############################################################################
-# Multi-vectors to work with based on the 3/4-vectors #
-#######################################################
 
-p = MultiVector('p')
-h = MultiVector(_h)
-q = MultiVector(_q)
-t = MultiVector('0')
+# Bring the config definitions into scope
+config.update_config()
+config.update_env()
 
-A = MultiVector(_A)
-B = MultiVector(_B)
-E = MultiVector(_E)
-F = E + B
-T = MultiVector(_T)
-G = MultiVector(ALLOWED)
+p = config.p
+h = config.h
+q = config.q
+t = config.t
 
-##############################################################################
-# Multi-vectors to work with based on the 4Set components #
-###########################################################
-B4 = MultiVector(['p'] + _B)
-T4 = MultiVector(['0'] + _T)
-A4 = MultiVector([_h] + _A)
-E4 = MultiVector([_q] + _E)
-Fp = F + p
-F4 = F + p + q
+A = config.A
+B = config.B
+E = config.E
+F = config.F
+T = config.T
+G = config.G
 
+B4 = config.B4
+T4 = config.T4
+A4 = config.A4
+E4 = config.E4
+Fp = config.Fp
+F4 = config.F4
 
-##############################################################################
-# Sepcific Differnetial operators #
-###################################
-Dmu = d = differential_operator(['0', '1', '2', '3'])
-DG = differential_operator(ALLOWED)
-DF = differential_operator(F)
-
-DB = differential_operator(B4)
-DT = differential_operator(T4)
-DA = differential_operator(A4)
-DE = differential_operator(E4)
+Dmu = d = config.Dmu
+DG = config.DG
+DF = config.DF
+DB = config.DB
+DT = config.DT
+DA = config.DA
+DE = config.DE
 
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
 #        properties of the original context using .metric and .division
-ar = ARContext(METRIC, ALLOWED)
+ar = ARContext(config)
 
 
 def arpy_info():
     '''Display some information about arpy'''
     print('\nNow running arpy version:\t', __version__)
     print('=======================================')
-    print('Allowed αs:\t', ', '.join([str(Alpha(a)) for a in ALLOWED]))
-    print('Division:\t', DIVISION_TYPE)
-    print('Metric:\t\t', ''.join(['+' if i == 1 else '-' for i in METRIC]))
+    print('Allowed αs:\t', ', '.join([str(Alpha(a)) for a in config.allowed]))
+    print('Division:\t', config.division_type)
+    metric = ['+' if i == 1 else '-' for i in config.metric]
+    print('Metric:\t\t', ''.join(metric))
 
 
 # All values that will be imported when the user does `from arpy import *`
 __all__ = [
-    # Config initialised values
-    'ALLOWED', 'XI_GROUPS', 'METRIC', 'DIVISION_TYPE', 'ALPHA_TO_GROUP',
-    'ALLOWED_GROUPS', 'FOUR_SET_COMPS', 'FOUR_SETS', 'BXYZ_LIKE',
     # Data structures
     'Alpha', 'Xi', 'Pair', 'MultiVector', 'DelMultiVector',
     # Non differential operators
@@ -115,5 +136,5 @@ __all__ = [
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
     # The a pre-defined ar() context function and Tex output
-    'ar', 'Tex', 'arpy_info'
+    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig'
 ]
