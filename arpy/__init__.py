@@ -4,7 +4,10 @@
 __version__ = '0.1.7'
 
 import types
+from sys import _getframe
 from copy import deepcopy
+from ctypes import c_int, pythonapi, py_object
+
 from .algebra.config import config, ARConfig
 from .algebra.ar_types import Alpha, Xi, Pair
 from .algebra.multivector import MultiVector, DelMultiVector
@@ -33,25 +36,40 @@ def invert_multivector(self):
 MultiVector.__invert__ = invert_multivector
 
 
-def update_env(self):
+def update_env(self, lvl=2):
     '''Update the list of predefined operators and multivectors'''
+    def _bind_to_calling_scope(defs, lvl):
+        '''
+        Inject the default Multivectors and operators into the main scope
+        of the repl. (THIS IS HORRIFYING!!!)
+        NOTE: This uses some not-so-nice abuse of stack frames and the
+              ctypes API to make this work and as such it will almost
+              certainly not run under anything other than cPython.
+        '''
+        # Grab the stack frame that the caller's code is running in
+        frame = _getframe(lvl)
+        # Dump the matched variables and their values into the frame
+        frame.f_locals.update(defs)
+        # Force an update of the frame locals from the locals dict
+        pythonapi.PyFrame_LocalsToFast(py_object(frame), c_int(0))
+
     # Multi-vectors to work with based on the 3-vectors
-    self.p = MultiVector('p')
-    self.h = MultiVector(self._h)
-    self.q = MultiVector(self._q)
-    self.t = MultiVector('0')
+    self.p = MultiVector('p', cfg=self)
+    self.h = MultiVector(self._h, cfg=self)
+    self.q = MultiVector(self._q, cfg=self)
+    self.t = MultiVector('0', cfg=self)
 
-    self.A = MultiVector(self._A)
-    self.B = MultiVector(self._B)
-    self.E = MultiVector(self._E)
+    self.A = MultiVector(self._A, cfg=self)
+    self.B = MultiVector(self._B, cfg=self)
+    self.E = MultiVector(self._E, cfg=self)
     self.F = self.E + self.B
-    self.T = MultiVector(self._T)
-    self.G = MultiVector(self.allowed)
+    self.T = MultiVector(self._T, cfg=self)
+    self.G = MultiVector(self.allowed, cfg=self)
 
-    self.B4 = MultiVector(['p'] + self._B)
-    self.T4 = MultiVector(['0'] + self._T)
-    self.A4 = MultiVector([self._h] + self._A)
-    self.E4 = MultiVector([self._q] + self._E)
+    self.B4 = MultiVector(['p'] + self._B, cfg=self)
+    self.T4 = MultiVector(['0'] + self._T, cfg=self)
+    self.A4 = MultiVector([self._h] + self._A, cfg=self)
+    self.E4 = MultiVector([self._q] + self._E, cfg=self)
     self.Fp = self.F + self.p
     self.F4 = self.F + self.p + self.q
 
@@ -65,6 +83,12 @@ def update_env(self):
     self.DA = differential_operator(self.A4)
     self.DE = differential_operator(self.E4)
 
+    _vars = ['p', 'h', 'q', 't', 'A', 'B', 'E', 'F', 'T', 'G',
+             'B4', 'T4', 'A4', 'E4', 'Fp', 'F4', 'Dmu', 'd',
+             'DG', 'DF', 'DB', 'DT', 'DA', 'DE']
+    defs = dict(zip(_vars, (getattr(self, var) for var in _vars)))
+    _bind_to_calling_scope(defs, lvl)
+
 
 # Add the update_env method to ARConfig _and_ the config instance
 ARConfig.update_env = update_env
@@ -75,33 +99,6 @@ config.update_env = types.MethodType(update_env, config)
 # Bring the config definitions into scope
 config.update_config()
 config.update_env()
-
-p = config.p
-h = config.h
-q = config.q
-t = config.t
-
-A = config.A
-B = config.B
-E = config.E
-F = config.F
-T = config.T
-G = config.G
-
-B4 = config.B4
-T4 = config.T4
-A4 = config.A4
-E4 = config.E4
-Fp = config.Fp
-F4 = config.F4
-
-Dmu = d = config.Dmu
-DG = config.DG
-DF = config.DF
-DB = config.DB
-DT = config.DT
-DA = config.DA
-DE = config.DE
 
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the

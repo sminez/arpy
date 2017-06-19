@@ -8,12 +8,57 @@ class ARConfig:
     '''The arpy paramater configuration object'''
     def __init__(self, allowed, metric, div):
         '''Bind in all parameters'''
-        self.allowed = allowed
-        self.metric = metric
+        self._allowed = allowed
+        self.original_allowed = allowed
+        self._metric = metric
+        self.original_metric = metric
         self.division_type = div
 
-        # Generate the config
+        # Generate the config and bind to the calling scope
         self.update_config()
+        self.update_env(lvl=3)  # See arpy __init__ for details
+
+    def reset(self):
+        '''Reset the metric and allowed to their default values'''
+        self.allowed = self.original_allowed
+        self.metric = self.original_metric
+        self.update_config()
+        self.update_env(lvl=3)  # See arpy __init__ for details
+
+    @property
+    def metric(self):
+        return self._metric
+
+    @metric.setter
+    def metric(self, signs):
+        if all(sign in ["+", "-"] for sign in signs):
+            if len(signs) != 4:
+                raise ValueError(
+                    "metric should be a 4 element string.\n"
+                    "i.e. 'ar.metric = \"+---\"'"
+                )
+            metric = tuple(1 if s == "+" else -1 for s in signs)
+        elif all(sign in [1, -1] for sign in signs):
+            metric = signs
+        else:
+            raise TypeError("metric must be comprised of +/- only")
+
+        self._metric = metric
+        self.update_config()
+        self.update_env(lvl=3)  # See arpy __init__ for details
+
+    @property
+    def allowed(self):
+        return self._allowed
+
+    @allowed.setter
+    def allowed(self, allowed):
+        if len(allowed) != 16:
+            raise ValueError('Must provide all 16 elements for allowed')
+
+        self._allowed = allowed
+        self.update_config()
+        self.update_env(lvl=3)  # See arpy __init__ for details
 
     def update_config(self):
         '''

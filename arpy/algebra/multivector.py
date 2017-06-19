@@ -97,7 +97,7 @@ class MultiVector(collections.abc.Set):
         elif isinstance(other, MultiVector):
             comps.extend(p for p in other)
 
-        res = MultiVector(comps)
+        res = MultiVector(comps, cfg=self.cfg)
         return res
 
     def __sub__(self, other):
