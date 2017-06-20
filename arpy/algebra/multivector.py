@@ -131,14 +131,14 @@ class MultiVector(collections.abc.Set):
     def __getitem__(self, key):
         if isinstance(key, str):
             # Allow retreval by string as well as Alpha
-            key = Alpha(key, cfg=cfg)
+            key = Alpha(key, cfg=self.cfg)
         if not isinstance(key, Alpha):
             raise KeyError
         return [Pair(key, xi) for xi in self.components[key]]
 
     def __delitem__(self, key):
         if isinstance(key, str):
-            key = Alpha(key, cfg=cfg)
+            key = Alpha(key, cfg=self.cfg)
         if not isinstance(key, Alpha):
             raise KeyError
 
@@ -146,10 +146,10 @@ class MultiVector(collections.abc.Set):
 
     def __iter__(self):
         for alpha in self.cfg.allowed:
-            key = Alpha(alpha, cfg=cfg)
+            key = Alpha(alpha, cfg=self.cfg)
             try:
                 for xi in self.components[key]:
-                    yield Pair(alpha, xi, cfg=cfg)
+                    yield Pair(alpha, xi, cfg=self.cfg)
             except KeyError:
                 pass
 

@@ -4,12 +4,12 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
 Tools for visualising results from calculations and investigations.
 '''
-from ..algebra.config import config as cfg
+from ..algebra.config import config
 from ..algebra.ar_types import Alpha
 from ..algebra.operations import full
 
 
-def cayley(op=full, padding=6, cfg=cfg):
+def cayley(op=full, padding=6, cfg=config):
     '''
     Print current Cayley table to the terminal allowing for specification
     of the operation used to compute the table.
@@ -25,7 +25,7 @@ def cayley(op=full, padding=6, cfg=cfg):
         print(comp)
 
 
-def sign_cayley(op=full, cfg=cfg):
+def sign_cayley(op=full, cfg=config):
     '''
     Print +-1 signs for the current Cayley table to the terminal allowing
     for specification of the operation used to compute the table.
@@ -35,7 +35,9 @@ def sign_cayley(op=full, cfg=cfg):
     divider = '      ' + ''.join('+---------' for _ in range(4)) + '+'
     comps = (
         ' '.join([
-            '■' if op(Alpha(x, cfg=cfg), Alpha(y, cfg=cfg)).sign == -1 else '□'
+            '■' if op(
+                Alpha(x, cfg=cfg), Alpha(y, cfg=cfg), cfg=cfg
+            ).sign == -1 else '□'
             for y in cfg.allowed])
         for x in cfg.allowed
     )
@@ -51,13 +53,12 @@ def sign_cayley(op=full, cfg=cfg):
             print(divider)
 
 
-def _4block(rows, cols, op, metric, allowed):
+def _4block(rows, cols, op, cfg):
     '''Visualise a 4x4 block of 4 elements acting on 4 others'''
     block = []
     for r in rows:
         comps = [
-            op(Alpha(r, allowed=allowed), Alpha(c, allowed=allowed),
-               metric=metric, allowed=allowed).sign
+            op(Alpha(r, cfg=cfg), Alpha(c, cfg=cfg), cfg=cfg).sign
             for c in cols
         ]
         block_row = ' '.join(['□' if c == 1 else '■' for c in comps])
@@ -65,14 +66,13 @@ def _4block(rows, cols, op, metric, allowed):
     return block
 
 
-def sign_distribution(op, cfg=cfg):
+def sign_distribution(op=full, cfg=config):
     '''
     By calculating one term for each of the 5 grouped components of the
     cayley table, look at how each metric / allowed set of indices affects
     the overall structure of the algebra.
     '''
     allowed = cfg.allowed
-    metric = cfg.metric
     bs, xs, zs = allowed[0:16:4], allowed[1:16:4], allowed[3:16:4]
 
     blocks = []
@@ -84,7 +84,7 @@ def sign_distribution(op, cfg=cfg):
 
     for name in ['∂b', '∂Ξ', '∇', '∇•', '∇x']:
         rows, cols = row_cols[name]
-        blocks.append((name, _4block(rows, cols, op, metric, allowed)))
+        blocks.append((name, _4block(rows, cols, op, cfg)))
 
     for i in range(4):
         for block in blocks:

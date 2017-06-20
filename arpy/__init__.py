@@ -74,14 +74,14 @@ def update_env(self, lvl=2):
     self.F4 = self.F + self.p + self.q
 
     # Differential operators
-    self.Dmu = self.d = differential_operator(['0', '1', '2', '3'])
-    self.DG = differential_operator(self.allowed)
-    self.DF = differential_operator(self.F)
+    self.Dmu = self.d = differential_operator(['0', '1', '2', '3'], cfg=self)
+    self.DG = differential_operator(self.allowed, cfg=self)
+    self.DF = differential_operator(self.F, cfg=self)
 
-    self.DB = differential_operator(self.B4)
-    self.DT = differential_operator(self.T4)
-    self.DA = differential_operator(self.A4)
-    self.DE = differential_operator(self.E4)
+    self.DB = differential_operator(self.B4, cfg=self)
+    self.DT = differential_operator(self.T4, cfg=self)
+    self.DA = differential_operator(self.A4, cfg=self)
+    self.DE = differential_operator(self.E4, cfg=self)
 
     _vars = ['p', 'h', 'q', 't', 'A', 'B', 'E', 'F', 'T', 'G',
              'B4', 'T4', 'A4', 'E4', 'Fp', 'F4', 'Dmu', 'd',

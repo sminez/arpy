@@ -39,9 +39,12 @@ class ARConfig:
                 )
             metric = tuple(1 if s == "+" else -1 for s in signs)
         elif all(sign in [1, -1] for sign in signs):
+            if len(signs) != 4:
+                raise ValueError('Metric should be a 4-tuple of 1/-1')
             metric = signs
         else:
-            raise TypeError("metric must be comprised of +/- only")
+            raise ValueError(
+                'Invalid metric: {}\nValid examples: "+---", "(1,-1,-1,-1)"')
 
         self._metric = metric
         self.update_config()
@@ -55,6 +58,8 @@ class ARConfig:
     def allowed(self, allowed):
         if len(allowed) != 16:
             raise ValueError('Must provide all 16 elements for allowed')
+        if not all([set(c).issubset(set('p0123')) for c in allowed]):
+            raise ValueError('Invalid indices for allowed: {}'.format(allowed))
 
         self._allowed = allowed
         self.update_config()
