@@ -16,7 +16,7 @@ from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
 from .algebra.differential import AR_differential, differential_operator
 from .algebra.del_grouping import del_grouped
 from .utils.lexparse import ARContext
-from .utils.utils import Tex
+from .utils.utils import Tex, reorder_allowed
 from .utils.visualisation import cayley, sign_cayley, sign_distribution
 
 
@@ -132,6 +132,6 @@ __all__ = [
     # Pre-defined MultiVectors
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
-    # The a pre-defined ar() context function and Tex output
-    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig'
+    # Util functions
+    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig', 'reorder_allowed'
 ]

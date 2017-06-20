@@ -19,11 +19,17 @@ def reorder_allowed(allowed, order='pBtThAqE'):
     Shuffle the ordering of allowed, keeping 3-Vectors together.
     NOTE: This assumes that the input is in pBtThAqE order to start.
     '''
-    groups = {
-        'p': ['p'], 't': ['0'], 'A': ['1', '2', '3'],
-        'B': allowed[1:4], 'T': allowed[5:8], 'E': allowed[13:16],
-        'q': [allowed[12]], 'h': [allowed[8]]
-    }
+    p = ['p']
+    t = ['0']
+    h = [a for a in allowed if len(a) == 3 and '0' not in a]
+    q = [a for a in allowed if len(a) == 4]
+    B = [a for a in allowed if len(a) == 2 and '0' not in a]
+    T = [a for a in allowed if len(a) == 3 and '0' in a]
+    A = [a for a in allowed if len(a) == 1 and a not in ['p', '0']]
+    E = [a for a in allowed if len(a) == 2 and '0' in a]
+
+    groups = {'p': p, 't': t, 'h': h, 'q': q,
+              'B': B, 'T': T, 'A': A, 'E': E}
     new = []
     for group in order:
         new += groups[group]
