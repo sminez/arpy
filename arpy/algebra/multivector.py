@@ -12,8 +12,7 @@ from itertools import groupby
 from collections import namedtuple
 from .ar_types import Alpha, Pair, Xi, XiProduct
 from .del_grouping import del_grouped
-from .config import ALLOWED, ALLOWED_GROUPS, ALPHA_TO_GROUP, BXYZ_LIKE, \
-    XI_GROUPS
+from .config import config as cfg
 
 
 MvecLabel = namedtuple('MvecLabel', 'label originals')
@@ -21,10 +20,11 @@ MvecLabel = namedtuple('MvecLabel', 'label originals')
 
 class MultiVector(collections.abc.Set):
     '''A custom container type for working efficiently with multivectors'''
-    def __init__(self, components=[], allowed=ALLOWED):
+    def __init__(self, components=[], cfg=cfg):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self._allowed_alphas = allowed
-        self.components = {Alpha(a, allowed=allowed): [] for a in allowed}
+        self.cfg = cfg
+        self.components = {
+            Alpha(a, cfg=cfg): [] for a in cfg.allowed}
         self.replacements = []
 
         if isinstance(components, str):  # Allow for single string input
@@ -32,11 +32,11 @@ class MultiVector(collections.abc.Set):
 
         for comp in components:
             if isinstance(comp, (str, Alpha)):
-                comp = Pair(comp, allowed=allowed)
+                comp = Pair(comp, cfg=cfg)
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
 
-            if comp.alpha.index in allowed:
+            if comp.alpha.index in cfg.allowed:
                 _comp = deepcopy(comp)
                 try:
                     self.components[_comp.alpha].append(_comp.xi)
@@ -50,18 +50,18 @@ class MultiVector(collections.abc.Set):
     def __repr__(self):
         comps = [
             '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
-                Alpha(a, allowed=self._allowed_alphas)))
-            for a in self._allowed_alphas
-            if self.components[Alpha(a, allowed=self._allowed_alphas)]]
+                Alpha(a, cfg=cfg)))
+            for a in self.cfg.allowed
+            if self.components[Alpha(a, cfg=cfg)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
         comps = [
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
-                Alpha(a, allowed=self._allowed_alphas), tex=True) +
+                Alpha(a, cfg=cfg), tex=True) +
             r'+ \nonumber\\'
-            for a in self._allowed_alphas
-            if self.components[Alpha(a, allowed=self._allowed_alphas)]
+            for a in self.cfg.allowed
+            if self.components[Alpha(a, cfg=cfg)]
         ]
         return '{\n' + '\n'.join(comps) + '\n}'
 
@@ -70,14 +70,14 @@ class MultiVector(collections.abc.Set):
         if isinstance(ordering, str):
             ordering = ordering.split()
 
-        if not all([o in self._allowed_alphas for o in ordering]):
+        if not all([o in self.cfg.allowed for o in ordering]):
             raise ValueError('Invalid index in ordering')
 
         comps = [
             '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
-                Alpha(a, allowed=self._allowed_alphas)))
+                Alpha(a, cfg=cfg)))
             for a in ordering
-            if self.components[Alpha(a, allowed=self._allowed_alphas)]]
+            if self.components[Alpha(a, cfg=cfg)]]
         print('{\n' + '\n'.join(comps) + '\n}')
 
     def __len__(self):
@@ -97,7 +97,7 @@ class MultiVector(collections.abc.Set):
         elif isinstance(other, MultiVector):
             comps.extend(p for p in other)
 
-        res = MultiVector(comps)
+        res = MultiVector(comps, cfg=self.cfg)
         return res
 
     def __sub__(self, other):
@@ -131,25 +131,25 @@ class MultiVector(collections.abc.Set):
     def __getitem__(self, key):
         if isinstance(key, str):
             # Allow retreval by string as well as Alpha
-            key = Alpha(key, allowed=self._allowed_alphas)
+            key = Alpha(key, cfg=self.cfg)
         if not isinstance(key, Alpha):
             raise KeyError
         return [Pair(key, xi) for xi in self.components[key]]
 
     def __delitem__(self, key):
         if isinstance(key, str):
-            key = Alpha(key, allowed=self._allowed_alphas)
+            key = Alpha(key, cfg=self.cfg)
         if not isinstance(key, Alpha):
             raise KeyError
 
         self.components[key] = []
 
     def __iter__(self):
-        for alpha in self._allowed_alphas:
-            key = Alpha(alpha, allowed=self._allowed_alphas)
+        for alpha in self.cfg.allowed:
+            key = Alpha(alpha, cfg=self.cfg)
             try:
                 for xi in self.components[key]:
-                    yield Pair(alpha, xi, allowed=self._allowed_alphas)
+                    yield Pair(alpha, xi, cfg=self.cfg)
             except KeyError:
                 pass
 
@@ -214,7 +214,8 @@ class MultiVector(collections.abc.Set):
         NOTE:: This deliberately does not return a new MultiVector as we
                should always be working with strict alpha values not grouped.
         '''
-        by_alpha = groupby(self, key=lambda x: ALPHA_TO_GROUP[x.alpha.index])
+        by_alpha = groupby(
+            self, key=lambda x: self.cfg.alpha_to_group[x.alpha.index])
         BTAE = [
             (group, tuple(c.xi for c in components))
             for (group, components) in by_alpha
@@ -262,7 +263,7 @@ class MultiVector(collections.abc.Set):
                         seen.append(comps[0].alpha)
 
                     if bxyz:
-                        x = str(BXYZ_LIKE[common_xi.val]).ljust(3)
+                        x = str(self.cfg.bxyz_like[common_xi.val]).ljust(3)
                         if sign:
                             signs = [c.xi.bxyz()[0] for c in comps]
                             blocks = ['■' if s == '-' else '□' for s in signs]
@@ -295,24 +296,24 @@ class MultiVector(collections.abc.Set):
             replacement = replacement[1:]
             xi_sign *= -1
 
-        if index in self._allowed_alphas:
+        if index in self.cfg.allowed:
             new_xi = Xi(replacement, sign=xi_sign)
             originals = deepcopy(new_mvec.components[
-                Alpha(index, allowed=self._allowed_alphas)])
+                Alpha(index, cfg=cfg)])
             replacements = [MvecLabel(new_xi, originals)]
-            new_mvec.components[Alpha(index)] = [new_xi]
+            new_mvec.components[Alpha(index, cfg=cfg)] = [new_xi]
         else:
             try:
                 replacements = []
-                indices = zip(['₁', '₂', '₃'], XI_GROUPS[index])
+                indices = zip(['₁', '₂', '₃'], self.cfg.xi_groups[index])
                 for comp, index in indices:
                     new_xi = Xi(replacement + comp, sign=xi_sign)
                     originals = deepcopy(
                         new_mvec.components[
-                            Alpha(index, allowed=self._allowed_alphas)])
+                            Alpha(index, cfg=cfg)])
                     replacements.append(MvecLabel(new_xi, originals))
                     new_mvec.components[
-                        Alpha(index, allowed=self._allowed_alphas)] = [new_xi]
+                        Alpha(index, cfg=cfg)] = [new_xi]
             except KeyError:
                 raise ValueError('{} is not a valid index'.format(index))
 
@@ -337,14 +338,12 @@ class MultiVector(collections.abc.Set):
                         comp.partials.extend(xi.partials)
                         comp.sign *= xi.sign
                         if return_pairs:
-                            new_comps.append(
-                                Pair(alpha, comp, allowed=self._allowed_alphas)
-                            )
+                            new_comps.append(Pair(alpha, comp, cfg=cfg))
                         else:
                             new_comps.append(comp)
                     return new_comps
             if return_pairs:
-                return [Pair(alpha, xi, allowed=self._allowed_alphas)]
+                return [Pair(alpha, xi, cfg=cfg)]
             else:
                 return [xi]
 
@@ -366,7 +365,7 @@ class MultiVector(collections.abc.Set):
                 pair.xi.components = tuple(new_pair_components)
                 new_comps.append(pair)
 
-        return MultiVector(new_comps, allowed=self._allowed_alphas)
+        return MultiVector(new_comps, cfg=cfg)
 
     @property
     def v(self):
@@ -379,18 +378,18 @@ class MultiVector(collections.abc.Set):
 
 class DelMultiVector(MultiVector):
 
-    def __init__(self, components=[], allowed=ALLOWED_GROUPS):
+    def __init__(self, components=[], cfg=cfg):
         # Given a list of pairs, build the mulitvector by binding the ξ values
-        self._allowed_alphas = ALLOWED_GROUPS
+        self.cfg = cfg
         self.components = {
-            Alpha(a, allowed=self._allowed_alphas): [] for a in allowed}
+            Alpha(a, cfg=cfg): [] for a in self.cfg.allowed}
 
         for comp in del_grouped(components):
             if isinstance(comp, (str, Alpha)):
-                comp = Pair(comp, allowed=allowed)
+                comp = Pair(comp, cfg=cfg)
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
-            if comp.alpha.index in allowed:
+            if comp.alpha.index in self.cfg.allowed:
                 try:
                     self.components[comp.alpha].append(comp.xi)
                 except KeyError:

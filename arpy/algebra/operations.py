@@ -37,7 +37,7 @@ we are done.
 from copy import deepcopy
 from functools import wraps
 from types import FunctionType
-from .config import ALLOWED, METRIC
+from .config import config as cfg
 from .multivector import MultiVector
 from ..utils.concepts.dispatch import dispatch_on
 from .ar_types import Alpha, Pair, XiProduct
@@ -54,12 +54,12 @@ def product_cache(func):
     cache_hits = {'hits': 0, 'misses': 0}
 
     @wraps(func)
-    def wrapped(i, j, metric=METRIC, allowed=ALLOWED):
+    def wrapped(i, j, cfg=cfg):
         '''
         Check the cache for a result and call through to find_prod if
         we don't have one.
         '''
-        args = (i, j, tuple(metric), tuple(allowed))
+        args = (i, j, tuple(cfg.metric), tuple(cfg.allowed))
         result = cache.get(args)
 
         if result:
@@ -69,7 +69,7 @@ def product_cache(func):
         else:
             # Compute the result and store it in the cache
             cache_hits['misses'] += 1
-            result = func(i, j, metric=metric, allowed=allowed)
+            result = func(i, j, cfg=cfg)
             cache[args] = result
             return result
 
@@ -80,7 +80,7 @@ def product_cache(func):
 
 
 @product_cache
-def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
+def find_prod(i, j, cfg=cfg):
     '''
     Compute the product of two alpha values in the algebra. This uses some
     optimisations and observations that I've made in order to speed up the
@@ -91,14 +91,14 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     '''
     # NOTE:: These are here so that they the user can change metric and
     #        allowed without having to reload the module.
-    metric = {k: v for k, v in zip('0123', metric)}
-    targets = {frozenset(a): a for a in allowed}
+    metric = {k: v for k, v in zip('0123', cfg.metric)}
+    targets = {frozenset(a): a for a in cfg.allowed}
 
     # Rule (1) :: Multiplication by αp is idempotent
     if i.index == 'p':
-        return Alpha(j.index, (i.sign * j.sign), allowed=allowed)
+        return Alpha(j.index, (i.sign * j.sign), cfg=cfg)
     elif j.index == 'p':
-        return Alpha(i.index, (i.sign * j.sign), allowed=allowed)
+        return Alpha(i.index, (i.sign * j.sign), cfg=cfg)
 
     # Rule (2) :: Squaring and popping
     sign = i.sign * j.sign
@@ -121,7 +121,7 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
     target = targets[frozenset(components)]
 
     if target == components:
-        return Alpha(target, sign, allowed=allowed)
+        return Alpha(target, sign, cfg=cfg)
 
     ordering = {c: i+1 for i, c in enumerate(target)}
     current = [ordering[c] for c in components]
@@ -133,46 +133,46 @@ def find_prod(i, j, metric=METRIC, allowed=ALLOWED):
         new_order = {j: i+1 for i, j in enumerate(sorted(current))}
         current = [new_order[k] for k in current]
 
-    return Alpha(target, sign, allowed=allowed)
+    return Alpha(target, sign, cfg=cfg)
 
 
-def inverse(a, metric=METRIC, allowed=ALLOWED):
+def inverse(a, cfg=cfg):
     '''Find the inverse of an Alpha element'''
     return Alpha(
         a.index,
-        (find_prod(a, a, metric, allowed).sign * a.sign),
-        allowed=allowed
+        (find_prod(a, a, cfg).sign * a.sign),
+        cfg=cfg
     )
 
 
 ##############################################################################
 @dispatch_on((0, 1))
-def full(a, b, metric=METRIC, allowed=ALLOWED):
+def full(a, b, cfg=cfg):
     '''Compute the Full product of two elements'''
     raise NotImplementedError
 
 
 @full.add((Alpha, Alpha))
-def _full_alpha_alpha(a, b, metric=METRIC, allowed=ALLOWED):
-    return find_prod(a, b, metric, allowed)
+def _full_alpha_alpha(a, b, cfg=cfg):
+    return find_prod(a, b, cfg)
 
 
 @full.add((Alpha, Pair))
-def _full_alpha_pair(a, b, metric=METRIC, allowed=ALLOWED):
-    alpha = find_prod(a, b.alpha, metric, allowed)
+def _full_alpha_pair(a, b, cfg=cfg):
+    alpha = find_prod(a, b.alpha, cfg)
     return Pair(alpha, b.xi)
 
 
 @full.add((Pair, Alpha))
-def _full_pair_alpha(a, b, metric=METRIC, allowed=ALLOWED):
-    alpha = find_prod(a.alpha, b, metric, allowed)
+def _full_pair_alpha(a, b, cfg=cfg):
+    alpha = find_prod(a.alpha, b, cfg)
     return Pair(alpha, a.xi)
 
 
 @full.add((Pair, Pair))
-def _full_pair_pair(a, b, metric=METRIC, allowed=ALLOWED):
+def _full_pair_pair(a, b, cfg=cfg):
     a, b = deepcopy(a), deepcopy(b)
-    alpha = find_prod(a.alpha, b.alpha, metric, allowed)
+    alpha = find_prod(a.alpha, b.alpha, cfg)
     return Pair(alpha, XiProduct([a.xi, b.xi]))
     # NOTE:: Not sure which method is correct as this is mixing
     #        usign with magsign...
@@ -187,8 +187,8 @@ def _full_pair_pair(a, b, metric=METRIC, allowed=ALLOWED):
 
 
 @full.add((MultiVector, MultiVector))
-def _full_mvec_mvec(mv1, mv2, metric=METRIC, allowed=ALLOWED):
-    prod = MultiVector(full(i, j, metric, allowed) for i in mv1 for j in mv2)
+def _full_mvec_mvec(mv1, mv2, cfg=cfg):
+    prod = MultiVector(full(i, j, cfg) for i in mv1 for j in mv2)
     prod.replacements.extend(mv1.replacements + mv2.replacements)
     return prod
 
@@ -198,37 +198,37 @@ def _full_mvec_mvec(mv1, mv2, metric=METRIC, allowed=ALLOWED):
 
 ##############################################################################
 @dispatch_on((0, 1))
-def div_by(a, b, metric=METRIC, allowed=ALLOWED):
+def div_by(a, b, cfg=cfg):
     '''Divide one element by another'''
     raise NotImplementedError
 
 
 @div_by.add((Alpha, Alpha))
-def _div_by_alpha_alpha(a, b, metric=METRIC, allowed=ALLOWED):
-    return find_prod(a, inverse(b, metric, allowed), metric, allowed)
+def _div_by_alpha_alpha(a, b, cfg=cfg):
+    return find_prod(a, inverse(b, cfg), cfg)
 
 
 @div_by.add((Pair, Alpha))
-def _div_by_pair_alpha(a, b, metric=METRIC, allowed=ALLOWED):
-    alpha = find_prod(a.alpha, inverse(b, metric, allowed), metric, allowed)
+def _div_by_pair_alpha(a, b, cfg=cfg):
+    alpha = find_prod(a.alpha, inverse(b, cfg), cfg)
     return Pair(alpha, a.xi)
 
 
 ##############################################################################
 @dispatch_on((0, 1))
-def div_into(a, b, metric=METRIC, allowed=ALLOWED):
+def div_into(a, b, cfg=cfg):
     '''Divide one element into another'''
     raise NotImplementedError
 
 
 @div_into.add((Alpha, Alpha))
-def _div_into_Alpha_Alpha(a, b, metric=METRIC, allowed=ALLOWED):
-    return find_prod(inverse(a, metric, allowed), b, metric, allowed)
+def _div_into_Alpha_Alpha(a, b, cfg=cfg):
+    return find_prod(inverse(a, cfg), b, cfg)
 
 
 @div_into.add((Alpha, Pair))
-def _div_into_Alpha_Pair(a, b, metric=METRIC, allowed=ALLOWED):
-    alpha = find_prod(inverse(a, metric, allowed), b.alpha, metric, allowed)
+def _div_into_Alpha_Pair(a, b, cfg=cfg):
+    alpha = find_prod(inverse(a, cfg), b.alpha, cfg)
     return Pair(alpha, b.xi)
 
 
@@ -289,7 +289,7 @@ def _project_multivector(element, grade):
 ##############################################################################
 
 @dispatch_on((0, 1, 2))
-def prod_apply(arg1, arg2, arg3=None, metric=METRIC, allowed=ALLOWED):
+def prod_apply(arg1, arg2, arg3=None, cfg=cfg):
     '''
     Apply a function to the cartesian product of two multivectors
     NOTE:: The function must act on a single Multivector.
@@ -298,44 +298,43 @@ def prod_apply(arg1, arg2, arg3=None, metric=METRIC, allowed=ALLOWED):
 
 
 @prod_apply.add((FunctionType, MultiVector, MultiVector))
-def _prod_apply_dmm(func, mv1, mv2, metric=METRIC, allowed=ALLOWED):
+def _prod_apply_dmm(func, mv1, mv2, cfg=cfg):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
     return MultiVector(
-        full(i, j, metric, allowed)
-        for i in func(mv1, metric=metric, allowed=allowed)
+        full(i, j, cfg)
+        for i in func(mv1, cfg=cfg)
         for j in mv2
     )
 
 
 @prod_apply.add((MultiVector, FunctionType, MultiVector))
-def _prod_apply_mdm(mv1, func, mv2, metric=METRIC, allowed=ALLOWED):
+def _prod_apply_mdm(mv1, func, mv2, cfg=cfg):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
     return MultiVector(
-        full(i, j, metric, allowed)
+        full(i, j, cfg)
         for i in mv1
-        for j in func(mv2, metric=metric, allowed=allowed)
+        for j in func(mv2, cfg=cfg)
     )
 
 
 @prod_apply.add((FunctionType, tuple, type(None)))
-def _prod_apply_d_mm(func, mvecs=(None, None), _=None,
-                     metric=METRIC, allowed=ALLOWED):
+def _prod_apply_d_mm(func, mvecs=(None, None), _=None, cfg=cfg):
     if not isinstance(mvecs[0], MultiVector) and \
             isinstance(mvecs[1], MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
-    return func(full(mvecs[0], mvecs[1], metric, allowed))
+    return func(full(mvecs[0], mvecs[1], cfg))
 
 
 ##############################################################################
 
 
-def dagger(mvec, metric=METRIC, allowed=ALLOWED):
+def dagger(mvec, cfg=cfg):
     '''return ther Hermitian conjugate of the Multivector'''
     _neg = [
-        Alpha(a) for a in allowed
-        if full(Alpha(a), Alpha(a), metric, allowed).sign == -1
+        Alpha(a) for a in cfg.allowed
+        if full(Alpha(a), Alpha(a), cfg).sign == -1
     ]
     mvec = deepcopy(mvec)
     new_vec = []
@@ -351,7 +350,7 @@ def dagger(mvec, metric=METRIC, allowed=ALLOWED):
 ##############################################################################
 
 @dispatch_on((0, 1))
-def commutator(a, b, metric=METRIC, allowed=ALLOWED):
+def commutator(a, b, cfg=cfg):
     '''
     Computes the group commutator [a, b] = (a . b . a^-1 . b^-1) for Alphas.
     '''
@@ -359,10 +358,10 @@ def commutator(a, b, metric=METRIC, allowed=ALLOWED):
 
 
 @commutator.add((Alpha, Alpha))
-def _group_commutator(a, b, metric=METRIC, allowed=ALLOWED):
-    product = full(a, b, metric, allowed)
-    product = full(product, inverse(a), metric, allowed)
-    product = full(product, inverse(b), metric, allowed)
+def _group_commutator(a, b, cfg=cfg):
+    product = full(a, b, cfg)
+    product = full(product, inverse(a), cfg)
+    product = full(product, inverse(b), cfg)
     return product
 
 

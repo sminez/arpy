@@ -10,7 +10,7 @@ from operator import add
 from sys import _getframe, stderr
 from collections import namedtuple
 from ..algebra.ar_types import Alpha, Pair
-from ..algebra.config import ALLOWED, METRIC
+from ..algebra.config import config as cfg
 from ..algebra.multivector import MultiVector
 from ..algebra.differential import differential_operator
 from ..algebra.operations import full, div_by, div_into, project, \
@@ -44,8 +44,9 @@ class ArpyLexer:
     tags = re.compile(_tags)
     literals = [tag_regex[0] for tag_regex in literals]
 
-    def __init__(self, _globals=None):
+    def __init__(self, cfg=cfg, _globals=None):
         self._globals = _globals
+        self.cfg = cfg
         self.context_vars = {}
 
     def lex(self, string, context_vars=None):
@@ -63,20 +64,25 @@ class ArpyLexer:
 
             if lex_tag == 'ALPHA':
                 if text.startswith('-'):
-                    token = Token('EXPR', Alpha(text[2:], -1))
+                    token = Token('EXPR', Alpha(text[2:], -1, cfg=self.cfg))
                 else:
-                    token = Token('EXPR', Alpha(text[1:]))
+                    token = Token('EXPR', Alpha(text[1:], cfg=self.cfg))
             elif lex_tag == 'PAIR':
                 if text.startswith('-'):
-                    token = Token('EXPR', Pair(Alpha(text[2:], -1)))
+                    token = Token(
+                        'EXPR', Pair(Alpha(text[2:], -1, cfg=self.cfg),
+                                     cfg=self.cfg))
                 else:
-                    token = Token('EXPR', Pair(Alpha(text[1:])))
+                    token = Token(
+                        'EXPR', Pair(Alpha(text[1:], cfg=self.cfg),
+                                     cfg=self.cfg))
             elif lex_tag == 'INDEX':
                 token = Token('INDEX', int(text))
             elif lex_tag == 'VAR':
                 try:
                     # Use definitions from the context over the global values
-                    token = Token('EXPR', eval(text, self.context_vars))
+                    token = Token(
+                        'EXPR', eval(text, self.context_vars))
                 except NameError:
                     try:
                         token = Token('EXPR', eval(text, self._globals))
@@ -101,9 +107,8 @@ class ArpyParser:
     unops = {'DAG': dagger}
     binops = {'FULL': full, 'BY': div_by, 'INTO': div_into, 'PLUS': add}
 
-    def __init__(self, metric=METRIC, allowed=ALLOWED):
-        self.metric = metric
-        self.allowed = allowed
+    def __init__(self, cfg=cfg):
+        self.cfg = cfg
         self.context_vars = {}
 
     def sub_expr(self, tokens, deliminator_tag):
@@ -134,7 +139,7 @@ class ArpyParser:
                     if previous_token:
                         val = full(
                             previous_token.val, sub_expr_token.val,
-                            metric=self.metric, allowed=self.allowed
+                            cfg=self.cfg
                         )
                         previous_token = Token('EXPR', val)
                     else:
@@ -145,7 +150,7 @@ class ArpyParser:
                         # default to forming the full product
                         val = full(
                             previous_token.val, token.val,
-                            metric=self.metric, allowed=self.allowed
+                            cfg=self.cfg
                         )
                         previous_token = Token('EXPR', val)
                     else:
@@ -175,11 +180,19 @@ class ArpyParser:
                             if token.tag == 'PLUS':
                                 val = op(LHS.val, RHS.val)
                             else:
-                                val = op(
-                                    LHS.val, RHS.val, metric=self.metric,
-                                    allowed=self.allowed
-                                )
+                                val = op(LHS.val, RHS.val, cfg=self.cfg)
                             previous_token = Token('EXPR', val)
+
+                elif token.tag in self.unops:
+                    if previous_token is None:
+                        msg = 'Missing argument to "{}" in "{}"\n'
+                        stderr.write(msg.format(token.val, raw_text))
+                        raise AR_Error()
+                    else:
+                        LHS, previous_token = previous_token, None
+                        op = self.unops.get(token.tag)
+                        val = op(LHS.val, cfg=self.cfg)
+                        previous_token = Token('EXPR', val)
 
                 elif token.tag == 'ANGLE_OPEN':
                     sub_expression = self.sub_expr(tokens, 'ANGLE_CLOSE')
@@ -225,58 +238,57 @@ class ARContext:
     >>> ar("a12 ^ a23")
     >>> α31
     '''
-    def __init__(self, metric=METRIC, allowed=ALLOWED):
-        self._metric = metric
-        self._allowed = allowed
-        self._lexer = ArpyLexer()
-        self._parser = ArpyParser(metric=metric, allowed=allowed)
+    def __init__(self, cfg=cfg):
+        self.cfg = cfg
+        self._lexer = ArpyLexer(cfg=cfg)
+        self._parser = ArpyParser(cfg=cfg)
         self._initialise_vars()
 
     def _initialise_vars(self):
         '''Set all of the standard variables'''
         # Check that we have a (roughly) valid set of values
-        _h = [a for a in self._allowed if len(a) == 3 and '0' not in a]
+        _h = [a for a in self.cfg.allowed if len(a) == 3 and '0' not in a]
         assert len(_h) == 1, 'h is a single element: {}'.format(_h)
         _h = _h[0]
-        _q = [a for a in self._allowed if len(a) == 4]
+        _q = [a for a in self.cfg.allowed if len(a) == 4]
         assert len(_q) == 1, 'q is a single element: {}'.format(_q)
         _q = _q[0]
-        _B = [a for a in self._allowed if len(a) == 2 and '0' not in a]
+        _B = [a for a in self.cfg.allowed if len(a) == 2 and '0' not in a]
         assert len(_B) == 3, 'B is a 3-vector: {}'.format(_B)
-        _T = [a for a in self._allowed if len(a) == 3 and '0' in a]
+        _T = [a for a in self.cfg.allowed if len(a) == 3 and '0' in a]
         assert len(_T) == 3, 'T is a 3-vector: {}'.format(_T)
-        _A = [a for a in self._allowed if len(a) == 1 and a not in 'p0']
+        _A = [a for a in self.cfg.allowed if len(a) == 1 and a not in 'p0']
         assert len(_A) == 3, 'A is a 3-vector: {}'.format(_A)
-        _E = [a for a in self._allowed if len(a) == 2 and '0' in a]
+        _E = [a for a in self.cfg.allowed if len(a) == 2 and '0' in a]
         assert len(_E) == 3, 'E is a 3-vector: {}'.format(_E)
 
         self._vars = {
             # Multivectors
-            'h': MultiVector(_h, allowed=self._allowed),
-            'q': MultiVector(_q, allowed=self._allowed),
-            'B': MultiVector(_B, allowed=self._allowed),
-            'E': MultiVector(_E, allowed=self._allowed),
-            'F': MultiVector(_E + _B, allowed=self._allowed),
-            'T': MultiVector(_T, allowed=self._allowed),
-            'G': MultiVector(self.allowed, allowed=self._allowed),
-            'B4': MultiVector(['p'] + _B, allowed=self._allowed),
-            'T4': MultiVector(['0'] + _T, allowed=self._allowed),
-            'A4': MultiVector([_h] + _A, allowed=self._allowed),
-            'E4': MultiVector([_q] + _E, allowed=self._allowed),
-            'Fp': MultiVector(['p'] + _B + _E, allowed=self._allowed),
-            'Fpq': MultiVector(['p'] + _B + [_q] + _E, allowed=self._allowed),
+            'h': MultiVector(_h, cfg=cfg),
+            'q': MultiVector(_q, cfg=cfg),
+            'B': MultiVector(_B, cfg=cfg),
+            'E': MultiVector(_E, cfg=cfg),
+            'F': MultiVector(_E + _B, cfg=cfg),
+            'T': MultiVector(_T, cfg=cfg),
+            'G': MultiVector(self.cfg.allowed, cfg=cfg),
+            'B4': MultiVector(['p'] + _B, cfg=cfg),
+            'T4': MultiVector(['0'] + _T, cfg=cfg),
+            'A4': MultiVector([_h] + _A, cfg=cfg),
+            'E4': MultiVector([_q] + _E, cfg=cfg),
+            'Fp': MultiVector(['p'] + _B + _E, cfg=cfg),
+            'Fpq': MultiVector(['p'] + _B + [_q] + _E, cfg=cfg),
             # Differentials
-            'DG': differential_operator(self.allowed, allowed=self._allowed),
-            'DF': differential_operator(_B + _E, allowed=self._allowed),
-            'DB': differential_operator(['p'] + _B, allowed=self._allowed),
-            'DT': differential_operator(['0'] + _T, allowed=self._allowed),
-            'DA': differential_operator([_h] + _A, allowed=self._allowed),
-            'DE': differential_operator([_q] + _E, allowed=self._allowed),
+            'DG': differential_operator(self.cfg.allowed, cfg=cfg),
+            'DF': differential_operator(_B + _E, cfg=cfg),
+            'DB': differential_operator(['p'] + _B, cfg=cfg),
+            'DT': differential_operator(['0'] + _T, cfg=cfg),
+            'DA': differential_operator([_h] + _A, cfg=cfg),
+            'DE': differential_operator([_q] + _E, cfg=cfg),
         }
 
     @property
     def metric(self):
-        return self._metric
+        return self.cfg.metric
 
     @metric.setter
     def metric(self, signs):
@@ -292,20 +304,18 @@ class ARContext:
         else:
             raise TypeError("metric must be comprised of +/- only")
 
-        self._metric = metric
-        self._parser.metric = metric
+        self.cfg.metric = metric
 
     @property
     def allowed(self):
-        return self._allowed
+        return self.cfg.allowed
 
     @allowed.setter
     def allowed(self, allowed):
         if len(allowed) != 16:
             raise ValueError('Must provide all 16 elements for allowed')
 
-        self._allowed = allowed
-        self._parser.allowed = allowed
+        self.cfg.allowed = allowed
         self._initialise_vars()
 
     def __call__(self, text):
