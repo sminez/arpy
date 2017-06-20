@@ -10,7 +10,7 @@ when at the head of the output and calculations are labelled.
 import argparse
 from collections import namedtuple
 from .utils.lexparse import ARContext
-from .algebra.config import ALLOWED, METRIC
+from .algebra.config import config
 
 from . import *  # Bring in all of arpy
 
@@ -94,8 +94,7 @@ def parse_calculation_file(fname):
 
             # extract comments
             elif line.startswith('#'):
-                text = line.split('#')[1].strip()
-                lines.append(comment(lnum, text))
+                lines.append(comment(lnum, line.strip()))
 
             # extract steps
             else:
@@ -108,15 +107,17 @@ def parse_calculation_file(fname):
 
     # Fall back to defaults if metric/allowed were not specified
     if allowed is None:
-        allowed = ALLOWED
-        lines = comment(0, '// ALLOWED: ' + ' '.join(ALLOWED))
+        allowed = config.allowed
+        lines = comment(0, '// ALLOWED: ' + ' '.join(allowed))
 
     if metric is None:
-        metric = METRIC
-        m = ''.join('+' if x == 1 else '-' for x in METRIC)
+        metric = config.metric
+        m = ''.join('+' if x == 1 else '-' for x in metric)
         lines = comment(0, '// METRIC: ' + m)
 
-    context = ARContext(metric=metric, allowed=allowed)
+    config.allowed = allowed
+    config.metric = metric
+    context = ARContext(cfg=config)
     return context, lines
 
 

@@ -1,26 +1,19 @@
 // ALLOWED: p 23 31 12 0 023 031 012 123 1 2 3 0123 10 20 30
 // METRIC: +---
 
-foo = F
+f = F
+f_dagger = F!
 
 # Compute Dmu F
 DF = Dmu ^ F
 
-# Compute some products of alphas
-a1 = a12 ^ a0123
-a2 = a23 ^ a02
-
+FF_dagger = F ^ F!
 
 # ...And now with a different set of parameters
-
 // ALLOWED: p 23 31 12 0 023 031 012 123 1 2 3 1230 01 02 03
 // METRIC: -+++
 
-foo = F
+# Note that the alphas for F have now changed
+f = F
 
-# Compute Dmu F
-DF = Dmu ^ F
-
-# Compute some products of alphas
-a1 = a12 ^ a0123
-a2 = a23 ^ a02
+ffdag = F ^ F!

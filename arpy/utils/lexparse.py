@@ -44,8 +44,9 @@ class ArpyLexer:
     tags = re.compile(_tags)
     literals = [tag_regex[0] for tag_regex in literals]
 
-    def __init__(self, _globals=None):
+    def __init__(self, cfg=cfg, _globals=None):
         self._globals = _globals
+        self.cfg = cfg
         self.context_vars = {}
 
     def lex(self, string, context_vars=None):
@@ -63,20 +64,25 @@ class ArpyLexer:
 
             if lex_tag == 'ALPHA':
                 if text.startswith('-'):
-                    token = Token('EXPR', Alpha(text[2:], -1))
+                    token = Token('EXPR', Alpha(text[2:], -1, cfg=self.cfg))
                 else:
-                    token = Token('EXPR', Alpha(text[1:]))
+                    token = Token('EXPR', Alpha(text[1:], cfg=self.cfg))
             elif lex_tag == 'PAIR':
                 if text.startswith('-'):
-                    token = Token('EXPR', Pair(Alpha(text[2:], -1)))
+                    token = Token(
+                        'EXPR', Pair(Alpha(text[2:], -1, cfg=self.cfg),
+                                     cfg=self.cfg))
                 else:
-                    token = Token('EXPR', Pair(Alpha(text[1:])))
+                    token = Token(
+                        'EXPR', Pair(Alpha(text[1:], cfg=self.cfg),
+                                     cfg=self.cfg))
             elif lex_tag == 'INDEX':
                 token = Token('INDEX', int(text))
             elif lex_tag == 'VAR':
                 try:
                     # Use definitions from the context over the global values
-                    token = Token('EXPR', eval(text, self.context_vars))
+                    token = Token(
+                        'EXPR', eval(text, self.context_vars))
                 except NameError:
                     try:
                         token = Token('EXPR', eval(text, self._globals))
@@ -177,6 +183,17 @@ class ArpyParser:
                                 val = op(LHS.val, RHS.val, cfg=self.cfg)
                             previous_token = Token('EXPR', val)
 
+                elif token.tag in self.unops:
+                    if previous_token is None:
+                        msg = 'Missing argument to "{}" in "{}"\n'
+                        stderr.write(msg.format(token.val, raw_text))
+                        raise AR_Error()
+                    else:
+                        LHS, previous_token = previous_token, None
+                        op = self.unops.get(token.tag)
+                        val = op(LHS.val, cfg=self.cfg)
+                        previous_token = Token('EXPR', val)
+
                 elif token.tag == 'ANGLE_OPEN':
                     sub_expression = self.sub_expr(tokens, 'ANGLE_CLOSE')
                     arg = self.parse(sub_expression, raw_text)
@@ -223,7 +240,7 @@ class ARContext:
     '''
     def __init__(self, cfg=cfg):
         self.cfg = cfg
-        self._lexer = ArpyLexer()
+        self._lexer = ArpyLexer(cfg=cfg)
         self._parser = ArpyParser(cfg=cfg)
         self._initialise_vars()
 
@@ -288,7 +305,6 @@ class ARContext:
             raise TypeError("metric must be comprised of +/- only")
 
         self.cfg.metric = metric
-        self._parser.metric = metric
 
     @property
     def allowed(self):
@@ -300,7 +316,6 @@ class ARContext:
             raise ValueError('Must provide all 16 elements for allowed')
 
         self.cfg.allowed = allowed
-        self._parser.allowed = allowed
         self._initialise_vars()
 
     def __call__(self, text):
