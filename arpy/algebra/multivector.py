@@ -20,6 +20,8 @@ MvecLabel = namedtuple('MvecLabel', 'label originals')
 
 class MultiVector(collections.abc.Set):
     '''A custom container type for working efficiently with multivectors'''
+    # __slots__ = ('cfg', 'components', 'replacements')
+
     def __init__(self, components=[], cfg=cfg):
         # Given a list of pairs, build the mulitvector by binding the ξ values
         self.cfg = cfg
@@ -52,7 +54,7 @@ class MultiVector(collections.abc.Set):
             '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
                 Alpha(a, cfg=cfg)))
             for a in self.cfg.allowed
-            if self.components[Alpha(a, cfg=cfg)]]
+            if self.components[Alpha(a, cfg=self.cfg)]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
@@ -229,7 +231,7 @@ class MultiVector(collections.abc.Set):
         '''
         Print a del grouped version of the multivector
         '''
-        print(DelMultiVector(self))
+        return DelMultiVector(self)
 
     def simplified(self, ix=0, bxyz=False, sign=False):
         '''
@@ -369,7 +371,7 @@ class MultiVector(collections.abc.Set):
 
     @property
     def v(self):
-        self.del_notation()
+        return self.del_notation()
 
     @property
     def s(self, ix=0, bxyz=False, sign=False):
@@ -382,14 +384,14 @@ class DelMultiVector(MultiVector):
         # Given a list of pairs, build the mulitvector by binding the ξ values
         self.cfg = cfg
         self.components = {
-            Alpha(a, cfg=cfg): [] for a in self.cfg.allowed}
+            Alpha(a, cfg=cfg): [] for a in self.cfg.allowed_groups}
 
         for comp in del_grouped(components):
             if isinstance(comp, (str, Alpha)):
                 comp = Pair(comp, cfg=cfg)
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
-            if comp.alpha.index in self.cfg.allowed:
+            if comp.alpha.index in self.cfg.allowed_groups:
                 try:
                     self.components[comp.alpha].append(comp.xi)
                 except KeyError:
@@ -406,3 +408,11 @@ class DelMultiVector(MultiVector):
             if self.components[alpha] != other.components[alpha]:
                 return False
         return True
+
+    def __repr__(self):
+        comps = [
+            '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
+                Alpha(a, cfg=cfg)))
+            for a in self.cfg.allowed_groups
+            if self.components[Alpha(a, cfg=self.cfg)]]
+        return '{\n' + '\n'.join(comps) + '\n}'

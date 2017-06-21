@@ -9,6 +9,8 @@ from ..utils.utils import SUB_SCRIPTS
 
 class Alpha:
     '''Unit elements in the algebra'''
+    __slots__ = ('allowed', 'allowed_groups', 'index', 'sign')
+
     def __init__(self, index, sign=None, cfg=cfg):
         '''
         Handle multiple constructor methods for αs
@@ -64,6 +66,8 @@ class Alpha:
 
 class Xi:
     '''A symbolic Real value'''
+    __slots__ = ('partials', 'val', 'sign')
+
     def __init__(self, val, partials=None, sign=1):
         if isinstance(val, Alpha):
             val = val.index
@@ -109,8 +113,12 @@ class Xi:
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
-        display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
-        return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
+        try:
+            display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
+            return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
+        except KeyError:
+            # vector notation or non-standard Xi
+            return '{}{}{}'.format(sign, ''.join(partials), self.val)
 
     def __tex__(self):
         sign = '+' if self.sign == 1 else '-'
@@ -133,6 +141,8 @@ class Xi:
 
 class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
+    __slots__ = ('partials', 'components', 'sign_base')
+
     def __init__(self, components):
         self.components = tuple(components)
         self.partials = []
@@ -219,6 +229,8 @@ class XiProduct:
 
 class Pair:
     '''A Pair may be any object along with an Alpha value'''
+    __slots__ = ('alpha', 'xi')
+
     def __init__(self, a, x=None, cfg=cfg):
         if x is None:
             if isinstance(a, str) and a.startswith('-'):
