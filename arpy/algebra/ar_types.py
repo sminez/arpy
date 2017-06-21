@@ -3,18 +3,18 @@ arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
 from copy import deepcopy
-from .config import ALLOWED, ALLOWED_GROUPS, SUB_SCRIPTS, BXYZ_LIKE
+from .config import config as cfg
+from ..utils.utils import SUB_SCRIPTS
 
 
 class Alpha:
     '''Unit elements in the algebra'''
-    def __init__(self, index, sign=None,
-                 allowed=ALLOWED, allowed_groups=ALLOWED_GROUPS):
+    def __init__(self, index, sign=None, cfg=cfg):
         '''
         Handle multiple constructor methods for αs
         '''
-        self.allowed = ALLOWED
-        self.allowed_groups = ALLOWED_GROUPS
+        self.allowed = cfg.allowed
+        self.allowed_groups = cfg.allowed_groups
 
         if sign is None:
             if index.startswith('-'):
@@ -22,7 +22,7 @@ class Alpha:
             else:
                 sign = 1
 
-        if index not in allowed and index not in allowed_groups:
+        if index not in cfg.allowed and index not in cfg.allowed_groups:
             raise ValueError('Invalid α index: {}'.format(index))
 
         if sign not in [1, -1]:
@@ -33,10 +33,11 @@ class Alpha:
 
     def __repr__(self):
         neg = '-' if self.sign == -1 else ''
+        return '{}α{}'.format(neg, self.index)
+        # Below will use unicode subscript output but it's hard to read :(
         try:
             return '{}α{}'.format(
-                neg, ''.join(SUB_SCRIPTS[i] for i in self.index)
-            )
+                neg, ''.join(SUB_SCRIPTS[i] for i in self.index))
         except:
             return '{}α{}'.format(neg, self.index)
 
@@ -93,7 +94,7 @@ class Xi:
 
     def __lt__(self, other):
         try:
-            return ALLOWED.index(self.val) < ALLOWED.index(other.val)
+            return cfg.allowed.index(self.val) < cfg.allowed.index(other.val)
         except:
             return self.val < other.val
 
@@ -108,18 +109,15 @@ class Xi:
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
-        if self.val in ALLOWED + ALLOWED_GROUPS:
-            display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
-            return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
-        else:
-            return '{}{}{}'.format(sign, ''.join(partials), self.val)
+        display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
+        return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
 
     def __tex__(self):
         sign = '+' if self.sign == 1 else '-'
         partials = ''.join(
             '\\partial_{' + p.index + '}' for p in reversed(self.partials)
         )
-        if self.val in ALLOWED + ALLOWED_GROUPS:
+        if self.val in cfg.allowed + cfg.allowed_groups:
             return sign + partials + '\\xi_{' + self.val + '}'
         else:
             return sign + partials + self.val
@@ -127,9 +125,9 @@ class Xi:
     def bxyz(self):
         '''Return a string representing only {b,x,y,z} information'''
         sign = '+' if self.sign == 1 else '-'
-        partials = [BXYZ_LIKE[p.index] for p in self.partials]
+        partials = [cfg.bxyz_like[p.index] for p in self.partials]
         partial_str = ''.join(['∂{}'.format(p) for p in reversed(partials)])
-        val = BXYZ_LIKE[self.val]
+        val = cfg.bxyz_like[self.val]
         return sign + partial_str + '[' + val + ']'
 
 
@@ -184,28 +182,44 @@ class XiProduct:
         return neg
 
     def __repr__(self):
+        superscripts = dict(zip('0123456789', '⁰¹²³⁴⁵⁶⁷⁸⁹'))
         partials = (
             '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
             for p in reversed(self.partials)
         )
+        # Allow nicer formatting for powers
         comps = [str(c) for c in self.components]
         comps = [c[1:] if c[0] == '-' else c for c in comps]
+
+        if all((c == comps[0] for c in comps)):
+            power = str(len(comps))
+            power = ''.join(superscripts[c] for c in power)
+            comps = '{}{}'.format(comps[0], power)
+        else:
+            comps = '.'.join(comps)
+
         sign = '' if self.sign == 1 else '-'
-        return sign + ''.join(partials) + '.'.join(comps)
+        return sign + ''.join(partials) + comps
 
     def __tex__(self):
         partials = ''.join(
             '\\partial{}'.format(p.index) for p in reversed(self.partials)
         )
-        comps = [str(c) for c in self.components]
-        comps = '.'.join(c[1:] if c[0] == '-' else c for c in comps)
-        sign = '' if self.sign == 1 else '-'
+        comps = [c.__tex__()[1:] for c in self.components]
+
+        if all((c == comps[0] for c in comps)):
+            power = str(len(comps))
+            comps = '{' + comps[0] + '}^{' + power + '}'
+        else:
+            comps = '.'.join(comps)
+
+        sign = '+' if self.sign == 1 else '-'
         return sign + partials + comps
 
 
 class Pair:
     '''A Pair may be any object along with an Alpha value'''
-    def __init__(self, a, x=None):
+    def __init__(self, a, x=None, cfg=cfg):
         if x is None:
             if isinstance(a, str) and a.startswith('-'):
                 x = Xi(a[1:])
@@ -215,7 +229,7 @@ class Pair:
         if isinstance(a, Alpha):
             self.alpha = a
         else:
-            self.alpha = Alpha(a)
+            self.alpha = Alpha(a, cfg=cfg)
 
         if not isinstance(x, (Xi, XiProduct)):
             x = Xi(x)

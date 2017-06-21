@@ -1,6 +1,6 @@
 from utils import metrics
 from arpy import Alpha, Pair, MultiVector, find_prod, inverse, dagger, \
-    commutator, project, ALLOWED
+    commutator, project, config, ARConfig
 
 ap = Alpha('p')
 neg_ap = Alpha('-p')
@@ -11,31 +11,34 @@ def test_inverse():
     Inverting an α and multiplying by the original should give αp
     '''
     for metric in metrics:
-        for index in ALLOWED:
+        for index in config.allowed:
+            new_config = ARConfig(config.allowed, metric, config.division_type)
             alpha = Alpha(index)
-            inverse_alpha = inverse(alpha, metric=metric)
-            assert find_prod(alpha, inverse_alpha, metric=metric) == ap
+            inverse_alpha = inverse(alpha, cfg=new_config)
+            assert find_prod(alpha, inverse_alpha, cfg=new_config) == ap
 
 
 def test_dagger():
     '''Dagger negates elements that square to -1'''
     for metric in metrics:
+        new_config = ARConfig(config.allowed, metric, config.division_type)
         alphas = [
-            Alpha(a, find_prod(Alpha(a), Alpha(a), metric=metric).sign)
-            for a in ALLOWED
+            Alpha(a, find_prod(Alpha(a), Alpha(a), cfg=new_config).sign)
+            for a in config.allowed
         ]
         negated = MultiVector([Pair(a) for a in alphas])
-        assert negated == dagger(MultiVector(ALLOWED), metric=metric)
+        assert negated == dagger(MultiVector(config.allowed), cfg=new_config)
 
 
 def test_commutator():
     '''Commutator results should always be +-αp'''
     for metric in metrics:
-        for i in ALLOWED:
+        new_config = ARConfig(config.allowed, metric, config.division_type)
+        for i in config.allowed:
             ai = Alpha(i)
-            for j in ALLOWED:
+            for j in config.allowed:
                 aj = Alpha(j)
-                assert commutator(ai, aj, metric=metric) in [ap, neg_ap]
+                assert commutator(ai, aj, cfg=new_config) in [ap, neg_ap]
 
 
 def test_project_alpha():
@@ -45,9 +48,9 @@ def test_project_alpha():
     '''
     a = Alpha("01")
     assert project(a, 2) == a
-    assert project(a, 0) == None
+    assert project(a, 0) is None
     assert project(ap, 0) == ap
-    assert project(ap, 1) == None
+    assert project(ap, 1) is None
 
 
 def test_project_pair():
@@ -58,10 +61,9 @@ def test_project_pair():
     pear = Pair("01")
     perfectpear = Pair("p")
     assert project(pear, 2) == pear
-    assert project(pear, 0) == None
+    assert project(pear, 0) is None
     assert project(perfectpear, 0) == perfectpear
-    assert project(perfectpear, 1) == None
-
+    assert project(perfectpear, 1) is None
 
 
 def test_project_multivector():

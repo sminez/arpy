@@ -1,12 +1,14 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
+import types
+from sys import _getframe
 from copy import deepcopy
-from .algebra.config import ALLOWED, XI_GROUPS, METRIC, DIVISION_TYPE, \
-        ALPHA_TO_GROUP, ALLOWED_GROUPS, FOUR_SET_COMPS, FOUR_SETS, \
-        BXYZ_LIKE
+from ctypes import c_int, pythonapi, py_object
+
+from .algebra.config import config, ARConfig
 from .algebra.ar_types import Alpha, Xi, Pair
 from .algebra.multivector import MultiVector, DelMultiVector
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
@@ -14,15 +16,15 @@ from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
 from .algebra.differential import AR_differential, differential_operator
 from .algebra.del_grouping import del_grouped
 from .utils.lexparse import ARContext
-from .utils.utils import Tex
+from .utils.utils import Tex, reorder_allowed
 from .utils.visualisation import cayley, sign_cayley, sign_distribution
 
 
 ##############################################################################
-# Horrible hack to get arround cyclic imports #
-###############################################
+# Horrible hacks to get arround cyclic imports #
+################################################
 def invert_multivector(self):
-    # ~mvec as a shortcut for the Hermitian conjugate
+    '''~mvec as a shortcut for the Hermitian conjugate'''
     inverted = deepcopy(self)
     for alpha, xis in inverted.components.items():
         if full(alpha, alpha).sign == -1:
@@ -30,58 +32,92 @@ def invert_multivector(self):
                 xi.sign *= -1
     return inverted
 
+
 MultiVector.__invert__ = invert_multivector
 
 
+def update_env(self, lvl=2):
+    '''Update the list of predefined operators and multivectors'''
+    def _bind_to_calling_scope(defs, lvl):
+        '''
+        Inject the default Multivectors and operators into the main scope
+        of the repl. (THIS IS HORRIFYING!!!)
+        NOTE: This uses some not-so-nice abuse of stack frames and the
+              ctypes API to make this work and as such it will almost
+              certainly not run under anything other than cPython.
+        '''
+        # Grab the stack frame that the caller's code is running in
+        frame = _getframe(lvl)
+        # Dump the matched variables and their values into the frame
+        frame.f_locals.update(defs)
+        # Force an update of the frame locals from the locals dict
+        pythonapi.PyFrame_LocalsToFast(py_object(frame), c_int(0))
+
+    # Multi-vectors to work with based on the 3-vectors
+    self.p = MultiVector('p', cfg=self)
+    self.h = MultiVector(self._h, cfg=self)
+    self.q = MultiVector(self._q, cfg=self)
+    self.t = MultiVector('0', cfg=self)
+
+    self.A = MultiVector(self._A, cfg=self)
+    self.B = MultiVector(self._B, cfg=self)
+    self.E = MultiVector(self._E, cfg=self)
+    self.F = self.E + self.B
+    self.T = MultiVector(self._T, cfg=self)
+    self.G = MultiVector(self.allowed, cfg=self)
+
+    self.B4 = MultiVector(['p'] + self._B, cfg=self)
+    self.T4 = MultiVector(['0'] + self._T, cfg=self)
+    self.A4 = MultiVector([self._h] + self._A, cfg=self)
+    self.E4 = MultiVector([self._q] + self._E, cfg=self)
+    self.Fp = self.F + self.p
+    self.F4 = self.F + self.p + self.q
+
+    # Differential operators
+    self.Dmu = self.d = differential_operator(['0', '1', '2', '3'], cfg=self)
+    self.DG = differential_operator(self.allowed, cfg=self)
+    self.DF = differential_operator(self.F, cfg=self)
+
+    self.DB = differential_operator(self.B4, cfg=self)
+    self.DT = differential_operator(self.T4, cfg=self)
+    self.DA = differential_operator(self.A4, cfg=self)
+    self.DE = differential_operator(self.E4, cfg=self)
+
+    _vars = ['p', 'h', 'q', 't', 'A', 'B', 'E', 'F', 'T', 'G',
+             'B4', 'T4', 'A4', 'E4', 'Fp', 'F4', 'Dmu', 'd',
+             'DG', 'DF', 'DB', 'DT', 'DA', 'DE']
+    defs = dict(zip(_vars, (getattr(self, var) for var in _vars)))
+    _bind_to_calling_scope(defs, lvl)
+
+
+# Add the update_env method to ARConfig _and_ the config instance
+ARConfig.update_env = update_env
+config.update_env = types.MethodType(update_env, config)
+
 ##############################################################################
-# Multi-vectors to work with based on the 3/4-vectors #
-#######################################################
-P = MultiVector('p')                                  # Pivot
-H = MultiVector('123')                                # Hedgehog
-Q = MultiVector('0123')                               # Quedgehog
-t = MultiVector('0')                                  # Time
 
-A = MultiVector('0 1 2 3')                            # The potentials
-B = MultiVector(XI_GROUPS['jk'])                      # The Magnetic field
-E = MultiVector(XI_GROUPS['i0'])                      # The Electric field
-F = E + B                                             # The Farady tensor
-T = MultiVector([a for a in ALLOWED if len(a) == 3])  # The trivectors
-G = MultiVector(ALLOWED)                              # The general multivector
-
-##############################################################################
-# Multi-vectors to work with based on the 4Set components #
-###########################################################
-B4 = MultiVector([Pair('p')] + [Pair(a) for a in XI_GROUPS['jk']])
-T4 = MultiVector([Pair('0')] + [Pair(a) for a in XI_GROUPS['0jk']])
-A4 = MultiVector([Pair('123')] + [Pair(a) for a in XI_GROUPS['i']])
-E4 = MultiVector([Pair('0123')] + [Pair(a) for a in XI_GROUPS['i0']])
-Fp = F + MultiVector('p')
-F4 = Fp + MultiVector('0123')
-
-
-##############################################################################
-# Sepcific Differnetial operators #
-###################################
-Dmu = d = differential_operator(['0', '1', '2', '3'])
-DG = differential_operator(ALLOWED)
-DF = differential_operator(F)
-
-DB = differential_operator(B4)
-DT = differential_operator(T4)
-DA = differential_operator(A4)
-DE = differential_operator(E4)
+# Bring the config definitions into scope
+config.update_config()
+config.update_env()
 
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
 #        properties of the original context using .metric and .division
-ar = ARContext(METRIC, DIVISION_TYPE)
+ar = ARContext(config)
+
+
+def arpy_info():
+    '''Display some information about arpy'''
+    print('\nNow running arpy version:\t', __version__)
+    print('=======================================')
+    print('Allowed αs:\t', ', '.join([str(Alpha(a)) for a in config.allowed]))
+    print('Division:\t', config.division_type)
+    metric = ['+' if i == 1 else '-' for i in config.metric]
+    print('Metric:\t\t', ''.join(metric))
 
 
 # All values that will be imported when the user does `from arpy import *`
 __all__ = [
-    # Config initialised values
-    'ALLOWED', 'XI_GROUPS', 'METRIC', 'DIVISION_TYPE', 'ALPHA_TO_GROUP',
-    'ALLOWED_GROUPS', 'FOUR_SET_COMPS', 'FOUR_SETS', 'BXYZ_LIKE',
     # Data structures
     'Alpha', 'Xi', 'Pair', 'MultiVector', 'DelMultiVector',
     # Non differential operators
@@ -96,6 +132,6 @@ __all__ = [
     # Pre-defined MultiVectors
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
-    # The a pre-defined ar() context function and Tex output
-    'ar', 'Tex'
+    # Util functions
+    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig', 'reorder_allowed'
 ]
