@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/sminez/arpy.svg?branch=master)](https://travis-ci.org/sminez/arpy) [![Coverage Status](https://coveralls.io/repos/github/sminez/arpy/badge.svg?branch=master)](https://coveralls.io/github/sminez/arpy?branch=master)
 
-arpy (Absolute Relativity in Python) Version 0.1.6
+arpy (Absolute Relativity in Python) Version 0.2.0
 
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
