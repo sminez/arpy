@@ -122,14 +122,14 @@ def parse_calculation_file(fname, default_allowed=config.allowed,
                         lines.append(step(lnum, var, args.strip()))
 
     # Fall back to defaults if metric/allowed were not specified
-    if allowed is None:
-        allowed = default_allowed
-        lines = raw(0, '// ALLOWED: ' + ' '.join(allowed))
-
     if metric is None:
         metric = default_metric
         m = ''.join('+' if x == 1 else '-' for x in metric)
-        lines = raw(0, '// METRIC: ' + m)
+        lines = [raw(0, '// METRIC: ' + m)] + lines
+
+    if allowed is None:
+        allowed = default_allowed
+        lines = [raw(0, '// ALLOWED: ' + ' '.join(allowed))] + lines
 
     config.allowed = allowed
     config.metric = metric
