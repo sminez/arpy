@@ -1,8 +1,11 @@
 // ALLOWED: p 23 31 12 0 023 031 012 123 1 2 3 0123 10 20 30
 // METRIC: +---
 
+odd = {1, 2, 3, 023, 031, 012}
+
+Dodd = Dmu ^ odd
+
 f = F
-f_dagger = F!
 
 # Compute Dmu F
 DF = Dmu ^ F
