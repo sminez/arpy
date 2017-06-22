@@ -66,9 +66,9 @@ class Alpha:
 
 class Xi:
     '''A symbolic Real value'''
-    __slots__ = ('partials', 'val', 'sign')
+    __slots__ = ('partials', 'val', 'sign', '_tex_val')
 
-    def __init__(self, val, partials=None, sign=1):
+    def __init__(self, val, partials=None, sign=1, tex=None):
         if isinstance(val, Alpha):
             val = val.index
 
@@ -80,6 +80,7 @@ class Xi:
             self.sign = sign
 
         self.partials = partials if partials else []
+        self._tex_val = tex
 
     def __hash__(self):
         return hash((self.val, self.sign, tuple(self.partials)))
@@ -125,7 +126,9 @@ class Xi:
         partials = ''.join(
             '\\partial_{' + p.index + '}' for p in reversed(self.partials)
         )
-        if self.val in cfg.allowed + cfg.allowed_groups:
+        if self._tex_val is not None:
+            return sign + partials + self._tex_val
+        elif self.val in cfg.allowed + cfg.allowed_groups:
             return sign + partials + '\\xi_{' + self.val + '}'
         else:
             return sign + partials + self.val

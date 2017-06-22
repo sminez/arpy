@@ -58,14 +58,13 @@ class MultiVector(collections.abc.Set):
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
-        comps = [
+        comps = '\n'.join(
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
                 Alpha(a, cfg=cfg), tex=True) +
             r'+ \nonumber\\'
             for a in self.cfg.allowed
-            if self.components[Alpha(a, cfg=cfg)]
-        ]
-        return '{\n' + '\n'.join(comps) + '\n}'
+            if self.components[Alpha(a, cfg=cfg)])
+        return r'\{ \nonumber\\' + '\n' + comps + '\n\\}' + r'\nonumber\\'
 
     def show(self, ordering):
         '''Print the components of the MultiVector in a specified ordering'''
@@ -383,10 +382,12 @@ class DelMultiVector(MultiVector):
     def __init__(self, components=[], cfg=cfg):
         # Given a list of pairs, build the mulitvector by binding the ξ values
         self.cfg = cfg
+        self._raw_components = components
+
         self.components = {
             Alpha(a, cfg=cfg): [] for a in self.cfg.allowed_groups}
 
-        for comp in del_grouped(components):
+        for comp in del_grouped(self._raw_components, cfg=self.cfg):
             if isinstance(comp, (str, Alpha)):
                 comp = Pair(comp, cfg=cfg)
             if not isinstance(comp, Pair):
@@ -416,3 +417,14 @@ class DelMultiVector(MultiVector):
             for a in self.cfg.allowed_groups
             if self.components[Alpha(a, cfg=self.cfg)]]
         return '{\n' + '\n'.join(comps) + '\n}'
+
+    def __tex__(self):
+        comps = '\n'.join(
+            ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
+                Alpha(a, cfg=cfg), tex=True) +
+            r'+ \nonumber\\'
+            for a in self.cfg.allowed_groups
+            if self.components[Alpha(a, cfg=cfg)]
+        )
+
+        return r'\{ \nonumber\\' + '\n' + comps + '\n\\}' + r'\nonumber\\'

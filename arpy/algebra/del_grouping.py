@@ -5,7 +5,7 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 from itertools import groupby
 from collections import namedtuple
 
-from .ar_types import Alpha, Pair
+from .ar_types import Alpha, Xi, Pair
 from .config import config as cfg
 from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS
 
@@ -93,12 +93,17 @@ def replace_curl(pairs, cfg):
             else:
                 continue
 
-            _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
             alpha = cfg.alpha_to_group[cands[0]['term'].alpha]
             group = GROUP_TO_4SET[group]
-            replaced.append(
-                Pair(Alpha(alpha, sign), '∇{}x{}'.format(_fourset, group))
-            )
+
+            _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+            tex_fourset = '' if fourset == 'A' else '^' + fourset
+
+            replaced.append(Pair(
+                Alpha(alpha, sign, cfg=cfg),
+                Xi('∇{}x{}'.format(_fourset, group),
+                   tex='\\nabla{}\\times {}'.format(tex_fourset, group)),
+                cfg=cfg))
 
             for candidate in [c['term'].pair for c in cands]:
                 pairs.remove(candidate)
@@ -129,15 +134,22 @@ def replace_grad(pairs, cfg):
                 else:
                     continue
 
-                xi = SUB_SCRIPTS[candidates[0].xi]
+                xi = ''.join(SUB_SCRIPTS[x] for x in candidates[0].xi)
+                tex_xi = candidates[0].xi
                 alpha = cfg.alpha_to_group[candidates[0].alpha]
+
+                tex_fourset = '' if fourset == 'A' else '^' + fourset
                 _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
-                replaced.append(
-                    Pair(Alpha(alpha, sign), '∇{}Ξ{}'.format(_fourset, xi))
-                )
+
+                replaced.append(Pair(
+                    Alpha(alpha, sign, cfg=cfg),
+                    Xi('∇{}Ξ{}'.format(_fourset, xi),
+                       tex='\\nabla' + tex_fourset + '\\Xi_{' + tex_xi + '}'),
+                    cfg=cfg))
 
                 for candidate in candidates:
                     pairs.remove(candidate.pair)
+
     return replaced, pairs
 
 
@@ -156,8 +168,6 @@ def replace_div(pairs, cfg):
         if len(candidates) == 3:
             alpha = candidates[0].alpha
             xi = GROUP_TO_4SET[cfg.alpha_to_group[candidates[0].xi]]
-            # The 'A' 3Vector calculus operators are the standard ones
-            _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
 
             if all(c.sign == 1 for c in candidates):
                 sign = 1
@@ -166,11 +176,19 @@ def replace_div(pairs, cfg):
             else:
                 continue
 
-            replaced.append(
-                Pair(Alpha(alpha, sign), '∇{}•{}'.format(_fourset, xi))
-            )
+            # The 'A' 3Vector calculus operators are the standard ones
+            _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+            tex_fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
+
+            replaced.append(Pair(
+                Alpha(alpha, sign, cfg=cfg),
+                Xi('∇{}•{}'.format(_fourset, xi),
+                   tex='\\nabla{}\\cdot {}'.format(tex_fourset, xi)),
+                cfg=cfg))
+
             for candidate in candidates:
                 pairs.remove(candidate.pair)
+
     return replaced, pairs
 
 
@@ -209,11 +227,15 @@ def replace_partials(pairs, cfg):
                         continue
 
                     alpha = cfg.alpha_to_group[candidates[0].alpha.index]
-                    blade = SUB_SCRIPTS[blade]
 
-                    replaced.append(
-                        Pair(Alpha(alpha, sign),
-                             '∂{}{}'.format(blade, component_4set)))
+                    _blade = ''.join(SUB_SCRIPTS[b] for b in blade)
+                    replaced.append(Pair(
+                        Alpha(alpha, sign, cfg=cfg),
+                        Xi('∂{}{}'.format(_blade, component_4set),
+                           tex='\\partial_{}{}'.format(blade, component_4set)),
+                        cfg=cfg))
+
                     for candidate in candidates:
                         pairs.remove(candidate)
+
     return replaced, pairs

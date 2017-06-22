@@ -143,12 +143,12 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter
 )
 
-# parser.add_argument(
-#     '-v',
-#     '--vector',
-#     action='store_true',
-#     help='display the result in vector calculus notation'
-# )
+parser.add_argument(
+    '-v',
+    '--vector',
+    action='store_true',
+    help='display the result in vector calculus notation'
+)
 # parser.add_argument(
 #     '-s',
 #     '--simplify',
@@ -164,6 +164,11 @@ parser.add_argument(
 parser.add_argument('script')
 args = parser.parse_args()
 
+modifier = ''
+if args.vector:
+    modifier = '.v'
+if args.latex:
+    modifier += '.__tex__()'
 
 context, lines = parse_calculation_file(args.script)
 
@@ -181,12 +186,9 @@ for l in lines:
 
     elif isinstance(l, mvec_def):
         exec('{} = MultiVector({})'.format(l.var, l.alphas))
-        eval('''print('{} = ', {})'''.format(l.var, l.var))
+        eval('''print('{} = ', {}{})'''.format(l.var, l.var, modifier))
 
     elif isinstance(l, step):
         exec('{} = context("{}")'.format(l.var, l.args))
         print('{} = {}'.format(l.var, l.args))
-        if args.latex:
-            eval('print({}.__tex__())'.format(l.var, l.var))
-        else:
-            eval('print({})'.format(l.var, l.var))
+        eval('print({}{})'.format(l.var, modifier))
