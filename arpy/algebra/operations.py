@@ -39,7 +39,7 @@ from functools import wraps
 from types import FunctionType
 from .config import config as cfg
 from .multivector import MultiVector
-from ..utils.concepts.dispatch import dispatch_on
+from ..utils.concepts.concepts.dispatch import dispatch_on
 from .ar_types import Alpha, Pair, XiProduct
 
 
