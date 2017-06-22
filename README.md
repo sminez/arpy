@@ -89,3 +89,12 @@ attempting to prove about the code.
 ### Documentation
 Please see the [wiki](https://github.com/sminez/arpy/wiki) for documentation and
 examples. Feel free to open an issue requesting additional information!
+
+
+### Updating the Concepts subtree
+The utils directory contains a subtree for `sminez/concepts`. In order to push
+changes made here to master you need to run the following from the project root:
+
+```bash
+$ git subtree push --prefix=arpy/utils/concepts git@github.com:sminez/concepts.git master
+```
