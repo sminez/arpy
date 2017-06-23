@@ -51,19 +51,17 @@ class MultiVector(collections.abc.Set):
 
     def __repr__(self):
         comps = [
-            '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
-                Alpha(a, cfg=cfg)))
-            for a in self.cfg.allowed
-            if self.components[Alpha(a, cfg=self.cfg)]]
+            '  {}{}'.format(repr(a).ljust(5), self._nice_xi(a))
+            for a in (Alpha(x, cfg=self.cfg) for x in self.cfg.allowed)
+            if self.components[a]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
         comps = '\n'.join(
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
-                Alpha(a, cfg=cfg), tex=True) +
-            r'+ \nonumber\\'
+                Alpha(a, cfg=self.cfg), tex=True) + r'+ \nonumber\\'
             for a in self.cfg.allowed
-            if self.components[Alpha(a, cfg=cfg)])
+            if self.components[Alpha(a, cfg=self.cfg)])
         return r'\{ \nonumber\\' + '\n' + comps + '\n\\}' + r'\nonumber\\'
 
     def show(self, ordering):
@@ -412,19 +410,17 @@ class DelMultiVector(MultiVector):
 
     def __repr__(self):
         comps = [
-            '  α{}{}'.format(str(a).ljust(5), self._nice_xi(
-                Alpha(a, cfg=cfg)))
-            for a in self.cfg.allowed_groups
-            if self.components[Alpha(a, cfg=self.cfg)]]
+            '  {}{}'.format(repr(a).ljust(5), self._nice_xi(a))
+            for a in (Alpha(x, cfg=self.cfg) for x in self.cfg.allowed_groups)
+            if self.components[a]]
         return '{\n' + '\n'.join(comps) + '\n}'
 
     def __tex__(self):
         comps = '\n'.join(
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
-                Alpha(a, cfg=cfg), tex=True) +
-            r'+ \nonumber\\'
+             Alpha(a, cfg=self.cfg), tex=True) + r'+ \nonumber\\'
             for a in self.cfg.allowed_groups
-            if self.components[Alpha(a, cfg=cfg)]
+            if self.components[Alpha(a, cfg=self.cfg)]
         )
 
         return r'\{ \nonumber\\' + '\n' + comps + '\n\\}' + r'\nonumber\\'

@@ -4,7 +4,8 @@ Assorted data structures and utility functions
 
 
 SUPER_SCRIPTS = {'B': 'ᴮ', 'A': 'ᴬ', 'T': 'ᵀ', 'E': 'ᴱ'}
-SUB_SCRIPTS = {'0': '₀', '1': '₁', '2': '₂', '3': '₃', 'p': 'ₚ'}
+SUB_SCRIPTS = {'0': '₀', '1': '₁', '2': '₂', '3': '₃',
+               'p': 'ₚ', 'i': 'ᵢ', 'j': 'ⱼ', 'k': 'ₖ'}
 
 
 def Tex(obj):

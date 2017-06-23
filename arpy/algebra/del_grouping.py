@@ -19,8 +19,6 @@ CURL_SIGN = {
     ('z', 'y', 'x'): 1, ('z', 'x', 'y'): -1
 }
 
-GROUP_TO_4SET = {'jk': 'B', 'i': 'A', '0jk': 'T', 'i0': 'E'}
-
 
 def _filter_on_partials(terms, partials, cfg, n=0):
     '''n is the index for xi.partials'''
@@ -94,7 +92,7 @@ def replace_curl(pairs, cfg):
                 continue
 
             alpha = cfg.alpha_to_group[cands[0]['term'].alpha]
-            group = GROUP_TO_4SET[group]
+            group = cfg.group_to_4set[group]
 
             _fourset = '' if fourset == 'A' else SUPER_SCRIPTS[fourset]
             tex_fourset = '' if fourset == 'A' else '^' + fourset
@@ -167,7 +165,7 @@ def replace_div(pairs, cfg):
 
         if len(candidates) == 3:
             alpha = candidates[0].alpha
-            xi = GROUP_TO_4SET[cfg.alpha_to_group[candidates[0].xi]]
+            xi = cfg.group_to_4set[cfg.alpha_to_group[candidates[0].xi]]
 
             if all(c.sign == 1 for c in candidates):
                 sign = 1

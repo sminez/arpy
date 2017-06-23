@@ -51,16 +51,18 @@ Assigning a result to a name will compute a result and display it.
 '''
 
 
-class CalculationError(Exception):
-    pass
-
-
-raw = namedtuple('raw', 'lnum text')
+raw = namedtuple('raw', 'lnum var')
+comment = namedtuple('raw', 'lnum text')
 step = namedtuple('step', 'lnum var args')
 context_update = namedtuple('context_update', 'lnum param val')
 mvec_def = namedtuple('mvec_def', 'lnum var alphas')
 
-mvec_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{([p0213, ]*)\}$'
+mvec_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{([p0213, -]*)\}$'
+modifier_map = {
+    'DEL NOTATION': '.v',
+    'SIMPLIFIED': '.simplified()',
+    'TEX': '.__tex__()'
+    }
 
 
 def parse_calculation_file(fname, default_allowed=config.allowed,
@@ -77,44 +79,48 @@ def parse_calculation_file(fname, default_allowed=config.allowed,
     # Set paramaters to default to start
     metric, allowed = None, None
     lines = []
+    modifiers = {}
 
     with open(fname, 'r') as f:
         for lnum, line in enumerate(f):
             lnum += 1
 
             if line == '\n':
-                lines.append(raw(lnum, ''))
+                lines.append(comment(lnum, ''))
 
             # Check and set paramaters
             elif line.startswith('// METRIC:'):
                 m = convert_metric(line.split('// METRIC: ')[1])
                 if metric is None:
                     metric = m
-                lines.append(raw(lnum, line.strip()))
+                lines.append(comment(lnum, line.strip()))
                 lines.append(context_update(lnum, 'metric', m))
 
             elif line.startswith('// ALLOWED:'):
                 a = line.split('// ALLOWED: ')[1].split()
                 if allowed is None:
                     allowed = a
-                lines.append(raw(lnum, line.strip()))
+                lines.append(comment(lnum, line.strip()))
                 lines.append(context_update(lnum, 'allowed', a))
+
+            elif line.startswith('// '):
+                action = line[3:].strip()
+                modifiers[lnum + 1] = modifier_map[action]
 
             # extract comments
             elif line.startswith('#'):
-                lines.append(raw(lnum, line.strip()))
+                lines.append(comment(lnum, line.strip()))
 
             # extract steps
             else:
                 if '=' not in line:
-                    tmp = 'Steps must assign to a variable:\n[{}] {}'
-                    raise CalculationError(tmp.format(lnum, line))
+                    lines.append(raw(lnum, line.strip()))
                 else:
                     # Check for multivector assignent
                     mvec_match = re.match(mvec_pattern, line)
                     if mvec_match:
                         var, alphas = mvec_match.groups()
-                        alphas = re.split(', |,| ', alphas)
+                        alphas = re.split(', |,| ', alphas.strip())
                         lines.append(mvec_def(lnum, var, alphas))
                     else:
                         # Try to parse an ar command
@@ -125,16 +131,16 @@ def parse_calculation_file(fname, default_allowed=config.allowed,
     if metric is None:
         metric = default_metric
         m = ''.join('+' if x == 1 else '-' for x in metric)
-        lines = [raw(0, '// METRIC: ' + m)] + lines
+        lines = [comment(0, '// METRIC: ' + m)] + lines
 
     if allowed is None:
         allowed = default_allowed
-        lines = [raw(0, '// ALLOWED: ' + ' '.join(allowed))] + lines
+        lines = [comment(0, '// ALLOWED: ' + ' '.join(allowed))] + lines
 
     config.allowed = allowed
     config.metric = metric
     context = ARContext(cfg=config)
-    return context, lines
+    return context, lines, modifiers
 
 
 parser = argparse.ArgumentParser(
@@ -170,11 +176,17 @@ if args.vector:
 if args.latex:
     modifier += '.__tex__()'
 
-context, lines = parse_calculation_file(args.script)
+context, lines, modifiers = parse_calculation_file(args.script)
 
 for l in lines:
-    if isinstance(l, raw):
+    step_modifier = modifiers.get(l.lnum)
+
+    if isinstance(l, comment):
         print(l.text)
+
+    elif isinstance(l, raw):
+        mod = step_modifier if step_modifier else modifier
+        eval('''print('{} = ', {}{})'''.format(l.var, l.var, mod))
 
     elif isinstance(l, context_update):
         # The update will have a matching comment line to show when
@@ -186,9 +198,11 @@ for l in lines:
 
     elif isinstance(l, mvec_def):
         exec('{} = MultiVector({})'.format(l.var, l.alphas))
-        eval('''print('{} = ', {}{})'''.format(l.var, l.var, modifier))
+        mod = step_modifier if step_modifier else modifier
+        eval('''print('{} = ', {}{})'''.format(l.var, l.var, mod))
 
     elif isinstance(l, step):
         exec('{} = context("{}")'.format(l.var, l.args))
         print('{} = {}'.format(l.var, l.args))
-        eval('print({}{})'.format(l.var, modifier))
+        mod = step_modifier if step_modifier else modifier
+        eval('print({}{})'.format(l.var, mod))

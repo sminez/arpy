@@ -102,14 +102,18 @@ class ARConfig:
 
         self.bxyz_like = dict(bxyz_pairings)
 
+        e_key = '0i' if self._E[0][0] == '0' else 'i0'
+
         # How the 3-vector components are grouped and under what names
         # TODO: Have a way to dynamically alter these names?
         self.xi_groups = {
-            'i': ['1', '2', '3'],
-            'i0': [a for a in self.allowed if len(a) == 2 and '0' in a],
-            'jk': [a for a in self.allowed if len(a) == 2 and '0' not in a],
-            '0jk': [a for a in self.allowed if len(a) == 3 and '0' in a]
+            'i': self._A,
+            e_key: self._E,
+            'jk': self._B,
+            '0jk': self._T,
         }
+
+        self.group_to_4set = {'jk': 'B', 'i': 'A', '0jk': 'T', e_key: 'E'}
 
         # Names to group the results of calculations under: scalars & 3-vectors
         self.allowed_groups = ['p', '0', '123', '0123'] + \
