@@ -11,7 +11,7 @@ from copy import deepcopy
 from itertools import groupby
 from collections import namedtuple
 from .ar_types import Alpha, Pair, Xi, XiProduct
-from .del_grouping import del_grouped
+from ..reductions.del_grouping import del_grouped
 from .config import config as cfg
 
 

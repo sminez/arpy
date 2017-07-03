@@ -5,8 +5,8 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 from itertools import groupby
 from collections import namedtuple
 
-from .ar_types import Alpha, Xi, Pair
-from .config import config as cfg
+from ..algebra.ar_types import Alpha, Xi, Pair
+from ..algebra.config import config as cfg
 from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS
 
 

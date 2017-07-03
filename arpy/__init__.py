@@ -14,7 +14,8 @@ from .algebra.multivector import MultiVector, DelMultiVector
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
         project, prod_apply, dagger, commutator
 from .algebra.differential import AR_differential, differential_operator
-from .algebra.del_grouping import del_grouped
+from .reductions.del_grouping import del_grouped
+from .reductions.reducers import cancel_like_terms
 from .utils.lexparse import ARContext
 from .utils.utils import Tex, reorder_allowed
 from .utils.visualisation import cayley, sign_cayley, sign_distribution
@@ -133,5 +134,6 @@ __all__ = [
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
     # Util functions
-    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig', 'reorder_allowed'
+    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig',
+    'reorder_allowed', 'cancel_like_terms'
 ]

@@ -144,30 +144,20 @@ class Xi:
 
 class XiProduct:
     '''Symbolic Xi valued products with a single sign'''
-    __slots__ = ('partials', 'components', 'sign_base')
+    __slots__ = ('partials', 'components', 'sign')
 
     def __init__(self, components):
-        self.components = tuple(components)
+        self.sign = 1
+        # Determine overall sign and set component signs to positive
+        for c in components:
+            self.sign *= c.sign
+            c.sign = 1
+
+        self.components = tuple(sorted(components))
         self.partials = []
-        self.sign_base = 1
 
     def __hash__(self):
-        return hash((self.components, tuple(self.partials), self.sign_base))
-
-    @property
-    def sign(self):
-        s = 1
-        for comp in self.components:
-            s *= comp.sign
-        return s * self.sign_base
-
-    @sign.setter
-    def sign(self, val):
-        if val not in [1, -1]:
-            raise ValueError()
-        if self.sign == -1:
-            val = -val
-        self.sign_base = val
+        return hash((self.components, tuple(self.partials), self.sign))
 
     @property
     def val(self):
@@ -191,7 +181,7 @@ class XiProduct:
 
     def __neg__(self):
         neg = deepcopy(self)
-        neg.sign_base *= -1
+        neg.sign *= -1
         return neg
 
     def __repr__(self):
@@ -256,3 +246,15 @@ class Pair:
 
     def __repr__(self):
         return '({}, {})'.format(self.alpha, self.xi)
+
+    def __hash__(self):
+        return hash((self.alpha, self.xi))
+
+    def __neg__(self):
+        neg = deepcopy(self)
+        if isinstance(neg.xi, Xi):
+            neg.xi.sign *= -1
+        else:
+            neg.xi.sign_base *= -1
+
+        return neg
