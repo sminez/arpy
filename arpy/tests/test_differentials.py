@@ -1,7 +1,7 @@
 import pytest
 from arpy import Alpha, Xi, Pair, config
 from arpy.algebra.differential import component_partial
-from arpy.algebra.del_grouping import replace_div, replace_grad, \
+from arpy.reductions.del_grouping import replace_div, replace_grad, \
     replace_partials, replace_curl
 
 
