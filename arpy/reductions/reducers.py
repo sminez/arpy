@@ -29,8 +29,8 @@ class Term:
         self.sign = sign
         self.alpha_bxyz = alpha[0]
         self.alpha_group = '_' if len(alpha) == 1 else alpha[1]
-        self.partials = tuple(partials)
-        self.xis = tuple(xis)
+        self.partials = None if partials is None else tuple(partials)
+        self.xis = None if xis is None else tuple(xis)
 
 
 class Template:
