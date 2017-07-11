@@ -12,6 +12,7 @@ from itertools import groupby
 from collections import namedtuple
 from .ar_types import Alpha, Pair, Xi, XiProduct
 from ..reductions.del_grouping import del_grouped
+from ..reductions.reducers import replace_all
 from .config import config as cfg
 
 
@@ -420,6 +421,62 @@ class DelMultiVector(MultiVector):
             ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
              Alpha(a, cfg=self.cfg), tex=True) + r'+ \nonumber\\'
             for a in self.cfg.allowed_groups
+            if self.components[Alpha(a, cfg=self.cfg)]
+        )
+
+        return r'\{ \nonumber\\' + '\n' + comps + '\n\\}' + r'\nonumber\\'
+
+
+class GroupedMultiVector(MultiVector):
+    def __init__(self, components=[], cfg=cfg):
+        # Given a list of pairs, build the mulitvector by binding the ξ values
+        self.cfg = cfg
+        if isinstance(components,
+                      (MultiVector, DelMultiVector, GroupedMultiVector)):
+            cfg = components.cfg
+            components = [p for p in components]
+
+        self._raw_components = components
+        self.alphas = cfg.allowed + cfg.allowed_groups[-4:]
+
+        self.components = {
+            Alpha(a, cfg=cfg): [] for a in self.alphas}
+
+        for comp in replace_all(self._raw_components, cfg=self.cfg):
+            if isinstance(comp, (str, Alpha)):
+                comp = Pair(comp, cfg=cfg)
+            if not isinstance(comp, Pair):
+                raise ValueError('Arguments must be Alphas, Pairs or Strings')
+            if comp.alpha.index in self.alphas:
+                try:
+                    self.components[comp.alpha].append(comp.xi)
+                except KeyError:
+                    # Negative Alpha value
+                    alpha, xi = comp.alpha, comp.xi
+                    alpha.sign = 1
+                    xi.sign *= -1
+                    self.components[alpha].append(xi)
+
+    def __eq__(self, other):
+        if not isinstance(other, GroupedMultiVector):
+            return False
+        for alpha in self.components:
+            if self.components[alpha] != other.components[alpha]:
+                return False
+        return True
+
+    def __repr__(self):
+        comps = [
+            '  {}{}'.format(repr(a).ljust(5), self._nice_xi(a))
+            for a in (Alpha(x, cfg=self.cfg) for x in self.alphas)
+            if self.components[a]]
+        return '{\n' + '\n'.join(comps) + '\n}'
+
+    def __tex__(self):
+        comps = '\n'.join(
+            ('  \\alpha_{' + str(a) + '}').ljust(17) + self._nice_xi(
+             Alpha(a, cfg=self.cfg), tex=True) + r'+ \nonumber\\'
+            for a in self.alphas
             if self.components[Alpha(a, cfg=self.cfg)]
         )
 
