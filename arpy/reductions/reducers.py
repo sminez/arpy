@@ -14,7 +14,6 @@ from itertools import groupby
 
 from ..algebra.ar_types import Xi, Pair, Alpha
 from ..algebra.config import config as cfg
-from ..algebra.multivector import MultiVector
 from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS
 
 
@@ -131,7 +130,7 @@ class Template:
             for term, matches in self.match_map.items():
                 for match in matches:
                     output.append(self.replace(match, term))
-            return MultiVector(output)
+            return output
 
         # Otherwise, take candidates from the first term template and try
         # to build complete matches of the template.
@@ -263,13 +262,13 @@ class Template:
         return None
 
 
-def cancel_like_terms(mvec):
+def cancel_like_terms(terms):
     '''
     For each alpha in the multivector, cancel terms that match their
     negative and return a new multivector of the remaining terms.
     '''
     filtered_pairs = []
-    for g in groupby(mvec, lambda p: p.alpha):
+    for g in groupby(terms, lambda p: p.alpha):
         alpha, pairs = g
         seen = {}
 
@@ -293,7 +292,7 @@ def cancel_like_terms(mvec):
         for v in seen.values():
             filtered_pairs.extend(v)
 
-    return MultiVector(filtered_pairs)
+    return filtered_pairs
 
 
 # Termfuncs need to take a requirements dict and a config, and return
@@ -404,6 +403,8 @@ partial_template = Template(
 
 def replace_all(terms, cfg):
     '''Run all known conversions on a Multivector'''
+    # Cancel first to cut down the search space
+    terms = cancel_like_terms(terms)
     terms = partial_template.replace(terms, cfg)
     terms = grad_template.replace(terms, cfg)
     terms = div_template.replace(terms, cfg)
