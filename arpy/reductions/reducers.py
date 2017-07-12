@@ -79,10 +79,6 @@ class Template:
                       for want, have in pairs if want[0] in 'bxyz')
                 if not all(ok):
                     continue
-                # for want, have in pairs:
-                #     if want[0] in 'bxyz':
-                #         if cfg.bxyz_like.get(have.val) != want[0]:
-                #             continue
 
             # Check that we have the correct kind of alpha
             if term.alpha_bxyz != "_" and term.alpha_bxyz in 'bxyz':
@@ -173,8 +169,8 @@ class Template:
                     # match another t1_candidate so don't discard them yet
                     output.append(t1_candidate)
                     # reset the requirements
-                    requirements = self.update_match_or_fail(
-                            self.terms[0], t1_candidate, {'+_sign': None})
+                    # requirements = self.update_match_or_fail(
+                    #         self.terms[0], t1_candidate, {'+_sign': None})
                     break
             else:
                 # If there were no breaks then we should have a match for each
@@ -369,7 +365,7 @@ def partial_termfunc(reqs, cfg):
 
 
 def dot_termfunc(reqs, cfg):
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['b']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}•{}'.format(reqs['G'], reqs['H']),
@@ -410,6 +406,15 @@ def whole_3vec_termfunc(reqs, cfg):
 def whole_3vec_squared_termfunc(reqs, cfg):
     return Pair(
         Alpha(reqs['k'], reqs['+_sign'], cfg=cfg),
+        Xi('{}²'.format(reqs['G']),
+           tex='{}^2'.format(reqs['G'])),
+        cfg=cfg)
+
+
+def dot_square_termfunc(reqs, cfg):
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['b']]
+    return Pair(
+        Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}²'.format(reqs['G']),
            tex='{}^2'.format(reqs['G'])),
         cfg=cfg)
@@ -464,11 +469,12 @@ partial_template = Template(
 
 dot_template = Template(
     terms=[
-        Term('+', 'xF', None, ('xG', 'xH')),
-        Term('+', 'yF', None, ('yG', 'yH')),
-        Term('+', 'zF', None, ('zG', 'zH'))
+        Term('+', 'bF', None, ('xG', 'xH')),
+        Term('+', 'bF', None, ('yG', 'yH')),
+        Term('+', 'bF', None, ('zG', 'zH'))
     ],
-    replacements=[Replacement(set(), set(), dot_termfunc)]
+    replacements=[Replacement(set(), set({'G', 'H'}), dot_square_termfunc),
+                  Replacement(set(), set(), dot_termfunc)]
 )
 
 wedge_template = Template(
