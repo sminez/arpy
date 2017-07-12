@@ -6,7 +6,6 @@ This module provides helpr functions for writing reductions on multivectors.
 
 
 TODO:
-    Simplified Div/Grad/Curl/Partials
     Second Derivatives
     Cross, Dot, Wedge products
 '''
@@ -64,26 +63,29 @@ class Template:
             # Check that we correctly have either a Xi or a
             # XiProduct with the correct number of components
             if term.xis not in [tuple("_"), None]:
-                pairs = None
+                pairs = ([], [])
 
                 if isinstance(value.xi, Xi):
                     if len(term.xis) > 1:
                         continue
-                    pairs = zip(term.xis, [value.xi.val])
+                    pairs = zip(term.xis, [value.xi])
                 else:
                     if len(term.xis) != len(value.xi.components):
                         continue
                     pairs = zip(term.xis, value.xi.components)
 
                 # Confirm that bxyz-ness is correct
-                if pairs:
-                    for want, have in pairs:
-                        if have[0] in 'bxyz':
-                            if cfg.bxyz_like.get(have.val) != want:
-                                continue
+                ok = (cfg.bxyz_like.get(have.val) == want[0]
+                      for want, have in pairs if want[0] in 'bxyz')
+                if not all(ok):
+                    continue
+                # for want, have in pairs:
+                #     if want[0] in 'bxyz':
+                #         if cfg.bxyz_like.get(have.val) != want[0]:
+                #             continue
 
             # Check that we have the correct kind of alpha
-            if term.alpha_bxyz != "_":
+            if term.alpha_bxyz != "_" and term.alpha_bxyz in 'bxyz':
                 if cfg.bxyz_like[value.alpha.index] != term.alpha_bxyz:
                     continue
 
@@ -135,12 +137,14 @@ class Template:
         # Otherwise, take candidates from the first term template and try
         # to build complete matches of the template.
         for t1_candidate in tuple(self.match_map.get(self.terms[0], [])):
-            requirements = {'+_sign': None}
             matching_terms = {self.terms[0]: t1_candidate}
 
             # Get the initial requirements for this match
-            requirements = self.update_match_or_fail(
-                    self.terms[0], t1_candidate, requirements)
+            try:
+                requirements = self.update_match_or_fail(
+                    self.terms[0], t1_candidate, {'+_sign': None})
+            except FailedMatch:
+                continue
 
             # Try to match each term in the template as we build up the
             # known requirements.
@@ -197,7 +201,7 @@ class Template:
 
         NOTE: here, a candiate is a pair.
         '''
-        def check_group(want, have):
+        def check_group(want, have, reqs):
             required_group = reqs.get(want)
             a_group = cfg.four_sets[have]
 
@@ -205,7 +209,9 @@ class Template:
                 reqs[want] = a_group
             else:
                 if required_group != a_group:
-                    raise FailedMatch
+                    raise FailedMatch(
+                        '{} != {} ({} {})'.format(
+                            want, have, required_group, a_group))
 
             return reqs
 
@@ -225,16 +231,25 @@ class Template:
         # All we need to do now is confirm that the match groups (capital
         # letters in the patterns) are consistent.
         if term.alpha_group is not '_':
-            reqs = check_group(term.alpha_group, candidate.alpha.index)
+            reqs = check_group(term.alpha_group, candidate.alpha.index, reqs)
+
+        if term.alpha_bxyz is not '_':
+            if term.alpha_bxyz not in 'bxyz':
+                required = reqs.get(term.alpha_bxyz)
+                if required is None:
+                    reqs[term.alpha_bxyz] = candidate.alpha.index
+                else:
+                    if required != candidate.alpha.index:
+                        raise FailedMatch
 
         if term.partials is not None:
             for want, have in zip(term.partials, candidate.xi.partials):
-                reqs = check_group(want[1], have.index)
+                reqs = check_group(want[1], have.index, reqs)
 
         if term.xis is not None:
             for want, have in zip(term.xis, candidate.xi.components):
                 if len(want) > 1:
-                    reqs = check_group(want[1], have.val)
+                    reqs = check_group(want[1], have.val, reqs)
                 else:
                     required = reqs.get(want)
                     if required is None:
@@ -353,6 +368,53 @@ def partial_termfunc(reqs, cfg):
         cfg=cfg)
 
 
+def dot_termfunc(reqs, cfg):
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    return Pair(
+        Alpha(alpha, reqs['+_sign'], cfg=cfg),
+        Xi('{}•{}'.format(reqs['G'], reqs['H']),
+           tex='{}\\cdot {}'.format(reqs['G'], reqs['H'])),
+        cfg=cfg)
+
+
+def wedge_termfunc(reqs, cfg):
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    return Pair(
+        Alpha(alpha, reqs['+_sign'], cfg=cfg),
+        Xi('{}Λ{}'.format(reqs['G'], reqs['H']),
+           tex='{}\\Lambda {}'.format(reqs['G'], reqs['H'])),
+        cfg=cfg)
+
+
+def blade_3vec_termfunc(reqs, cfg):
+    b_map = {frozenset('p'): 'p', frozenset('0123'): 'q',
+             frozenset('0'): 't', frozenset('123'): 'h'}
+
+    blade = b_map[frozenset(cfg.four_set_comps[reqs['G']]['b'])]
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    return Pair(
+        Alpha(alpha, reqs['+_sign'], cfg=cfg),
+        Xi('{}{}'.format(blade, reqs['H']),
+           tex='{}{}'.format(blade, reqs['H'])),
+        cfg=cfg)
+
+
+def whole_3vec_termfunc(reqs, cfg):
+    return Pair(
+        Alpha(reqs['k'], reqs['+_sign'], cfg=cfg),
+        Xi('{}'.format(reqs['G']),
+           tex='{}'.format(reqs['G'])),
+        cfg=cfg)
+
+
+def whole_3vec_squared_termfunc(reqs, cfg):
+    return Pair(
+        Alpha(reqs['k'], reqs['+_sign'], cfg=cfg),
+        Xi('{}²'.format(reqs['G']),
+           tex='{}^2'.format(reqs['G'])),
+        cfg=cfg)
+
+
 # Terms are specified according to their component parts.
 # Special characters are:
 #   b,x,y,z     --> bxyz-like in general
@@ -400,6 +462,65 @@ partial_template = Template(
     replacements=[Replacement(set(), set(), partial_termfunc)]
 )
 
+dot_template = Template(
+    terms=[
+        Term('+', 'xF', None, ('xG', 'xH')),
+        Term('+', 'yF', None, ('yG', 'yH')),
+        Term('+', 'zF', None, ('zG', 'zH'))
+    ],
+    replacements=[Replacement(set(), set(), dot_termfunc)]
+)
+
+wedge_template = Template(
+    terms=[
+        Term('+', 'xF', None, ('yG', 'zH')),
+        Term('-', 'xF', None, ('zG', 'yH')),
+        Term('+', 'yF', None, ('zG', 'xH')),
+        Term('-', 'yF', None, ('xG', 'zH')),
+        Term('+', 'zF', None, ('xG', 'yH')),
+        Term('-', 'zF', None, ('yG', 'xH'))
+    ],
+    replacements=[Replacement(set(), set(), wedge_termfunc)]
+)
+
+blade_3vec_template = Template(
+    terms=[
+        Term('+', 'xF', None, ('bG', 'xH')),
+        Term('+', 'yF', None, ('bG', 'yH')),
+        Term('+', 'zF', None, ('bG', 'zH'))
+    ],
+    replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
+)
+
+# This is to allow for Sb as well as bS (which is caught by the
+# template above)
+blade_3vec_flipped_template = Template(
+    terms=[
+        Term('+', 'xF', None, ('xH', 'bG')),
+        Term('+', 'yF', None, ('yH', 'bG')),
+        Term('+', 'zF', None, ('zH', 'bG'))
+    ],
+    replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
+)
+
+whole_3vec_template = Template(
+    terms=[
+        Term('+', 'k', None, ('xG',)),
+        Term('+', 'k', None, ('yG',)),
+        Term('+', 'k', None, ('zG',))
+    ],
+    replacements=[Replacement(set(), set(), whole_3vec_termfunc)]
+)
+
+whole_3vec_squared_template = Template(
+    terms=[
+        Term('+', 'k', None, ('xG', 'xG')),
+        Term('+', 'k', None, ('yG', 'yG')),
+        Term('+', 'k', None, ('zG', 'zG'))
+    ],
+    replacements=[Replacement(set(), set(), whole_3vec_squared_termfunc)]
+)
+
 
 def replace_all(terms, cfg):
     '''Run all known conversions on a Multivector'''
@@ -409,4 +530,10 @@ def replace_all(terms, cfg):
     terms = grad_template.replace(terms, cfg)
     terms = div_template.replace(terms, cfg)
     terms = curl_template.replace(terms, cfg)
+    terms = blade_3vec_template.replace(terms, cfg)
+    terms = blade_3vec_flipped_template.replace(terms, cfg)
+    terms = dot_template.replace(terms, cfg)
+    terms = wedge_template.replace(terms, cfg)
+    terms = whole_3vec_squared_template.replace(terms, cfg)
+    terms = whole_3vec_template.replace(terms, cfg)
     return terms

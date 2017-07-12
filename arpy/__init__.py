@@ -10,7 +10,8 @@ from ctypes import c_int, pythonapi, py_object
 
 from .algebra.config import config, ARConfig
 from .algebra.ar_types import Alpha, Xi, Pair
-from .algebra.multivector import MultiVector, DelMultiVector
+from .algebra.multivector import MultiVector, DelMultiVector, \
+        GroupedMultiVector
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
         project, prod_apply, dagger, commutator
 from .algebra.differential import AR_differential, differential_operator
@@ -120,7 +121,8 @@ def arpy_info():
 # All values that will be imported when the user does `from arpy import *`
 __all__ = [
     # Data structures
-    'Alpha', 'Xi', 'Pair', 'MultiVector', 'DelMultiVector',
+    'Alpha', 'Xi', 'Pair',
+    'MultiVector', 'DelMultiVector', 'GroupedMultiVector',
     # Non differential operators
     'find_prod', 'inverse', 'full', 'div_by', 'div_into',
     'project', 'prod_apply', 'dagger', 'commutator',
