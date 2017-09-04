@@ -2,12 +2,16 @@
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-This module provides helpr functions for writing reductions on multivectors.
+This module provides helper functions for writing reductions on multivectors.
 
+::NOTE::
+It looks like the issue with parsing Force style equations is that the current
+Term implementation only looks at partials for the full term, not the
+possibility that there may be a XiProduct with nested partials inside.
 
 TODO:
     Second Derivatives
-    Cross, Dot, Wedge products
+    Product and derivatives (F dF etc)
 '''
 from itertools import groupby
 
@@ -59,6 +63,7 @@ class Template:
         '''
         Check to see if a given value matches on of the template terms.
         '''
+        print('here')
         for term in self.terms:
             # Check that we correctly have either a Xi or a
             # XiProduct with the correct number of components
@@ -469,9 +474,9 @@ partial_template = Template(
 
 dot_template = Template(
     terms=[
-        Term('+', 'bF', None, ('xG', 'xH')),
-        Term('+', 'bF', None, ('yG', 'yH')),
-        Term('+', 'bF', None, ('zG', 'zH'))
+        Term('+', 'bF', tuple(), ('xG', 'xH')),
+        Term('+', 'bF', tuple(), ('yG', 'yH')),
+        Term('+', 'bF', tuple(), ('zG', 'zH'))
     ],
     replacements=[Replacement(set(), set({'G', 'H'}), dot_square_termfunc),
                   Replacement(set(), set(), dot_termfunc)]
@@ -479,21 +484,21 @@ dot_template = Template(
 
 wedge_template = Template(
     terms=[
-        Term('+', 'xF', None, ('yG', 'zH')),
-        Term('-', 'xF', None, ('zG', 'yH')),
-        Term('+', 'yF', None, ('zG', 'xH')),
-        Term('-', 'yF', None, ('xG', 'zH')),
-        Term('+', 'zF', None, ('xG', 'yH')),
-        Term('-', 'zF', None, ('yG', 'xH'))
+        Term('+', 'xF', tuple(), ('yG', 'zH')),
+        Term('-', 'xF', tuple(), ('zG', 'yH')),
+        Term('+', 'yF', tuple(), ('zG', 'xH')),
+        Term('-', 'yF', tuple(), ('xG', 'zH')),
+        Term('+', 'zF', tuple(), ('xG', 'yH')),
+        Term('-', 'zF', tuple(), ('yG', 'xH'))
     ],
     replacements=[Replacement(set(), set(), wedge_termfunc)]
 )
 
 blade_3vec_template = Template(
     terms=[
-        Term('+', 'xF', None, ('bG', 'xH')),
-        Term('+', 'yF', None, ('bG', 'yH')),
-        Term('+', 'zF', None, ('bG', 'zH'))
+        Term('+', 'xF', tuple(), ('bG', 'xH')),
+        Term('+', 'yF', tuple(), ('bG', 'yH')),
+        Term('+', 'zF', tuple(), ('bG', 'zH'))
     ],
     replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
 )
@@ -502,27 +507,27 @@ blade_3vec_template = Template(
 # template above)
 blade_3vec_flipped_template = Template(
     terms=[
-        Term('+', 'xF', None, ('xH', 'bG')),
-        Term('+', 'yF', None, ('yH', 'bG')),
-        Term('+', 'zF', None, ('zH', 'bG'))
+        Term('+', 'xF', tuple(), ('xH', 'bG')),
+        Term('+', 'yF', tuple(), ('yH', 'bG')),
+        Term('+', 'zF', tuple(), ('zH', 'bG'))
     ],
     replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
 )
 
 whole_3vec_template = Template(
     terms=[
-        Term('+', 'k', None, ('xG',)),
-        Term('+', 'k', None, ('yG',)),
-        Term('+', 'k', None, ('zG',))
+        Term('+', 'k', tuple(), ('xG',)),
+        Term('+', 'k', tuple(), ('yG',)),
+        Term('+', 'k', tuple(), ('zG',))
     ],
     replacements=[Replacement(set(), set(), whole_3vec_termfunc)]
 )
 
 whole_3vec_squared_template = Template(
     terms=[
-        Term('+', 'k', None, ('xG', 'xG')),
-        Term('+', 'k', None, ('yG', 'yG')),
-        Term('+', 'k', None, ('zG', 'zG'))
+        Term('+', 'k', tuple(), ('xG', 'xG')),
+        Term('+', 'k', tuple(), ('yG', 'yG')),
+        Term('+', 'k', tuple(), ('zG', 'zG'))
     ],
     replacements=[Replacement(set(), set(), whole_3vec_squared_termfunc)]
 )

@@ -402,6 +402,8 @@ class DelMultiVector(MultiVector):
                     self.components[alpha].append(xi)
 
     def __eq__(self, other):
+        if isinstance(other, MultiVector):
+            other = GroupedMultiVector(other)
         if not isinstance(other, DelMultiVector):
             return False
         for alpha in self.components:
