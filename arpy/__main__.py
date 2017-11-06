@@ -56,8 +56,10 @@ comment = namedtuple('raw', 'lnum text')
 step = namedtuple('step', 'lnum var args')
 context_update = namedtuple('context_update', 'lnum param val')
 mvec_def = namedtuple('mvec_def', 'lnum var alphas')
+operator_def = namedtuple('op_def', 'lnum var alphas')
 
 mvec_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{([p0213, -]*)\}$'
+operator_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\<([p0213, -]*)\>$'
 modifier_map = {
     'DEL NOTATION': '.v',
     'SIMPLIFIED': '.simplified()',
@@ -118,10 +120,15 @@ def parse_calculation_file(fname, default_allowed=config.allowed,
                 else:
                     # Check for multivector assignent
                     mvec_match = re.match(mvec_pattern, line)
+                    operator_match = re.match(operator_pattern, line)
                     if mvec_match:
                         var, alphas = mvec_match.groups()
                         alphas = re.split(', |,| ', alphas.strip())
                         lines.append(mvec_def(lnum, var, alphas))
+                    elif operator_match:
+                        var, alphas = operator_match.groups()
+                        alphas = re.split(', |,| ', alphas.strip())
+                        lines.append(operator_def(lnum, var, alphas))
                     else:
                         # Try to parse an ar command
                         var, args = line.split(' = ')
@@ -200,6 +207,10 @@ for l in lines:
         exec('{} = MultiVector({})'.format(l.var, l.alphas))
         mod = step_modifier if step_modifier else modifier
         eval('''print('{} = ', {}{})'''.format(l.var, l.var, mod))
+
+    elif isinstance(l, operator_def):
+        exec('{} = differential_operator({})'.format(l.var, l.alphas))
+        eval('''print('{} = ', {})'''.format(l.var, l.var))
 
     elif isinstance(l, step):
         exec('{} = context("{}")'.format(l.var, l.args))
