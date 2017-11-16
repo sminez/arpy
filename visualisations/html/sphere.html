@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Spherical AR ζ</title>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <style type="text/css">
+        body {
+          padding: 0;
+          margin: 0;
+        }
+        path.node {
+          stroke-width: 9.5px;
+        }
+
+        path.link {
+          fill: none;
+          stroke-opacity: 0.3;
+        }
+    </style>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+
+    var width = window.innerWidth,
+        height = window.innerHeight - 5;
+
+    var graph = {
+      "nodes": [
+        {id: "αp", x: width/2, y: height/2, group: "jk"},
+        {id: "α23", x: width/2, y: height/2, group: "jk"},
+        {id: "α31", x: width/2, y: height/2, group: "jk"},
+        {id: "α12", x: width/2, y: height/2, group: "jk"},
+        {id: "α0", x: width/3, y: height/3, group: "0jk"},
+        {id: "α023", x: width/3, y: height/3, group: "0jk"},
+        {id: "α031", x: width/3, y: height/3, group: "0jk"},
+        {id: "α012", x: width/3, y: height/3, group: "0jk"},
+        {id: "α123", x: width/5, y: height/5, group: "i"},
+        {id: "α1", x: width/5, y: height/5, group: "i"},
+        {id: "α2", x: width/5, y: height/5, group: "i"},
+        {id: "α3", x: width/5, y: height/5, group: "i"},
+        {id: "α0123", x: width/7, y: height/7, group: "0i"},
+        {id: "α01", x: width/7, y: height/7, group: "0i"},
+        {id: "α02", x: width/7, y: height/7, group: "0i"},
+        {id: "α03", x: width/7, y: height/7, group: "0i"}
+      ],
+      links: [
+        {source: "αp", edge: "jk", target: "αp", value: 6},
+        {source: "αp", edge: "jk", target: "α23", value: 6},
+        {source: "αp", edge: "jk", target: "α31", value: 6},
+        {source: "αp", edge: "jk", target: "α12", value: 6},
+        {source: "αp", edge: "0jk", target: "α0", value: 10},
+        {source: "αp", edge: "0jk", target: "α023", value: 10},
+        {source: "αp", edge: "0jk", target: "α031", value: 10},
+        {source: "αp", edge: "0jk", target: "α012", value: 10},
+        {source: "αp", edge: "i", target: "α123", value: 10},
+        {source: "αp", edge: "i", target: "α1", value: 10},
+        {source: "αp", edge: "i", target: "α2", value: 10},
+        {source: "αp", edge: "i", target: "α3", value: 10},
+        {source: "αp", edge: "0i", target: "α0123", value: 10},
+        {source: "αp", edge: "0i", target: "α01", value: 10},
+        {source: "αp", edge: "0i", target: "α02", value: 10},
+        {source: "αp", edge: "0i", target: "α03", value: 10},
+        {source: "α23", edge: "jk", target: "αp", value: 6},
+        {source: "α23", edge: "jk", target: "α23", value: 4},
+        {source: "α23", edge: "jk", target: "α31", value: 4},
+        {source: "α23", edge: "jk", target: "α12", value: 4},
+        {source: "α23", edge: "0jk", target: "α0", value: 10},
+        {source: "α23", edge: "0jk", target: "α023", value: 10},
+        {source: "α23", edge: "0jk", target: "α031", value: 10},
+        {source: "α23", edge: "0jk", target: "α012", value: 10},
+        {source: "α23", edge: "i", target: "α123", value: 10},
+        {source: "α23", edge: "i", target: "α1", value: 10},
+        {source: "α23", edge: "i", target: "α2", value: 10},
+        {source: "α23", edge: "i", target: "α3", value: 10},
+        {source: "α23", edge: "0i", target: "α0123", value: 10},
+        {source: "α23", edge: "0i", target: "α01", value: 10},
+        {source: "α23", edge: "0i", target: "α02", value: 10},
+        {source: "α23", edge: "0i", target: "α03", value: 10},
+        {source: "α31", edge: "jk", target: "αp", value: 6},
+        {source: "α31", edge: "jk", target: "α23", value: 4},
+        {source: "α31", edge: "jk", target: "α31", value: 4},
+        {source: "α31", edge: "jk", target: "α12", value: 4},
+        {source: "α31", edge: "0jk", target: "α0", value: 10},
+        {source: "α31", edge: "0jk", target: "α023", value: 10},
+        {source: "α31", edge: "0jk", target: "α031", value: 10},
+        {source: "α31", edge: "0jk", target: "α012", value: 10},
+        {source: "α31", edge: "i", target: "α123", value: 10},
+        {source: "α31", edge: "i", target: "α1", value: 10},
+        {source: "α31", edge: "i", target: "α2", value: 10},
+        {source: "α31", edge: "i", target: "α3", value: 10},
+        {source: "α31", edge: "0i", target: "α0123", value: 10},
+        {source: "α31", edge: "0i", target: "α01", value: 10},
+        {source: "α31", edge: "0i", target: "α02", value: 10},
+        {source: "α31", edge: "0i", target: "α03", value: 10},
+        {source: "α12", edge: "jk", target: "αp", value: 6},
+        {source: "α12", edge: "jk", target: "α23", value: 4},
+        {source: "α12", edge: "jk", target: "α31", value: 4},
+        {source: "α12", edge: "jk", target: "α12", value: 4},
+        {source: "α12", edge: "0jk", target: "α0", value: 10},
+        {source: "α12", edge: "0jk", target: "α023", value: 10},
+        {source: "α12", edge: "0jk", target: "α031", value: 10},
+        {source: "α12", edge: "0jk", target: "α012", value: 10},
+        {source: "α12", edge: "i", target: "α123", value: 10},
+        {source: "α12", edge: "i", target: "α1", value: 10},
+        {source: "α12", edge: "i", target: "α2", value: 10},
+        {source: "α12", edge: "i", target: "α3", value: 10},
+        {source: "α12", edge: "0i", target: "α0123", value: 10},
+        {source: "α12", edge: "0i", target: "α01", value: 10},
+        {source: "α12", edge: "0i", target: "α02", value: 10},
+        {source: "α12", edge: "0i", target: "α03", value: 10},
+        {source: "α0", edge: "jk", target: "αp", value: 10},
+        {source: "α0", edge: "jk", target: "α23", value: 10},
+        {source: "α0", edge: "jk", target: "α31", value: 10},
+        {source: "α0", edge: "jk", target: "α12", value: 10},
+        {source: "α0", edge: "0jk", target: "α0", value: 6},
+        {source: "α0", edge: "0jk", target: "α023", value: 6},
+        {source: "α0", edge: "0jk", target: "α031", value: 6},
+        {source: "α0", edge: "0jk", target: "α012", value: 6},
+        {source: "α0", edge: "i", target: "α123", value: 10},
+        {source: "α0", edge: "i", target: "α1", value: 10},
+        {source: "α0", edge: "i", target: "α2", value: 10},
+        {source: "α0", edge: "i", target: "α3", value: 10},
+        {source: "α0", edge: "0i", target: "α0123", value: 10},
+        {source: "α0", edge: "0i", target: "α01", value: 10},
+        {source: "α0", edge: "0i", target: "α02", value: 10},
+        {source: "α0", edge: "0i", target: "α03", value: 10},
+        {source: "α023", edge: "jk", target: "αp", value: 10},
+        {source: "α023", edge: "jk", target: "α23", value: 10},
+        {source: "α023", edge: "jk", target: "α31", value: 10},
+        {source: "α023", edge: "jk", target: "α12", value: 10},
+        {source: "α023", edge: "0jk", target: "α0", value: 6},
+        {source: "α023", edge: "0jk", target: "α023", value: 4},
+        {source: "α023", edge: "0jk", target: "α031", value: 4},
+        {source: "α023", edge: "0jk", target: "α012", value: 4},
+        {source: "α023", edge: "i", target: "α123", value: 10},
+        {source: "α023", edge: "i", target: "α1", value: 10},
+        {source: "α023", edge: "i", target: "α2", value: 10},
+        {source: "α023", edge: "i", target: "α3", value: 10},
+        {source: "α023", edge: "0i", target: "α0123", value: 10},
+        {source: "α023", edge: "0i", target: "α01", value: 10},
+        {source: "α023", edge: "0i", target: "α02", value: 10},
+        {source: "α023", edge: "0i", target: "α03", value: 10},
+        {source: "α031", edge: "jk", target: "αp", value: 10},
+        {source: "α031", edge: "jk", target: "α23", value: 10},
+        {source: "α031", edge: "jk", target: "α31", value: 10},
+        {source: "α031", edge: "jk", target: "α12", value: 10},
+        {source: "α031", edge: "0jk", target: "α0", value: 6},
+        {source: "α031", edge: "0jk", target: "α023", value: 4},
+        {source: "α031", edge: "0jk", target: "α031", value: 4},
+        {source: "α031", edge: "0jk", target: "α012", value: 4},
+        {source: "α031", edge: "i", target: "α123", value: 10},
+        {source: "α031", edge: "i", target: "α1", value: 10},
+        {source: "α031", edge: "i", target: "α2", value: 10},
+        {source: "α031", edge: "i", target: "α3", value: 10},
+        {source: "α031", edge: "0i", target: "α0123", value: 10},
+        {source: "α031", edge: "0i", target: "α01", value: 10},
+        {source: "α031", edge: "0i", target: "α02", value: 10},
+        {source: "α031", edge: "0i", target: "α03", value: 10},
+        {source: "α012", edge: "jk", target: "αp", value: 10},
+        {source: "α012", edge: "jk", target: "α23", value: 10},
+        {source: "α012", edge: "jk", target: "α31", value: 10},
+        {source: "α012", edge: "jk", target: "α12", value: 10},
+        {source: "α012", edge: "0jk", target: "α0", value: 6},
+        {source: "α012", edge: "0jk", target: "α023", value: 4},
+        {source: "α012", edge: "0jk", target: "α031", value: 4},
+        {source: "α012", edge: "0jk", target: "α012", value: 4},
+        {source: "α012", edge: "i", target: "α123", value: 10},
+        {source: "α012", edge: "i", target: "α1", value: 10},
+        {source: "α012", edge: "i", target: "α2", value: 10},
+        {source: "α012", edge: "i", target: "α3", value: 10},
+        {source: "α012", edge: "0i", target: "α0123", value: 10},
+        {source: "α012", edge: "0i", target: "α01", value: 10},
+        {source: "α012", edge: "0i", target: "α02", value: 10},
+        {source: "α012", edge: "0i", target: "α03", value: 10},
+        {source: "α123", edge: "jk", target: "αp", value: 10},
+        {source: "α123", edge: "jk", target: "α23", value: 10},
+        {source: "α123", edge: "jk", target: "α31", value: 10},
+        {source: "α123", edge: "jk", target: "α12", value: 10},
+        {source: "α123", edge: "0jk", target: "α0", value: 10},
+        {source: "α123", edge: "0jk", target: "α023", value: 10},
+        {source: "α123", edge: "0jk", target: "α031", value: 10},
+        {source: "α123", edge: "0jk", target: "α012", value: 10},
+        {source: "α123", edge: "i", target: "α123", value: 6},
+        {source: "α123", edge: "i", target: "α1", value: 6},
+        {source: "α123", edge: "i", target: "α2", value: 6},
+        {source: "α123", edge: "i", target: "α3", value: 6},
+        {source: "α123", edge: "0i", target: "α0123", value: 10},
+        {source: "α123", edge: "0i", target: "α01", value: 10},
+        {source: "α123", edge: "0i", target: "α02", value: 10},
+        {source: "α123", edge: "0i", target: "α03", value: 10},
+        {source: "α1", edge: "jk", target: "αp", value: 10},
+        {source: "α1", edge: "jk", target: "α23", value: 10},
+        {source: "α1", edge: "jk", target: "α31", value: 10},
+        {source: "α1", edge: "jk", target: "α12", value: 10},
+        {source: "α1", edge: "0jk", target: "α0", value: 10},
+        {source: "α1", edge: "0jk", target: "α023", value: 10},
+        {source: "α1", edge: "0jk", target: "α031", value: 10},
+        {source: "α1", edge: "0jk", target: "α012", value: 10},
+        {source: "α1", edge: "i", target: "α123", value: 6},
+        {source: "α1", edge: "i", target: "α1", value: 4},
+        {source: "α1", edge: "i", target: "α2", value: 4},
+        {source: "α1", edge: "i", target: "α3", value: 4},
+        {source: "α1", edge: "0i", target: "α0123", value: 10},
+        {source: "α1", edge: "0i", target: "α01", value: 10},
+        {source: "α1", edge: "0i", target: "α02", value: 10},
+        {source: "α1", edge: "0i", target: "α03", value: 10},
+        {source: "α2", edge: "jk", target: "αp", value: 10},
+        {source: "α2", edge: "jk", target: "α23", value: 10},
+        {source: "α2", edge: "jk", target: "α31", value: 10},
+        {source: "α2", edge: "jk", target: "α12", value: 10},
+        {source: "α2", edge: "0jk", target: "α0", value: 10},
+        {source: "α2", edge: "0jk", target: "α023", value: 10},
+        {source: "α2", edge: "0jk", target: "α031", value: 10},
+        {source: "α2", edge: "0jk", target: "α012", value: 10},
+        {source: "α2", edge: "i", target: "α123", value: 6},
+        {source: "α2", edge: "i", target: "α1", value: 4},
+        {source: "α2", edge: "i", target: "α2", value: 4},
+        {source: "α2", edge: "i", target: "α3", value: 4},
+        {source: "α2", edge: "0i", target: "α0123", value: 10},
+        {source: "α2", edge: "0i", target: "α01", value: 10},
+        {source: "α2", edge: "0i", target: "α02", value: 10},
+        {source: "α2", edge: "0i", target: "α03", value: 10},
+        {source: "α3", edge: "jk", target: "αp", value: 10},
+        {source: "α3", edge: "jk", target: "α23", value: 10},
+        {source: "α3", edge: "jk", target: "α31", value: 10},
+        {source: "α3", edge: "jk", target: "α12", value: 10},
+        {source: "α3", edge: "0jk", target: "α0", value: 10},
+        {source: "α3", edge: "0jk", target: "α023", value: 10},
+        {source: "α3", edge: "0jk", target: "α031", value: 10},
+        {source: "α3", edge: "0jk", target: "α012", value: 10},
+        {source: "α3", edge: "i", target: "α123", value: 6},
+        {source: "α3", edge: "i", target: "α1", value: 4},
+        {source: "α3", edge: "i", target: "α2", value: 4},
+        {source: "α3", edge: "i", target: "α3", value: 4},
+        {source: "α3", edge: "0i", target: "α0123", value: 10},
+        {source: "α3", edge: "0i", target: "α01", value: 10},
+        {source: "α3", edge: "0i", target: "α02", value: 10},
+        {source: "α3", edge: "0i", target: "α03", value: 10},
+        {source: "α0123", edge: "jk", target: "αp", value: 10},
+        {source: "α0123", edge: "jk", target: "α23", value: 10},
+        {source: "α0123", edge: "jk", target: "α31", value: 10},
+        {source: "α0123", edge: "jk", target: "α12", value: 10},
+        {source: "α0123", edge: "0jk", target: "α0", value: 10},
+        {source: "α0123", edge: "0jk", target: "α023", value: 10},
+        {source: "α0123", edge: "0jk", target: "α031", value: 10},
+        {source: "α0123", edge: "0jk", target: "α012", value: 10},
+        {source: "α0123", edge: "i", target: "α123", value: 10},
+        {source: "α0123", edge: "i", target: "α1", value: 10},
+        {source: "α0123", edge: "i", target: "α2", value: 10},
+        {source: "α0123", edge: "i", target: "α3", value: 10},
+        {source: "α0123", edge: "0i", target: "α0123", value: 6},
+        {source: "α0123", edge: "0i", target: "α01", value: 6},
+        {source: "α0123", edge: "0i", target: "α02", value: 6},
+        {source: "α0123", edge: "0i", target: "α03", value: 6},
+        {source: "α01", edge: "jk", target: "αp", value: 10},
+        {source: "α01", edge: "jk", target: "α23", value: 10},
+        {source: "α01", edge: "jk", target: "α31", value: 10},
+        {source: "α01", edge: "jk", target: "α12", value: 10},
+        {source: "α01", edge: "0jk", target: "α0", value: 10},
+        {source: "α01", edge: "0jk", target: "α023", value: 10},
+        {source: "α01", edge: "0jk", target: "α031", value: 10},
+        {source: "α01", edge: "0jk", target: "α012", value: 10},
+        {source: "α01", edge: "i", target: "α123", value: 10},
+        {source: "α01", edge: "i", target: "α1", value: 10},
+        {source: "α01", edge: "i", target: "α2", value: 10},
+        {source: "α01", edge: "i", target: "α3", value: 10},
+        {source: "α01", edge: "0i", target: "α0123", value: 6},
+        {source: "α01", edge: "0i", target: "α01", value: 4},
+        {source: "α01", edge: "0i", target: "α02", value: 4},
+        {source: "α01", edge: "0i", target: "α03", value: 4},
+        {source: "α02", edge: "jk", target: "αp", value: 10},
+        {source: "α02", edge: "jk", target: "α23", value: 10},
+        {source: "α02", edge: "jk", target: "α31", value: 10},
+        {source: "α02", edge: "jk", target: "α12", value: 10},
+        {source: "α02", edge: "0jk", target: "α0", value: 10},
+        {source: "α02", edge: "0jk", target: "α023", value: 10},
+        {source: "α02", edge: "0jk", target: "α031", value: 10},
+        {source: "α02", edge: "0jk", target: "α012", value: 10},
+        {source: "α02", edge: "i", target: "α123", value: 10},
+        {source: "α02", edge: "i", target: "α1", value: 10},
+        {source: "α02", edge: "i", target: "α2", value: 10},
+        {source: "α02", edge: "i", target: "α3", value: 10},
+        {source: "α02", edge: "0i", target: "α0123", value: 6},
+        {source: "α02", edge: "0i", target: "α01", value: 4},
+        {source: "α02", edge: "0i", target: "α02", value: 4},
+        {source: "α02", edge: "0i", target: "α03", value: 4},
+        {source: "α03", edge: "jk", target: "αp", value: 10},
+        {source: "α03", edge: "jk", target: "α23", value: 10},
+        {source: "α03", edge: "jk", target: "α31", value: 10},
+        {source: "α03", edge: "jk", target: "α12", value: 10},
+        {source: "α03", edge: "0jk", target: "α0", value: 10},
+        {source: "α03", edge: "0jk", target: "α023", value: 10},
+        {source: "α03", edge: "0jk", target: "α031", value: 10},
+        {source: "α03", edge: "0jk", target: "α012", value: 10},
+        {source: "α03", edge: "i", target: "α123", value: 10},
+        {source: "α03", edge: "i", target: "α1", value: 10},
+        {source: "α03", edge: "i", target: "α2", value: 10},
+        {source: "α03", edge: "i", target: "α3", value: 10},
+        {source: "α03", edge: "0i", target: "α0123", value: 6},
+        {source: "α03", edge: "0i", target: "α01", value: 4},
+        {source: "α03", edge: "0i", target: "α02", value: 4},
+        {source: "α03", edge: "0i", target: "α03", value: 4}
+      ]
+    }
+
+    var color = d3.scale.ordinal()
+      .domain(["αp", "α23", "α31", "α12",
+               "α0", "α023", "α031", "α012",
+               "α123", "α1", "α2", "α3",
+               "α0123", "α01", "α02", "α03"])
+      .range(["#dbc78f", "#4a778f", "#6fa0b0", "#8fb5bf",
+              "#872e2e", "#76718f", "#9c8ead", "#b49bbf",
+              "#4c4861", "#bd4442", "#d66847", "#d98e66",
+              "#dbaa56", "#498c6b", "#84b394", "#9fc4a0"]);
+
+    var edgeColor = d3.scale.ordinal()
+      .domain(["jk", "0jk", "i", "0i"])
+      .range(["#8fb5bf", "#b49bbf", "#d98e66", "#9fc4a0"]);
+
+    var nodeById = d3.map(graph.nodes, function(d) { return d.id; }),
+        fill = d3.scale.category20(),
+        nodes = graph.nodes,
+        links = [];
+
+    var projection = d3.geo.orthographic()
+        .scale(height/3)
+        .translate([(width/2)-125, height/2 + 15])
+        .clipAngle(null)
+
+    var path = d3.geo.path()
+        .projection(projection)
+
+    var force = d3.layout.force()
+        .linkDistance(function(d) {return (d.value * 24) - 15})
+        .linkStrength(0.1)
+        .gravity(0.1)
+        .size([width, height])
+        .charge(function(d) { return (15 - d.value) * (35 - d.value) });
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width - 20)
+        .attr("height", height - 20)
+        .call(d3.behavior.drag()
+          .origin(function() { var r = projection.rotate(); return {x: 2 * r[0], y: -2 * r[1]}; })
+          .on("drag", function() {
+              var r = [d3.event.x / 2, -d3.event.y / 2, projection.rotate()[2]];
+              t0 = Date.now();
+              origin = r; projection.rotate(r);
+              force.start();
+          })
+        )
+
+    graph.links.forEach(function(link) {
+        var s = link.source = nodeById.get(link.source),
+            t = link.target = nodeById.get(link.target);
+            links.push({source: s, target: t, value: link.value, edge: link.edge});
+    });
+
+    var link = svg.selectAll("path.link")
+        .data(links)
+        .enter().append("path").attr("class", "link")
+        .style("stroke-width", function(d) {
+            return 1.6 * (5.6 - (d.value / 2.3))
+        })
+        .attr("stroke", function(d) {
+            return edgeColor(d.edge)
+        });
+
+    var node = svg.selectAll("path.node")
+        .data(nodes)
+        .enter().append("path").attr("class", "node")
+        .style("fill", function(d) { return color(d.id); })
+        .style("stroke", function(d) { return color(d.id); })
+        .call(force.drag);
+
+    force
+        .nodes(nodes)
+        .links(links)
+        .on("tick", tick)
+        .start();
+
+    function tick() {
+      node.attr("d", function(d) {
+          var p = path({"type":"Feature","geometry":{"type":"Point","coordinates":[d.x, d.y]}});
+          return p ? p : 'M 0 0'
+      });
+      link.attr("d", function(d) {
+          var p = path({"type":"Feature","geometry":{"type":"LineString","coordinates":[[d.source.x, d.source.y],[d.target.x, d.target.y]]}});
+          return p ? p : 'M 0 0'
+      });
+    }
+    </script>
+  </body>
+</html>

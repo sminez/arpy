@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <style>
+    .links line {
+      stroke-opacity: 0.3;
+      stroke-width: 1.2px;
+    }
+
+    .nodes circle {
+      stroke: #fff;
+      stroke-width: 2.5px;
+    }
+    </style>
+
+</head>
+
+<body>
+    <svg width="960" height="600"></svg>
+
+    <script>
+    var graph = {
+  "nodes": [
+    {"id": "αp", "group": "jk"},
+    {"id": "α23", "group": "jk"},
+    {"id": "α31", "group": "jk"},
+    {"id": "α12", "group": "jk"},
+    {"id": "α0", "group": "0jk"},
+    {"id": "α023", "group": "0jk"},
+    {"id": "α031", "group": "0jk"},
+    {"id": "α012", "group": "0jk"},
+    {"id": "α123", "group": "i"},
+    {"id": "α1", "group": "i"},
+    {"id": "α2", "group": "i"},
+    {"id": "α3", "group": "i"},
+    {"id": "α0123", "group": "0i"},
+    {"id": "α01", "group": "0i"},
+    {"id": "α02", "group": "0i"},
+    {"id": "α03", "group": "0i"}
+  ],
+  "links": [
+    {"source": "αp", "edge": "jk", "target": "αp", "value": 6},
+    {"source": "αp", "edge": "jk", "target": "α23", "value": 6},
+    {"source": "αp", "edge": "jk", "target": "α31", "value": 6},
+    {"source": "αp", "edge": "jk", "target": "α12", "value": 6},
+    {"source": "αp", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "αp", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "αp", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "αp", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "αp", "edge": "i", "target": "α123", "value": 10},
+    {"source": "αp", "edge": "i", "target": "α1", "value": 10},
+    {"source": "αp", "edge": "i", "target": "α2", "value": 10},
+    {"source": "αp", "edge": "i", "target": "α3", "value": 10},
+    {"source": "αp", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "αp", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "αp", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "αp", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α23", "edge": "jk", "target": "αp", "value": 6},
+    {"source": "α23", "edge": "jk", "target": "α23", "value": 6},
+    {"source": "α23", "edge": "jk", "target": "α31", "value": 6},
+    {"source": "α23", "edge": "jk", "target": "α12", "value": 6},
+    {"source": "α23", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α23", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α23", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α23", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α23", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α23", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α23", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α23", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α23", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α23", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α23", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α23", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α31", "edge": "jk", "target": "αp", "value": 6},
+    {"source": "α31", "edge": "jk", "target": "α23", "value": 6},
+    {"source": "α31", "edge": "jk", "target": "α31", "value": 6},
+    {"source": "α31", "edge": "jk", "target": "α12", "value": 6},
+    {"source": "α31", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α31", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α31", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α31", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α31", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α31", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α31", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α31", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α31", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α31", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α31", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α31", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α12", "edge": "jk", "target": "αp", "value": 6},
+    {"source": "α12", "edge": "jk", "target": "α23", "value": 6},
+    {"source": "α12", "edge": "jk", "target": "α31", "value": 6},
+    {"source": "α12", "edge": "jk", "target": "α12", "value": 6},
+    {"source": "α12", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α12", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α12", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α12", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α12", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α12", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α12", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α12", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α12", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α12", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α12", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α12", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α0", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α0", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α0", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α0", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α0", "edge": "0jk", "target": "α0", "value": 6},
+    {"source": "α0", "edge": "0jk", "target": "α023", "value": 6},
+    {"source": "α0", "edge": "0jk", "target": "α031", "value": 6},
+    {"source": "α0", "edge": "0jk", "target": "α012", "value": 6},
+    {"source": "α0", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α0", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α0", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α0", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α0", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α0", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α0", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α0", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α023", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α023", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α023", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α023", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α023", "edge": "0jk", "target": "α0", "value": 6},
+    {"source": "α023", "edge": "0jk", "target": "α023", "value": 6},
+    {"source": "α023", "edge": "0jk", "target": "α031", "value": 6},
+    {"source": "α023", "edge": "0jk", "target": "α012", "value": 6},
+    {"source": "α023", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α023", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α023", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α023", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α023", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α023", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α023", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α023", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α031", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α031", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α031", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α031", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α031", "edge": "0jk", "target": "α0", "value": 6},
+    {"source": "α031", "edge": "0jk", "target": "α023", "value": 6},
+    {"source": "α031", "edge": "0jk", "target": "α031", "value": 6},
+    {"source": "α031", "edge": "0jk", "target": "α012", "value": 6},
+    {"source": "α031", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α031", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α031", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α031", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α031", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α031", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α031", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α031", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α012", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α012", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α012", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α012", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α012", "edge": "0jk", "target": "α0", "value": 6},
+    {"source": "α012", "edge": "0jk", "target": "α023", "value": 6},
+    {"source": "α012", "edge": "0jk", "target": "α031", "value": 6},
+    {"source": "α012", "edge": "0jk", "target": "α012", "value": 6},
+    {"source": "α012", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α012", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α012", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α012", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α012", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α012", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α012", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α012", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α123", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α123", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α123", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α123", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α123", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α123", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α123", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α123", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α123", "edge": "i", "target": "α123", "value": 6},
+    {"source": "α123", "edge": "i", "target": "α1", "value": 6},
+    {"source": "α123", "edge": "i", "target": "α2", "value": 6},
+    {"source": "α123", "edge": "i", "target": "α3", "value": 6},
+    {"source": "α123", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α123", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α123", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α123", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α1", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α1", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α1", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α1", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α1", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α1", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α1", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α1", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α1", "edge": "i", "target": "α123", "value": 6},
+    {"source": "α1", "edge": "i", "target": "α1", "value": 6},
+    {"source": "α1", "edge": "i", "target": "α2", "value": 6},
+    {"source": "α1", "edge": "i", "target": "α3", "value": 6},
+    {"source": "α1", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α1", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α1", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α1", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α2", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α2", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α2", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α2", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α2", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α2", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α2", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α2", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α2", "edge": "i", "target": "α123", "value": 6},
+    {"source": "α2", "edge": "i", "target": "α1", "value": 6},
+    {"source": "α2", "edge": "i", "target": "α2", "value": 6},
+    {"source": "α2", "edge": "i", "target": "α3", "value": 6},
+    {"source": "α2", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α2", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α2", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α2", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α3", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α3", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α3", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α3", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α3", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α3", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α3", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α3", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α3", "edge": "i", "target": "α123", "value": 6},
+    {"source": "α3", "edge": "i", "target": "α1", "value": 6},
+    {"source": "α3", "edge": "i", "target": "α2", "value": 6},
+    {"source": "α3", "edge": "i", "target": "α3", "value": 6},
+    {"source": "α3", "edge": "0i", "target": "α0123", "value": 10},
+    {"source": "α3", "edge": "0i", "target": "α01", "value": 10},
+    {"source": "α3", "edge": "0i", "target": "α02", "value": 10},
+    {"source": "α3", "edge": "0i", "target": "α03", "value": 10},
+    {"source": "α0123", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α0123", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α0123", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α0123", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α0123", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α0123", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α0123", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α0123", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α0123", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α0123", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α0123", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α0123", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α0123", "edge": "0i", "target": "α0123", "value": 6},
+    {"source": "α0123", "edge": "0i", "target": "α01", "value": 6},
+    {"source": "α0123", "edge": "0i", "target": "α02", "value": 6},
+    {"source": "α0123", "edge": "0i", "target": "α03", "value": 6},
+    {"source": "α01", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α01", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α01", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α01", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α01", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α01", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α01", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α01", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α01", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α01", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α01", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α01", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α01", "edge": "0i", "target": "α0123", "value": 6},
+    {"source": "α01", "edge": "0i", "target": "α01", "value": 6},
+    {"source": "α01", "edge": "0i", "target": "α02", "value": 6},
+    {"source": "α01", "edge": "0i", "target": "α03", "value": 6},
+    {"source": "α02", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α02", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α02", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α02", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α02", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α02", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α02", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α02", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α02", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α02", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α02", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α02", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α02", "edge": "0i", "target": "α0123", "value": 6},
+    {"source": "α02", "edge": "0i", "target": "α01", "value": 6},
+    {"source": "α02", "edge": "0i", "target": "α02", "value": 6},
+    {"source": "α02", "edge": "0i", "target": "α03", "value": 6},
+    {"source": "α03", "edge": "jk", "target": "αp", "value": 10},
+    {"source": "α03", "edge": "jk", "target": "α23", "value": 10},
+    {"source": "α03", "edge": "jk", "target": "α31", "value": 10},
+    {"source": "α03", "edge": "jk", "target": "α12", "value": 10},
+    {"source": "α03", "edge": "0jk", "target": "α0", "value": 10},
+    {"source": "α03", "edge": "0jk", "target": "α023", "value": 10},
+    {"source": "α03", "edge": "0jk", "target": "α031", "value": 10},
+    {"source": "α03", "edge": "0jk", "target": "α012", "value": 10},
+    {"source": "α03", "edge": "i", "target": "α123", "value": 10},
+    {"source": "α03", "edge": "i", "target": "α1", "value": 10},
+    {"source": "α03", "edge": "i", "target": "α2", "value": 10},
+    {"source": "α03", "edge": "i", "target": "α3", "value": 10},
+    {"source": "α03", "edge": "0i", "target": "α0123", "value": 6},
+    {"source": "α03", "edge": "0i", "target": "α01", "value": 6},
+    {"source": "α03", "edge": "0i", "target": "α02", "value": 6},
+    {"source": "α03", "edge": "0i", "target": "α03", "value": 6}
+  ]
+}
+
+    var svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    var color = d3.scaleOrdinal()
+      .domain(["αp", "α23", "α31", "α12",
+               "α0", "α023", "α031", "α012",
+               "α123", "α1", "α2", "α3",
+               "α0123", "α01", "α02", "α03"])
+      .range(["#dbc78f", "#4a778f", "#6fa0b0", "#8fb5bf",
+              "#872e2e", "#76718f", "#9c8ead", "#b49bbf",
+              "#4c4861", "#bd4442", "#d66847", "#d98e66",
+              "#dbaa56", "#498c6b", "#84b394", "#9fc4a0"]);
+
+    var edgeColor = d3.scaleOrdinal()
+      .domain(["jk", "0jk", "i", "0i"])
+      .range(["#8fb5bf", "#b49bbf", "#d98e66", "#9fc4a0"]);
+
+    var simulation = d3.forceSimulation()
+        .force("link", d3.forceLink()
+            .id(function(d) { return d.id; })
+            .distance(function(d) {return (d.value * 24) - 10})
+            .strength(0.4))
+        .force("charge", d3.forceManyBody())
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    var link = svg.append("g")
+        .attr("class", "links")
+      .selectAll("line")
+      .data(graph.links)
+      .enter().append("line")
+        .style("stroke-width", function(d) {
+            return 1.6 * (5.6 - (d.value / 2))
+        })
+        .attr("stroke", function(d) {return edgeColor(d.edge)});
+
+    var node = svg.append("g")
+        .attr("class", "nodes")
+      .selectAll("circle")
+      .data(graph.nodes)
+      .enter().append("circle")
+        .attr("r", 15)
+        .attr("fill", function(d) { return color(d.id); })
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.append("title")
+        .text(function(d) { return d.id; });
+
+    simulation
+        .nodes(graph.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(graph.links);
+
+    function ticked() {
+      link
+          .attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+      node
+          .attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
+    }
+
+    function dragstarted(d) {
+      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(d) {
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+
+    function dragended(d) {
+      if (!d3.event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    </script>
+
+</body>
