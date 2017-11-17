@@ -3,55 +3,43 @@
     <meta charset="utf-8">
     <title>Photon wave function Ξγ</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
-    </script>
-    <script type="text/javascript" async
-      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_SVG">
     </script>
     <style>
 
     body {
-        font-family: 'Open Sans', sans-serif;
-        font-size: 24px;
         background: #fcfcfa;
     }
 
-    #equation {    
-        position:absolute;
-        top:50px;
-        left:30px;
-        width:500px;
-        height:100px; 
-        color: #394243;
-    }
     </style>
 </head>
 
 <body>
-    <div id='equation'>
-    $\Xi_{\gamma} = \mathcal{H}_{0}\mathcal{R} (\alpha_{01} + \alpha_{31})e^{\mathcal{R}\omega\alpha_{012}(\alpha_{3}z - \alpha_{0}t)}$
-    </div>
-    <svg width="400" height="400"></svg>
     <script>
-
-    var svg = d3.select("svg"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height"),
+    var eqn = "$\\Xi_{\\gamma} = \\mathcal{H}_{0}\\mathcal{R} (\\alpha_{01} + \\alpha_{31})e^{\\mathcal{R}\\omega\\alpha_{012}(\\alpha_{3}z - \\alpha_{0}t)}$";
+    
+    var width = 400,
+        height = 400,
         angles = d3.range(0, Math.PI, Math.PI/200).concat(
             d3.range(2*Math.PI, Math.PI, -Math.PI/200)
         );
 
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(50,50)");
+
     function getBaseRadius(angle) {
         // Parametric curve is (cos(a), sin(2a))
-        var x = 1.5 * Math.cos(angle - Math.PI/2),
-            y = Math.sin(2*(angle - Math.PI/2)) / 4;
+        var x = Math.cos(angle - Math.PI/2),
+            y = Math.sin(angle);
 
         return 100 * (Math.sqrt(x * x + y * y));
     }
 
     var path = svg.append("g")
-        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+        .attr("transform", "translate(" + width/3 + "," + height/4 + ")")
         .attr("fill", "none")
         .attr("stroke-linejoin", "round")
         .attr("stroke-width", 4)
@@ -65,15 +53,49 @@
                     .curve(d3.curveLinearClosed)
                     .angle(function(a) { return a; })
                     .radius(function(angle) {
-                        var trueTime = d3.now() / 500
+                        var trueTime = d3.now() / 450
                             t = (angle >= Math.PI) ? trueTime : trueTime + 16,
                             a = (angle >= Math.PI) ? -angle : angle;
-                        return getBaseRadius(angle) + Math.cos(a * 8 - i * 2 * Math.PI / 3 + t) * Math.pow((1 + Math.cos(a - t)) / 2, 7) * 18;
+                        return getBaseRadius(angle) + Math.cos(a * 8 - i * 3 * Math.PI / 2 + t) * Math.pow(1 + Math.cos(a - t) / 2, 3) * 3;
                     });
             });
+
+    svg.append("g")
+        .attr("transform", "translate(-20," + (-height / 20) + ")")
+      	.attr("class", "eqn")
+        .append("text")
+        .text(function() { return eqn });
 
     d3.timer(function() {
         path.attr("d", function(d) { return d(angles); });
     });
+
+
+    setTimeout(() => {
+      
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+          processEscapes: true
+        }
+      });
+      
+      MathJax.Hub.Register.StartupHook("End", function() {
+        setTimeout(() => {
+              svg.selectAll('.eqn').each(function(){
+              var self = d3.select(this),
+                  g = self.select('text>span>svg');
+              g.remove();
+              self.append(function(){
+                return g.node();
+              });
+            });
+          }, 1);
+        });
+      
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, svg.node()]);
+      
+    }, 1);
+
     </script>
 </body>
