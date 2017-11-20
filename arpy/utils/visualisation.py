@@ -42,7 +42,7 @@ def sign_cayley(op=full, cfg=config):
         for x in cfg.allowed
     )
 
-    print('          ', '         '.join(['B', 'A', 'T', 'E']))
+    print('          ', '         '.join(['B', 'T', 'A', 'E']))
     print(divider)
 
     for i, comp in enumerate(comps):
