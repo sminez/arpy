@@ -58,7 +58,7 @@ context_update = namedtuple('context_update', 'lnum param val')
 mvec_def = namedtuple('mvec_def', 'lnum var alphas')
 operator_def = namedtuple('op_def', 'lnum var alphas')
 
-mvec_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{([p0213, -]*)\}$'
+mvec_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{(.*)\}$'
 operator_pattern = r'([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\<([p0213, -]*)\>$'
 modifier_map = {
     'DEL NOTATION': '.v',
@@ -73,7 +73,7 @@ def parse_calculation_file(fname, default_allowed=config.allowed,
     def convert_metric(s):
         s = s[:-1]  # remove trailing newline
         if not all([c in '+-' for c in s]):
-            raise CalculationError('Invalid metric: {}', s)
+            raise RuntimeError('Invalid metric: {}', s)
 
         metric = [1 if c == '+' else -1 for c in s]
         return tuple(metric)

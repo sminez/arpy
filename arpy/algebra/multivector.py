@@ -6,6 +6,7 @@ NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
        returns the Hermitian conjugate) is written in the arpy __init__ file!
        (I am fully aware of how horrible this is...)
 '''
+import re
 import collections.abc
 from copy import deepcopy
 from itertools import groupby
@@ -17,6 +18,7 @@ from .config import config as cfg
 
 
 MvecLabel = namedtuple('MvecLabel', 'label originals')
+explicit_xi = r'[-p0123]*\[.*\]'
 
 
 class MultiVector(collections.abc.Set):
@@ -34,8 +36,18 @@ class MultiVector(collections.abc.Set):
             components = components.split()
 
         for comp in components:
-            if isinstance(comp, (str, Alpha)):
+            if isinstance(comp, Alpha):
                 comp = Pair(comp, cfg=cfg)
+            elif isinstance(comp, str):
+                if re.match(explicit_xi, comp):
+                    # This is something of the form 012[Sin(kx-ωt)] so split
+                    # it into `012` and `Sin(kx-ωt)`
+                    alpha, xi = comp.split('[')
+                    # Remove the trailing `]`
+                    comp = Pair(alpha, xi[:-1], cfg=cfg)
+                else:
+                    comp = Pair(comp, cfg=cfg)
+
             if not isinstance(comp, Pair):
                 raise ValueError('Arguments must be Alphas, Pairs or Strings')
 
