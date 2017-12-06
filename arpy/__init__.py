@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.2.5'
+__version__ = '0.2.6'
 
 import types
 from sys import _getframe
@@ -105,7 +105,7 @@ config.update_env()
 # Build the default context for computation
 # NOTE:: The user can create a new context in the same way or modify the
 #        properties of the original context using .metric and .division
-ar = ARContext(config)
+ar = ARContext(cfg=config)
 
 
 def arpy_info():
@@ -136,6 +136,6 @@ __all__ = [
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
     # Util functions
-    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig',
+    'ar', 'Tex', 'arpy_info', 'config', 'ARConfig', 'ARContext',
     'reorder_allowed', 'cancel_like_terms'
 ]

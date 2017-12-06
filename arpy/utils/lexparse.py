@@ -10,6 +10,7 @@ from operator import add
 from sys import _getframe, stderr
 from collections import namedtuple
 from ..algebra.ar_types import Alpha, Pair
+from ..algebra.config import ARConfig
 from ..algebra.config import config as cfg
 from ..algebra.multivector import MultiVector
 from ..algebra.differential import differential_operator
@@ -238,7 +239,11 @@ class ARContext:
     >>> ar("a12 ^ a23")
     >>> α31
     '''
-    def __init__(self, cfg=cfg):
+    def __init__(self, allowed=None, metric=None, div=None,
+                 cfg=None, print_all=True):
+        self._print = print_all
+        if cfg is None:
+            cfg = ARConfig(allowed, metric, div)
         self.cfg = cfg
         self._lexer = ArpyLexer(cfg=cfg)
         self._parser = ArpyParser(cfg=cfg)
@@ -331,4 +336,14 @@ class ARContext:
         if result:
             # Result is an internal Token so pull of the value for returning
             # If there was an error we have printed the error and returned None
+            if self._print:
+                print('"{}": {}'.format(text, result.val))
+
             return result.val
+
+    # Allow ARContext to be used as a context manager
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass

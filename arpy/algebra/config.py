@@ -10,7 +10,7 @@ class ARConfig:
         '''Bind in all parameters'''
         self._allowed = allowed
         self.original_allowed = allowed
-        self._metric = metric
+        self._metric = self._convert_metric(metric)
         self.original_metric = metric
         self.division_type = div
 
@@ -25,12 +25,8 @@ class ARConfig:
         self.update_config()
         self.update_env(lvl=3)  # See arpy __init__ for details
 
-    @property
-    def metric(self):
-        return self._metric
-
-    @metric.setter
-    def metric(self, signs):
+    def _convert_metric(self, signs):
+        '''Convert the supplied metric to a tuple of ints'''
         if all(sign in ["+", "-"] for sign in signs):
             if len(signs) != 4:
                 raise ValueError(
@@ -46,7 +42,15 @@ class ARConfig:
             raise ValueError(
                 'Invalid metric: {}\nValid examples: "+---", "(1,-1,-1,-1)"')
 
-        self._metric = metric
+        return metric
+
+    @property
+    def metric(self):
+        return self._metric
+
+    @metric.setter
+    def metric(self, signs):
+        self._metric = self._convert_metric(signs)
         self.update_config()
         self.update_env(lvl=3)  # See arpy __init__ for details
 
