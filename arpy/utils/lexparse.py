@@ -240,7 +240,7 @@ class ARContext:
     >>> α31
     '''
     def __init__(self, allowed=None, metric=None, div=None,
-                 cfg=None, print_all=True):
+                 cfg=None, print_all=False):
         self._print = print_all
         if cfg is None:
             cfg = ARConfig(allowed, metric, div)
