@@ -38,15 +38,20 @@ class AR_differential:
                     'Differential operators must be initialised with either'
                     ' a MultiVector, list or string of alpha indices')
 
+        self.cfg = cfg
+
         alphas = ', '.join([str(a) for a in self.wrt])
         self.__doc__ = 'Differnetiate with respect to: {}'.format(alphas)
 
-    def __call__(self, mvec, cfg=cfg, div=None, as_del=False):
+    def __call__(self, mvec, cfg=None, div=None, as_del=False):
         '''
         Compute the result of Differentiating a each component of a MultiVector
         with respect to a given list of unit elements under the algebra.
         '''
         comps = []
+        if cfg is None:
+            cfg = self.cfg
+
         for comp in mvec:
             for element in self.wrt:
                 result = component_partial(comp, element, cfg, div)
@@ -62,7 +67,7 @@ class AR_differential:
     def __repr__(self):
         elements = [
             '{}∂{}'.format(
-                str(inverse(a)),
+                str(inverse(a, cfg=self.cfg)),
                 ''.join(SUB_SCRIPTS[i] for i in a.index)
             )
             for a in self.wrt

@@ -19,6 +19,7 @@ from ..algebra.operations import full, div_by, div_into, project, \
 
 
 tags = [
+    ('MVEC',  r'\{(.*)\}$'),
     ('ALPHA', r'-?a[0123]{1,4}|-?ap'),
     ('PAIR',  r'-?p[0123]{1,4}'),
     ('VAR',   r'[a-zA-Z_][a-zA-Z_0-9]*'),
@@ -28,6 +29,7 @@ literals = [
     ('PAREN_OPEN',  r'\('), ('PAREN_CLOSE',  r'\)'),
     ('ANGLE_OPEN',  r'\<'), ('ANGLE_CLOSE',  r'\>'),
     ('SQUARE_OPEN', r'\['), ('SQUARE_CLOSE', r'\]'),
+    ('CURLY_OPEN',  r'\{'), ('CURLY_CLOSE', r'\}'),
     ('PLUS', r'\+'), ('COMMA', r','), ('FULL', r'\^'),
     ('BY', r'/'), ('INTO', r'\\'), ('DOT', r'\.'),
     ('DAG', r'!')
@@ -63,7 +65,10 @@ class ArpyLexer:
             text = group[1] if len(group) == 2 else match.group(lex_tag)
             matched_text.append(text)
 
-            if lex_tag == 'ALPHA':
+            if lex_tag == 'MVEC':
+                alphas = re.split(', |,| ', text.strip())
+                token = Token('EXPR', MultiVector(alphas, cfg=self.cfg))
+            elif lex_tag == 'ALPHA':
                 if text.startswith('-'):
                     token = Token('EXPR', Alpha(text[2:], -1, cfg=self.cfg))
                 else:
