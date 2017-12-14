@@ -20,6 +20,7 @@ from ..algebra.operations import full, div_by, div_into, project, \
 
 tags = [
     ('MVEC',  r'\{(.*)\}$'),
+    ('DIFF',  r'<([p0213, -]*)\>'),
     ('ALPHA', r'-?a[0123]{1,4}|-?ap'),
     ('PAIR',  r'-?p[0123]{1,4}'),
     ('VAR',   r'[a-zA-Z_][a-zA-Z_0-9]*'),
@@ -68,6 +69,11 @@ class ArpyLexer:
             if lex_tag == 'MVEC':
                 alphas = re.split(', |,| ', text.strip())
                 token = Token('EXPR', MultiVector(alphas, cfg=self.cfg))
+            elif lex_tag == 'DIFF':
+                alphas = re.split(', |,| ', text.strip())
+                token = Token(
+                    'EXPR',
+                    differential_operator(alphas, cfg=self.cfg))
             elif lex_tag == 'ALPHA':
                 if text.startswith('-'):
                     token = Token('EXPR', Alpha(text[2:], -1, cfg=self.cfg))
