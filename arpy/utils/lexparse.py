@@ -354,6 +354,7 @@ class ARContext:
 
     # Allow ARContext to be used as a context manager
     def __enter__(self):
+        self.cfg.update_env()
         return self
 
     def __exit__(self, *args):
