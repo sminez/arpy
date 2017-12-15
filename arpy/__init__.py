@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.2.6.4'
+__version__ = '0.2.6.5'
 
 import types
 from sys import _getframe
@@ -19,7 +19,8 @@ from .reductions.del_grouping import del_grouped
 from .reductions.reducers import cancel_like_terms
 from .utils.lexparse import ARContext
 from .utils.utils import Tex, reorder_allowed
-from .utils.visualisation import cayley, sign_cayley, sign_distribution
+from .utils.visualisation import cayley, sign_cayley, sign_distribution, \
+        js_cayley
 
 
 ##############################################################################
@@ -131,7 +132,7 @@ __all__ = [
     # Differential operator helpers
     'AR_differential', 'differential_operator', 'del_grouped',
     # Visulaisation functions
-    'cayley', 'sign_cayley', 'sign_distribution',
+    'cayley', 'sign_cayley', 'sign_distribution', 'js_cayley',
     # Pre-defined MultiVectors
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'B4', 'T4', 'A4', 'E4', 'F4',
