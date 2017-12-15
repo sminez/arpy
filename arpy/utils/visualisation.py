@@ -222,11 +222,11 @@ def sign_distribution(op=full, cfg=config):
     blocks = []
 
     row_cols = {
-        '∂b': (bs, bs), '∂Ξ': (bs, xs),
+        '∂e': (bs, bs), '∂Ξ': (bs, xs),
         '∇': (xs, bs), '∇•': (xs, xs), '∇x': (zs, xs)
     }
 
-    for name in ['∂b', '∂Ξ', '∇', '∇•', '∇x']:
+    for name in ['∂e', '∂Ξ', '∇', '∇•', '∇x']:
         rows, cols = row_cols[name]
         blocks.append((name, _4block(rows, cols, op, cfg)))
 
