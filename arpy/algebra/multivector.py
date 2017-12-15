@@ -10,7 +10,7 @@ import re
 import collections.abc
 from copy import deepcopy
 from itertools import groupby
-from collections import namedtuple
+from collections import namedtuple, Counter
 from .ar_types import Alpha, Pair, Xi, XiProduct
 from ..reductions.del_grouping import del_grouped
 from ..reductions.reducers import replace_all
@@ -191,6 +191,24 @@ class MultiVector(collections.abc.Set):
     def _nice_xi(self, alpha, raise_key_error=False,
                  for_print=True, tex=False):
         '''Single element xi lists return their value raw'''
+        def n_xi(comps):
+            '''Convert [x, x] -> "2x"'''
+            c = Counter([str(comp) for comp in comps])
+
+            str_comps = []
+            for k, v in c.items():
+                if k.startswith('-'):
+                    if v > 1:
+                        str_comps.append('- %s%s' % (v, k[1:]))
+                    else:
+                        str_comps.append('- %s' % k[1:])
+                else:
+                    if v > 1:
+                        str_comps.append('+ %s%s' % (v, k))
+                    else:
+                        str_comps.append('+ %s' % k)
+            return ' '.join(str_comps)
+
         try:
             xi = sorted(self.components[alpha], key=lambda x: x.partials)
         except KeyError:
@@ -206,13 +224,17 @@ class MultiVector(collections.abc.Set):
                 if tex:
                     return '( ' + ' '.join(x.__tex__() for x in xi) + ' )'
                 else:
-                    xis = [str(x) for x in xi]
-                    for i, x in enumerate(xis):
-                        if not x.startswith('-'):
-                            xis[i] = '+ ' + x
-                        else:
-                            xis[i] = '- ' + x[1:]
-                    return '( ' + ' '.join(xis) + ' )'
+                    # NOTE: This was the original non-grouped method of
+                    #       display. Leaving here until we know that the
+                    #       new version is bug free. (!)
+                    # xis = [str(x) for x in xi]
+                    # for i, x in enumerate(xis):
+                    #     if not x.startswith('-'):
+                    #         xis[i] = '+ ' + x
+                    #     else:
+                    #         xis[i] = '- ' + x[1:]
+                    # return '( ' + ' '.join(xis) + ' )'
+                    return '( ' + n_xi(xi) + ' )'
             else:
                 return xi
 
