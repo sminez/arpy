@@ -263,7 +263,7 @@ class MultiVector(collections.abc.Set):
         '''
         Print a del grouped version of the multivector
         '''
-        return DelMultiVector(self)
+        return DelMultiVector(self, cfg=self.cfg)
 
     def simplified(self, ix=0, bxyz=False, sign=False):
         '''
