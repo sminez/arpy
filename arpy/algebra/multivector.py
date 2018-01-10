@@ -283,7 +283,14 @@ class MultiVector(collections.abc.Set):
                 xi_grouped = groupby(full,  key=lambda x: x.xi.components[ix])
                 for common_xi, comps in xi_grouped:
                     comps = [
-                        Pair(c.alpha, c.xi.components[ix2])
+                        Pair(
+                            c.alpha,
+                            Xi(
+                                c.xi.components[ix2].val,
+                                c.xi.components[ix2].partials,
+                                c.xi.sign,
+                            )
+                        )
                         for c in comps
                     ]
                     comps = sorted(comps, key=key)
