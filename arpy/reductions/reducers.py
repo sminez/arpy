@@ -63,7 +63,6 @@ class Template:
         '''
         Check to see if a given value matches on of the template terms.
         '''
-        print('here')
         for term in self.terms:
             # Check that we correctly have either a Xi or a
             # XiProduct with the correct number of components
