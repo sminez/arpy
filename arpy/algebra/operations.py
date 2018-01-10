@@ -360,8 +360,8 @@ def commutator(a, b, cfg=cfg):
 @commutator.add((Alpha, Alpha))
 def _group_commutator(a, b, cfg=cfg):
     product = full(a, b, cfg)
-    product = full(product, inverse(a), cfg)
-    product = full(product, inverse(b), cfg)
+    product = full(product, inverse(a, cfg=cfg), cfg)
+    product = full(product, inverse(b, cfg=cfg), cfg)
     return product
 
 
