@@ -28,12 +28,12 @@ class Term:
     def __init__(self, sign, alpha, partials, xis):
         '''
         sign :    + -
-        alpha:    [bxyz][group]    (group is a capital letter)
+        alpha:    [exyz][group]    (group is a capital letter)
         partials: list of strings
         xis:      list of strings
         '''
         self.sign = sign
-        self.alpha_bxyz = alpha[0]
+        self.alpha_exyz = alpha[0]
         self.alpha_group = '_' if len(alpha) == 1 else alpha[1]
         self.partials = None if partials is None else tuple(partials)
         self.xis = None if xis is None else tuple(xis)
@@ -78,21 +78,21 @@ class Template:
                         continue
                     pairs = zip(term.xis, value.xi.components)
 
-                # Confirm that bxyz-ness is correct
-                ok = (cfg.bxyz_like.get(have.val) == want[0]
-                      for want, have in pairs if want[0] in 'bxyz')
+                # Confirm that exyz-ness is correct
+                ok = (cfg.exyz_like.get(have.val) == want[0]
+                      for want, have in pairs if want[0] in 'exyz')
                 if not all(ok):
                     continue
 
             # Check that we have the correct kind of alpha
-            if term.alpha_bxyz != "_" and term.alpha_bxyz in 'bxyz':
-                if cfg.bxyz_like[value.alpha.index] != term.alpha_bxyz:
+            if term.alpha_exyz != "_" and term.alpha_exyz in 'exyz':
+                if cfg.exyz_like[value.alpha.index] != term.alpha_exyz:
                     continue
 
             # Check partials (Xi partials are Alpha objects)
             if term.partials not in [tuple("_"), None]:
                 if len(value.xi.partials) == len(term.partials):
-                    ok = (cfg.bxyz_like.get(have.index) == want[0]
+                    ok = (cfg.exyz_like.get(have.index) == want[0]
                           for want, have
                           in zip(term.partials, value.xi.partials))
                     if not all(ok):
@@ -153,7 +153,7 @@ class Template:
                 for candidate in self.match_map.get(term, []):
                     try:
                         new_requirements = self.update_match_or_fail(
-                                term, candidate, requirements)
+                            term, candidate, requirements)
                         # We need to do this so we don't accidentally mutate
                         # the requirements as part of a failed match.
                         requirements = new_requirements
@@ -225,7 +225,7 @@ class Template:
             if (tsign * sign) != candidate.xi.sign:
                 raise FailedMatch
 
-        # At this stage we have now checked that the bxyz nature of each
+        # At this stage we have now checked that the exyz nature of each
         # element of the term is correct, that it has the right number
         # of partials and xi components and that the sign is correct.
         # All we need to do now is confirm that the match groups (capital
@@ -233,11 +233,11 @@ class Template:
         if term.alpha_group is not '_':
             reqs = check_group(term.alpha_group, candidate.alpha.index, reqs)
 
-        if term.alpha_bxyz is not '_':
-            if term.alpha_bxyz not in 'bxyz':
-                required = reqs.get(term.alpha_bxyz)
+        if term.alpha_exyz is not '_':
+            if term.alpha_exyz not in 'exyz':
+                required = reqs.get(term.alpha_exyz)
                 if required is None:
-                    reqs[term.alpha_bxyz] = candidate.alpha.index
+                    reqs[term.alpha_exyz] = candidate.alpha.index
                 else:
                     if required != candidate.alpha.index:
                         raise FailedMatch
@@ -329,7 +329,7 @@ def grad_termfunc(reqs, cfg):
 def div_termfunc(reqs, cfg):
     proxy_alpha = cfg.four_set_comps[reqs['H']]['x']
     xi = cfg.group_to_4set[cfg.alpha_to_group[proxy_alpha]]
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['b']]
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['e']]
 
     tex_fourset = '' if reqs['G'] == 'A' else '^' + reqs['G']
     _fourset = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
@@ -359,7 +359,7 @@ def partial_termfunc(reqs, cfg):
     xi = cfg.group_to_4set[cfg.alpha_to_group[proxy_alpha]]
     alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
 
-    partial = cfg.four_set_comps[reqs['G']]['b']
+    partial = cfg.four_set_comps[reqs['G']]['e']
     _partial = ''.join(SUB_SCRIPTS[b] for b in partial)
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
@@ -369,7 +369,7 @@ def partial_termfunc(reqs, cfg):
 
 
 def dot_termfunc(reqs, cfg):
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['b']]
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['e']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}•{}'.format(reqs['G'], reqs['H']),
@@ -390,7 +390,7 @@ def blade_3vec_termfunc(reqs, cfg):
     b_map = {frozenset('p'): 'p', frozenset('0123'): 'q',
              frozenset('0'): 't', frozenset('123'): 'h'}
 
-    blade = b_map[frozenset(cfg.four_set_comps[reqs['G']]['b'])]
+    blade = b_map[frozenset(cfg.four_set_comps[reqs['G']]['e'])]
     alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
@@ -416,7 +416,7 @@ def whole_3vec_squared_termfunc(reqs, cfg):
 
 
 def dot_square_termfunc(reqs, cfg):
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['b']]
+    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['e']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}²'.format(reqs['G']),
@@ -426,8 +426,8 @@ def dot_square_termfunc(reqs, cfg):
 
 # Terms are specified according to their component parts.
 # Special characters are:
-#   b,x,y,z     --> bxyz-like in general
-#   bG,xG,yG,zG --> where G is a group (any capital letter)
+#   e,x,y,z     --> exyz-like in general
+#   eG,xG,yG,zG --> where G is a group (any capital letter)
 #   lowercase   --> a Xi value
 #   _           --> don't care
 # NOTE :: the sets that form the first and second elements of the
@@ -443,9 +443,9 @@ grad_template = Template(
 
 div_template = Template(
     terms=[
-        Term('+', 'bF', ('xG',), ('xH',)),
-        Term('+', 'bF', ('yG',), ('yH',)),
-        Term('+', 'bF', ('zG',), ('zH',))
+        Term('+', 'eF', ('xG',), ('xH',)),
+        Term('+', 'eF', ('yG',), ('yH',)),
+        Term('+', 'eF', ('zG',), ('zH',))
     ],
     replacements=[Replacement(set(), set(), div_termfunc)]
 )
@@ -464,18 +464,18 @@ curl_template = Template(
 
 partial_template = Template(
     terms=[
-        Term('+', 'xF', ('bG',), ('xH',)),
-        Term('+', 'yF', ('bG',), ('yH',)),
-        Term('+', 'zF', ('bG',), ('zH',))
+        Term('+', 'xF', ('eG',), ('xH',)),
+        Term('+', 'yF', ('eG',), ('yH',)),
+        Term('+', 'zF', ('eG',), ('zH',))
     ],
     replacements=[Replacement(set(), set(), partial_termfunc)]
 )
 
 dot_template = Template(
     terms=[
-        Term('+', 'bF', tuple(), ('xG', 'xH')),
-        Term('+', 'bF', tuple(), ('yG', 'yH')),
-        Term('+', 'bF', tuple(), ('zG', 'zH'))
+        Term('+', 'eF', tuple(), ('xG', 'xH')),
+        Term('+', 'eF', tuple(), ('yG', 'yH')),
+        Term('+', 'eF', tuple(), ('zG', 'zH'))
     ],
     replacements=[Replacement(set(), set({'G', 'H'}), dot_square_termfunc),
                   Replacement(set(), set(), dot_termfunc)]
@@ -495,9 +495,9 @@ wedge_template = Template(
 
 blade_3vec_template = Template(
     terms=[
-        Term('+', 'xF', tuple(), ('bG', 'xH')),
-        Term('+', 'yF', tuple(), ('bG', 'yH')),
-        Term('+', 'zF', tuple(), ('bG', 'zH'))
+        Term('+', 'xF', tuple(), ('eG', 'xH')),
+        Term('+', 'yF', tuple(), ('eG', 'yH')),
+        Term('+', 'zF', tuple(), ('eG', 'zH'))
     ],
     replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
 )
@@ -506,9 +506,9 @@ blade_3vec_template = Template(
 # template above)
 blade_3vec_flipped_template = Template(
     terms=[
-        Term('+', 'xF', tuple(), ('xH', 'bG')),
-        Term('+', 'yF', tuple(), ('yH', 'bG')),
-        Term('+', 'zF', tuple(), ('zH', 'bG'))
+        Term('+', 'xF', tuple(), ('xH', 'eG')),
+        Term('+', 'yF', tuple(), ('yH', 'eG')),
+        Term('+', 'zF', tuple(), ('zH', 'eG'))
     ],
     replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
 )

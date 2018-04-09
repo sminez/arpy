@@ -71,7 +71,7 @@ def replace_curl(pairs, cfg):
         candidates = []
 
         for t in _filter_on_partials(pairs, comps, cfg):
-            aix, xix, dix = [cfg.bxyz_like[k] for k in [t.alpha, t.xi, t.d]]
+            aix, xix, dix = [cfg.exyz_like[k] for k in [t.alpha, t.xi, t.d]]
             curl_sign = CURL_SIGN.get((aix, xix, dix))
             if curl_sign:
                 candidates.append({'term': t, 'curl_sign': curl_sign})
@@ -160,7 +160,7 @@ def replace_div(pairs, cfg):
         # partial from this 4set and x-partial with x-3vec component, etc
         candidates = [
             c for c in _filter_on_partials(pairs, comps, cfg)
-            if cfg.bxyz_like[c.xi] == cfg.bxyz_like[c.d]
+            if cfg.exyz_like[c.xi] == cfg.exyz_like[c.d]
         ]
 
         if len(candidates) == 3:

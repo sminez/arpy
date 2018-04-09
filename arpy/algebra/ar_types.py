@@ -133,12 +133,12 @@ class Xi:
         else:
             return sign + partials + self.val
 
-    def bxyz(self):
-        '''Return a string representing only {b,x,y,z} information'''
+    def exyz(self):
+        '''Return a string representing only {e,x,y,z} information'''
         sign = '+' if self.sign == 1 else '-'
-        partials = [cfg.bxyz_like[p.index] for p in self.partials]
+        partials = [cfg.exyz_like[p.index] for p in self.partials]
         partial_str = ''.join(['∂{}'.format(p) for p in reversed(partials)])
-        val = cfg.bxyz_like[self.val]
+        val = cfg.exyz_like[self.val]
         return sign + partial_str + '[' + val + ']'
 
 

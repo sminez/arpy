@@ -167,8 +167,6 @@ class MultiVector(collections.abc.Set):
 
     def cancel_terms(self):
         '''Remove terms that cancel following a calculation'''
-        # TODO: mvec x mvec = 0
-        # Cancel terms with their negative
         # XXX: optimise! This is quadratic in len(components.values())
         #      Maybe groupby would work?
         for xis in self.components.values():
@@ -224,16 +222,6 @@ class MultiVector(collections.abc.Set):
                 if tex:
                     return '( ' + ' '.join(x.__tex__() for x in xi) + ' )'
                 else:
-                    # NOTE: This was the original non-grouped method of
-                    #       display. Leaving here until we know that the
-                    #       new version is bug free. (!)
-                    # xis = [str(x) for x in xi]
-                    # for i, x in enumerate(xis):
-                    #     if not x.startswith('-'):
-                    #         xis[i] = '+ ' + x
-                    #     else:
-                    #         xis[i] = '- ' + x[1:]
-                    # return '( ' + ' '.join(xis) + ' )'
                     return '( ' + n_xi(xi) + ' )'
             else:
                 return xi
@@ -242,20 +230,20 @@ class MultiVector(collections.abc.Set):
         '''Return a copy of this multivector'''
         return deepcopy(self)
 
-    def BTAE_grouped(self):
+    def zet_grouped(self):
         '''
-        Print an BTAE grouped representation of the MultiVector
+        Print an zet grouped representation of the MultiVector
         NOTE:: This deliberately does not return a new MultiVector as we
                should always be working with strict alpha values not grouped.
         '''
         by_alpha = groupby(
             self, key=lambda x: self.cfg.alpha_to_group[x.alpha.index])
-        BTAE = [
+        zet = [
             (group, tuple(c.xi for c in components))
             for (group, components) in by_alpha
         ]
         print('{')
-        for group, comps in BTAE:
+        for group, comps in zet:
             print('  α{}'.format(group).ljust(7), comps)
         print('}')
 
@@ -265,7 +253,7 @@ class MultiVector(collections.abc.Set):
         '''
         return DelMultiVector(self, cfg=self.cfg)
 
-    def simplified(self, ix=0, bxyz=False, sign=False):
+    def simplified(self, ix=0, exyz=False, sign=False):
         '''
         Display the multivector with simplified Xi values.
         '''
@@ -303,14 +291,14 @@ class MultiVector(collections.abc.Set):
                         print('  {}:'.format(comps[0].alpha))
                         seen.append(comps[0].alpha)
 
-                    if bxyz:
-                        x = str(self.cfg.bxyz_like[common_xi.val]).ljust(3)
+                    if exyz:
+                        x = str(self.cfg.exyz_like[common_xi.val]).ljust(3)
                         if sign:
-                            signs = [c.xi.bxyz()[0] for c in comps]
+                            signs = [c.xi.exyz()[0] for c in comps]
                             blocks = ['■' if s == '-' else '□' for s in signs]
                             comp_str = ' '.join(blocks)
                         else:
-                            comp_str = ', '.join([c.xi.bxyz() for c in comps])
+                            comp_str = ', '.join([c.xi.exyz() for c in comps])
                     else:
                         x = str(common_xi).ljust(6)
                         comp_str = ', '.join([str(c.xi) for c in comps])
@@ -413,8 +401,8 @@ class MultiVector(collections.abc.Set):
         return self.del_notation()
 
     @property
-    def s(self, ix=0, bxyz=False, sign=False):
-        self.simplified(ix, bxyz, sign)
+    def s(self, ix=0, exyz=False, sign=False):
+        self.simplified(ix, exyz, sign)
 
 
 class DelMultiVector(MultiVector):

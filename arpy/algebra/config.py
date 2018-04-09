@@ -88,8 +88,8 @@ class ARConfig:
         self.four_sets.update({comp: 'A' for comp in [self._h] + self._A})
         self.four_sets.update({comp: 'E' for comp in [self._q] + self._E})
 
-        # Fast lookup of 4set components in {t,x,y,z} order
-        _dims = 'b x y z'.split()
+        # Fast lookup of 4set components in {e,x,y,z} order
+        _dims = 'e x y z'.split()
         self.four_set_comps = {
             'B': dict(zip(_dims, ['p'] + self._B)),
             'T': dict(zip(_dims, ['0'] + self._T)),
@@ -99,12 +99,12 @@ class ARConfig:
 
         _groups = [['p'] + self._B, ['0'] + self._T,
                    [self._h] + self._A, [self._q] + self._E]
-        bxyz_pairings = [(s[0], 'b') for s in _groups]
-        bxyz_pairings.extend([(s[1], 'x') for s in _groups])
-        bxyz_pairings.extend([(s[2], 'y') for s in _groups])
-        bxyz_pairings.extend([(s[3], 'z') for s in _groups])
+        exyz_pairings = [(s[0], 'e') for s in _groups]
+        exyz_pairings.extend([(s[1], 'x') for s in _groups])
+        exyz_pairings.extend([(s[2], 'y') for s in _groups])
+        exyz_pairings.extend([(s[3], 'z') for s in _groups])
 
-        self.bxyz_like = dict(bxyz_pairings)
+        self.exyz_like = dict(exyz_pairings)
 
         e_key = '0i' if self._E[0][0] == '0' else 'i0'
 
