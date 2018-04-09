@@ -199,14 +199,14 @@ def _full_mvec_mvec(mv1, mv2, cfg=cfg):
 
 @full.add((Alpha, MultiVector))
 def _full_alpha_mvec(a, m, cfg=cfg):
-    prod = MultiVector(full(a, comp, cfg) for comp in m)
+    prod = MultiVector((full(a, comp, cfg) for comp in m), cfg=cfg)
     prod.replacements = m.replacements
     return prod
 
 
 @full.add((MultiVector, Alpha))
 def _full_mvec_alpha(m, a, cfg=cfg):
-    prod = MultiVector(full(comp, a, cfg) for comp in m)
+    prod = MultiVector((full(comp, a, cfg) for comp in m), cfg=cfg)
     prod.replacements = m.replacements
     return prod
 
