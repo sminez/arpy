@@ -188,6 +188,10 @@ def _full_pair_pair(a, b, cfg=cfg):
 
 @full.add((MultiVector, MultiVector))
 def _full_mvec_mvec(mv1, mv2, cfg=cfg):
+    # Handle the special case of m ^ m == {}  (an empty MultiVector)
+    if mv1 == mv2:
+        return MultiVector()
+
     prod = MultiVector(full(i, j, cfg) for i in mv1 for j in mv2)
     prod.replacements.extend(mv1.replacements + mv2.replacements)
     return prod
