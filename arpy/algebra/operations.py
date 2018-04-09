@@ -351,8 +351,8 @@ def _prod_apply_d_mm(func, mvecs=(None, None), _=None, cfg=cfg):
 def dagger(mvec, cfg=cfg):
     '''return ther Hermitian conjugate of the Multivector'''
     _neg = [
-        Alpha(a) for a in cfg.allowed
-        if full(Alpha(a), Alpha(a), cfg).sign == -1
+        Alpha(a, cfg=cfg) for a in cfg.allowed
+        if full(Alpha(a, cfg=cfg), Alpha(a, cfg=cfg), cfg).sign == -1
     ]
     mvec = deepcopy(mvec)
     new_vec = []
