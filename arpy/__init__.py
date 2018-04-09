@@ -69,25 +69,25 @@ def update_env(self, lvl=2):
     self.T = MultiVector(self._T, cfg=self)
     self.G = MultiVector(self.allowed, cfg=self)
 
-    self.B4 = MultiVector(['p'] + self._B, cfg=self)
-    self.T4 = MultiVector(['0'] + self._T, cfg=self)
-    self.A4 = MultiVector([self._h] + self._A, cfg=self)
-    self.E4 = MultiVector([self._q] + self._E, cfg=self)
+    self.zet_B = MultiVector(['p'] + self._B, cfg=self)
+    self.zet_T = MultiVector(['0'] + self._T, cfg=self)
+    self.zet_A = MultiVector([self._h] + self._A, cfg=self)
+    self.zet_E = MultiVector([self._q] + self._E, cfg=self)
     self.Fp = self.F + self.p
-    self.F4 = self.F + self.p + self.q
+    self.zet_F = self.F + self.p + self.q
 
     # Differential operators
     self.Dmu = self.d = differential_operator(['0', '1', '2', '3'], cfg=self)
     self.DG = differential_operator(self.allowed, cfg=self)
     self.DF = differential_operator(self.F, cfg=self)
 
-    self.DB = differential_operator(self.B4, cfg=self)
-    self.DT = differential_operator(self.T4, cfg=self)
-    self.DA = differential_operator(self.A4, cfg=self)
-    self.DE = differential_operator(self.E4, cfg=self)
+    self.DB = differential_operator(self.zet_B, cfg=self)
+    self.DT = differential_operator(self.zet_T, cfg=self)
+    self.DA = differential_operator(self.zet_A, cfg=self)
+    self.DE = differential_operator(self.zet_E, cfg=self)
 
     _vars = ['p', 'h', 'q', 't', 'A', 'B', 'E', 'F', 'T', 'G',
-             'B4', 'T4', 'A4', 'E4', 'Fp', 'F4', 'Dmu', 'd',
+             'zet_B', 'zet_T', 'zet_A', 'zet_E', 'Fp', 'zet_F', 'Dmu', 'd',
              'DG', 'DF', 'DB', 'DT', 'DA', 'DE']
     defs = dict(zip(_vars, (getattr(self, var) for var in _vars)))
     _bind_to_calling_scope(defs, lvl)
@@ -135,7 +135,7 @@ __all__ = [
     'cayley', 'sign_cayley', 'sign_distribution', 'js_cayley',
     # Pre-defined MultiVectors
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
-    'B4', 'T4', 'A4', 'E4', 'F4',
+    'zet_B', 'zet_T', 'zet_A', 'zet_E', 'zet_F',
     # Util functions
     'ar', 'Tex', 'arpy_info', 'config', 'ARConfig', 'ARContext',
     'reorder_allowed', 'cancel_like_terms'
