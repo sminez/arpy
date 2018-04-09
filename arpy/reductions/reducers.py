@@ -277,7 +277,7 @@ class Template:
         return None
 
 
-def cancel_like_terms(terms):
+def cancel_like_terms(terms, cfg=None):
     '''
     For each alpha in the multivector, cancel terms that match their
     negative and return a new multivector of the remaining terms.
@@ -532,18 +532,24 @@ whole_3vec_squared_template = Template(
 )
 
 
-def replace_all(terms, cfg):
-    '''Run all known conversions on a Multivector'''
-    # Cancel first to cut down the search space
-    terms = cancel_like_terms(terms)
-    terms = partial_template.replace(terms, cfg)
-    terms = grad_template.replace(terms, cfg)
-    terms = div_template.replace(terms, cfg)
-    terms = curl_template.replace(terms, cfg)
-    terms = blade_3vec_template.replace(terms, cfg)
-    terms = blade_3vec_flipped_template.replace(terms, cfg)
-    terms = dot_template.replace(terms, cfg)
-    terms = wedge_template.replace(terms, cfg)
-    terms = whole_3vec_squared_template.replace(terms, cfg)
-    terms = whole_3vec_template.replace(terms, cfg)
-    return terms
+def chain_reducers(reducers):
+    '''
+    Chain together multiple reductions and return the list of terms produced
+    by running them sequentially over the input terms.
+    '''
+    def _chained(terms, cfg):
+        for reducer in reducers:
+            terms = reducer.replace(terms, cfg)
+
+        return terms
+
+    return _chained
+
+
+# Run all default reductions on a MultiVector
+replace_all = chain_reducers([
+    cancel_like_terms, partial_template, grad_template, div_template,
+    curl_template, blade_3vec_template, blade_3vec_flipped_template,
+    dot_template, wedge_template, whole_3vec_squared_template,
+    whole_3vec_template
+])
