@@ -61,6 +61,10 @@ class MultiVector(collections.abc.Set):
                     alpha.sign = 1
                     xi.sign *= -1
                     self.components[alpha].append(xi)
+            else:
+                raise ValueError(
+                    'Invalid alpha: allowed values are {}'.format(
+                        self.cfg.allowed))
 
     def __repr__(self):
         comps = [
@@ -119,6 +123,11 @@ class MultiVector(collections.abc.Set):
     def __eq__(self, other):
         if not isinstance(other, MultiVector):
             return False
+
+        if self.cfg != other.cfg:
+            # Multivectors from different algebras are never equal
+            return False
+
         for alpha in self.components:
             if self.components[alpha] != other.components[alpha]:
                 return False

@@ -89,6 +89,15 @@ def find_prod(i, j, cfg=cfg):
     NOTE: find_prod ALWAYS returns a new alpha as we don't want to mutate
           the values passed in as that will mess up any future calculations!
     '''
+    # Confirm that the alphas passed in are valid for this config
+    if not (i.allowed == j.allowed == cfg.allowed):
+        raise ValueError(
+            ('Inconsistant allowed values detected when computing a product.\n'
+             'Config allowed: {}\n'
+             'Passed values: "α{}" "α{}"').format(
+                 cfg.allowed, i.index, j.index)
+        )
+
     # NOTE:: These are here so that they the user can change metric and
     #        allowed without having to reload the module.
     metric = {k: v for k, v in zip('0123', cfg.metric)}

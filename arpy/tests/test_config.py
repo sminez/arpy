@@ -5,7 +5,8 @@ from arpy import config, ARConfig
 original_allowed = set(config.allowed)
 new_allowed = [
     'p', '23', '31', '12', '0', '023', '031', '012',
-    '123', '1', '2', '3', '0123', '10', '20', '30']
+    '123', '1', '2', '3', '0123', '10', '20', '30'
+]
 
 
 def test_set_reset():

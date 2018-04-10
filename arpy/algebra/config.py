@@ -18,6 +18,16 @@ class ARConfig:
         self.update_config()
         # update_env in the __init__
 
+    def __eq__(self, other):
+        if not isinstance(other, ARConfig):
+            return False
+
+        metric = self.metric == other.metric
+        allowed = self.allowed == other.allowed
+        div = self.division_type == other.division_type
+
+        return metric and allowed and div
+
     def reset(self):
         '''Reset the metric and allowed to their default values'''
         self.allowed = self.original_allowed
