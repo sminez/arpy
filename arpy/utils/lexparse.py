@@ -339,11 +339,13 @@ class ARContext:
         #        inject local variables into the parser.
         stack_frame = _getframe(1)
         self._lexer._globals = stack_frame.f_locals
+
         try:
             result = self._parser.parse(
                 self._lexer.lex(text, context_vars=self._vars), text)
         except AR_Error:
             return None
+
         if result:
             # Result is an internal Token so pull of the value for returning
             # If there was an error we have printed the error and returned None

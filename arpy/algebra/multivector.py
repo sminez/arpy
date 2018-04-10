@@ -22,8 +22,12 @@ explicit_xi = r'[-p0123]*\[.*\]'
 
 
 class MultiVector(collections.abc.Set):
-    '''A custom container type for working efficiently with multivectors'''
-    # __slots__ = ('cfg', 'components', 'replacements')
+    '''
+    A custom container type for working efficiently with multivectors.
+    '''
+    # NOTE: The __invert__ method on MultiVecors is defined in __init__.py
+    #       as it requires the use of the full product function which results
+    #       in a cyclic import.
 
     def __init__(self, components=[], cfg=cfg):
         # Given a list of pairs, build the mulitvector by binding the ξ values
