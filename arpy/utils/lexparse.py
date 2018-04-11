@@ -354,9 +354,9 @@ class ARContext:
                 result.cancel_terms()
 
             if self._print:
-                print('"{}": {}'.format(text, result.val))
+                print('"{}": {}'.format(text, result))
 
-            return result.val
+            return result
 
     # Allow ARContext to be used as a context manager
     def __enter__(self):
