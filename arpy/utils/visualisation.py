@@ -9,6 +9,7 @@ import time
 import tempfile
 import webbrowser
 
+from .lexparse import ARContext
 from ..algebra.config import config
 from ..algebra.operations import full
 from ..algebra.ar_types import Alpha, Pair
@@ -286,9 +287,14 @@ def js_cayley(op=full, cfg=config):
 def op_block(rows, cols, op=full, cfg=config):
     '''
     Visualise the sign of component interactions under a binary operation on
-    Alphas. In addition to setting `op` to one of the built in binary operations,
-    you can also pass your own function with the following signature:
+    Alphas. In addition to setting `op` to one of the built in binary
+    operations, you can also pass your own function with the following
+    signature:
         op(Alpha, Alpha, ARConfig) -> Alpha
+
+    Alternatively, you may also pass a valid `ar` string defining how to combine
+    each pair of components in terms of i and j:
+        "i ^ (j!) ^ a0123"
     '''
     def _alpha(x):
         if isinstance(x, Alpha):
@@ -298,6 +304,17 @@ def op_block(rows, cols, op=full, cfg=config):
         else:
             raise ValueError(
                 'Must pass a MultiVector or a list of Alphas/Pairs')
+
+    def _block_func(s):
+        def func(i, j, cfg=config):
+            with ARContext(cfg=cfg) as ar:
+                return ar(s)
+
+        return func
+
+    if isinstance(op, str):
+        # Convert the string to an ar function
+        op = _block_func(op)
 
     block = ''
     for r in rows:
