@@ -334,7 +334,7 @@ class ARContext:
         self.cfg.allowed = allowed
         self._initialise_vars()
 
-    def __call__(self, text):
+    def __call__(self, text, *, cancel_terms=False):
         # NOTE:: The following is a horrible hack that allows you to
         #        inject local variables into the parser.
         stack_frame = _getframe(1)
@@ -349,6 +349,10 @@ class ARContext:
         if result:
             # Result is an internal Token so pull of the value for returning
             # If there was an error we have printed the error and returned None
+            result = result.val
+            if cancel_terms and isinstance(result, MultiVector):
+                result.cancel_terms()
+
             if self._print:
                 print('"{}": {}'.format(text, result.val))
 
