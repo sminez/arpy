@@ -258,3 +258,13 @@ class Pair:
             neg.xi.sign_base *= -1
 
         return neg
+
+    def extract_alpha(self):
+        '''
+        Pairs can have sign information on either the Xi or the Alpha
+        so we need to combine the information whenever we want to deal with
+        the Alpha on its own.
+        '''
+        alpha = deepcopy(self.alpha)
+        alpha.sign *= self.xi.sign
+        return alpha

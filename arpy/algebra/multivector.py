@@ -178,6 +178,23 @@ class MultiVector(collections.abc.Set):
             except KeyError:
                 pass
 
+    def iter_alphas(self):
+        '''
+        Iterate over the contents of a MultiVector by alpha. This method
+        yields tuples of the Alpha and a list of Pairs.
+        '''
+        for alpha in self.cfg.allowed:
+            key = Alpha(alpha, cfg=self.cfg)
+            try:
+                pairs = [
+                    Pair(alpha, xi, cfg=self.cfg)
+                    for xi in self.components[key]
+                ]
+                if pairs:
+                    yield key, pairs
+            except KeyError:
+                pass
+
     def cancel_terms(self):
         '''Remove terms that cancel following a calculation'''
         # XXX: optimise! This is quadratic in len(components.values())
