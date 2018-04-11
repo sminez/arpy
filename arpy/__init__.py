@@ -20,7 +20,7 @@ from .reductions.reducers import cancel_like_terms
 from .utils.lexparse import ARContext
 from .utils.utils import Tex, reorder_allowed
 from .utils.visualisation import cayley, sign_cayley, sign_distribution, \
-        js_cayley
+        js_cayley, op_block
 
 
 ##############################################################################
@@ -133,6 +133,7 @@ __all__ = [
     'AR_differential', 'differential_operator', 'del_grouped',
     # Visulaisation functions
     'cayley', 'sign_cayley', 'sign_distribution', 'js_cayley',
+    'op_block',
     # Pre-defined MultiVectors
     'G', 'F', 'Fp', 'B', 'T', 'A', 'E',
     'zet_B', 'zet_T', 'zet_A', 'zet_E', 'zet_F',

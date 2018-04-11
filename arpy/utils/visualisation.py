@@ -10,8 +10,8 @@ import tempfile
 import webbrowser
 
 from ..algebra.config import config
-from ..algebra.ar_types import Alpha
 from ..algebra.operations import full
+from ..algebra.ar_types import Alpha, Pair
 
 
 # HTML/JS for js_cayley visualisation
@@ -281,3 +281,30 @@ def js_cayley(op=full, cfg=config):
         ('An internet connection is required to generate the output '
          'due to the use of the D3 JavaScript library.')
     )
+
+
+def op_block(rows, cols, op=full, cfg=config):
+    '''
+    Visualise the sign of component interactions under a binary operation on
+    Alphas. In addition to setting `op` to one of the built in binary operations,
+    you can also pass your own function with the following signature:
+        op(Alpha, Alpha, ARConfig) -> Alpha
+    '''
+    def _alpha(x):
+        if isinstance(x, Alpha):
+            return x
+        elif isinstance(x, Pair):
+            return x.extract_alpha()
+        else:
+            raise ValueError(
+                'Must pass a MultiVector or a list of Alphas/Pairs')
+
+    block = ''
+    for r in rows:
+        comps = [
+            op(r.extract_alpha(), c.extract_alpha(), cfg).sign
+            for c in cols
+        ]
+        block_row = ' '.join(['□' if c == 1 else '■' for c in comps])
+        block += '|' + block_row + '|\n'
+    print(block)
