@@ -357,8 +357,16 @@ def _prod_apply_d_mm(func, mvecs=(None, None), _=None, cfg=cfg):
 ##############################################################################
 
 
-def dagger(mvec, cfg=cfg):
-    '''return ther Hermitian conjugate of the Multivector'''
+@dispatch_on(index=0)
+def dagger(obj, cfg=cfg):
+    '''
+    Compute the Hermitian conjugate of the argument.
+    '''
+    raise NotImplementedError
+
+
+@dagger.add(MultiVector)
+def _dagger_mvec(mvec, cfg=cfg):
     _neg = [
         Alpha(a, cfg=cfg) for a in cfg.allowed
         if full(Alpha(a, cfg=cfg), Alpha(a, cfg=cfg), cfg).sign == -1
@@ -371,6 +379,24 @@ def dagger(mvec, cfg=cfg):
         new_vec.append(pair)
     res = MultiVector(new_vec)
     res.replacements.extend(mvec.replacements)
+    return res
+
+
+@dagger.add(Alpha)
+def _dagger_alpha(alpha, cfg=cfg):
+    res = deepcopy(alpha)
+    if full(alpha, alpha, cfg).sign == -1:
+        res.sign *= -1
+
+    return res
+
+
+@dagger.add(Pair)
+def _dagger_pair(pair, cfg=cfg):
+    res = deepcopy(pair)
+    if full(pair.extract_alpha(), pair.extract_alpha(), cfg).sign == -1:
+        res.xi.sign *= -1
+
     return res
 
 
