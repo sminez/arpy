@@ -260,6 +260,9 @@ class ARContext:
         self._parser = ArpyParser(cfg=cfg)
         self._initialise_vars()
 
+    def __repr__(self):
+        return str(self.cfg)
+
     def _initialise_vars(self):
         '''Set all of the standard variables'''
         # Check that we have a (roughly) valid set of values
