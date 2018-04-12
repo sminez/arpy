@@ -28,6 +28,16 @@ class ARConfig:
 
         return metric and allowed and div
 
+    def __repr__(self):
+        metric = "".join("+" if m == 1 else "-" for m in self.metric)
+        allowed = "{α" + ", α".join(self.allowed) + "}"
+        return ('Config Details:\n'
+                '===============\n'
+                'Allowed Alphas: {}\n'
+                'Metric:         {}\n'
+                'Division type:  {}').format(
+                    allowed, metric, self.division_type)
+
     def reset(self):
         '''Reset the metric and allowed to their default values'''
         self.allowed = self.original_allowed
