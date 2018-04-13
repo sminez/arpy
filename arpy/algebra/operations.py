@@ -169,20 +169,20 @@ def _full_alpha_alpha(a, b, cfg=cfg):
 @full.add((Alpha, Pair))
 def _full_alpha_pair(a, b, cfg=cfg):
     alpha = find_prod(a, b.alpha, cfg)
-    return Pair(alpha, b.xi)
+    return Pair(alpha, b.xi, cfg=cfg)
 
 
 @full.add((Pair, Alpha))
 def _full_pair_alpha(a, b, cfg=cfg):
     alpha = find_prod(a.alpha, b, cfg)
-    return Pair(alpha, a.xi)
+    return Pair(alpha, a.xi, cfg=cfg)
 
 
 @full.add((Pair, Pair))
 def _full_pair_pair(a, b, cfg=cfg):
     a, b = deepcopy(a), deepcopy(b)
     alpha = find_prod(a.alpha, b.alpha, cfg)
-    return Pair(alpha, XiProduct([a.xi, b.xi]))
+    return Pair(alpha, XiProduct([a.xi, b.xi]), cfg=cfg)
     # NOTE:: Not sure which method is correct as this is mixing
     #        usign with magsign...
 
@@ -197,11 +197,7 @@ def _full_pair_pair(a, b, cfg=cfg):
 
 @full.add((MultiVector, MultiVector))
 def _full_mvec_mvec(mv1, mv2, cfg=cfg):
-    # Handle the special case of m ^ m == {}  (an empty MultiVector)
-    # if mv1 == mv2:
-    #     return MultiVector()
-
-    prod = MultiVector(full(i, j, cfg) for i in mv1 for j in mv2)
+    prod = MultiVector((full(i, j, cfg) for i in mv1 for j in mv2), cfg=cfg)
     prod.replacements.extend(mv1.replacements + mv2.replacements)
     return prod
 
@@ -238,7 +234,7 @@ def _div_by_alpha_alpha(a, b, cfg=cfg):
 @div_by.add((Pair, Alpha))
 def _div_by_pair_alpha(a, b, cfg=cfg):
     alpha = find_prod(a.alpha, inverse(b, cfg), cfg)
-    return Pair(alpha, a.xi)
+    return Pair(alpha, a.xi, cfg=cfg)
 
 
 ##############################################################################
@@ -256,12 +252,12 @@ def _div_into_Alpha_Alpha(a, b, cfg=cfg):
 @div_into.add((Alpha, Pair))
 def _div_into_Alpha_Pair(a, b, cfg=cfg):
     alpha = find_prod(inverse(a, cfg), b.alpha, cfg)
-    return Pair(alpha, b.xi)
+    return Pair(alpha, b.xi, cfg=cfg)
 
 
 ##############################################################################
 @dispatch_on(index=0)
-def project(element, grade):
+def project(element, grade, cfg=cfg):
     '''
     Implementation of the grade-projection operator <A>n.
     Return only the elements of A that are of grade n.
@@ -271,7 +267,7 @@ def project(element, grade):
 
 
 @project.add(Alpha)
-def _project_alpha(element, grade):
+def _project_alpha(element, grade, cfg=cfg):
     if element.index == 'p':
         if grade == 0:
             return element
@@ -284,7 +280,7 @@ def _project_alpha(element, grade):
 
 
 @project.add(Pair)
-def _project_pair(element, grade):
+def _project_pair(element, grade, cfg=cfg):
     if element.alpha.index == 'p':
         if grade == 0:
             return element
@@ -297,7 +293,7 @@ def _project_pair(element, grade):
 
 
 @project.add(MultiVector)
-def _project_multivector(element, grade):
+def _project_multivector(element, grade, cfg=cfg):
     correct_grade = []
     if grade == 0:
         for component in element:
@@ -308,7 +304,7 @@ def _project_multivector(element, grade):
             ix = component.alpha.index
             if len(ix) == grade and ix != 'p':
                 correct_grade.append(component)
-    res = MultiVector(correct_grade)
+    res = MultiVector(correct_grade, cfg=cfg)
     res.replacements.extend(element.replacements)
     return res
 
@@ -329,9 +325,10 @@ def _prod_apply_dmm(func, mv1, mv2, cfg=cfg):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
     return MultiVector(
-        full(i, j, cfg)
-        for i in func(mv1, cfg=cfg)
-        for j in mv2
+        (full(i, j, cfg)
+         for i in func(mv1, cfg=cfg)
+         for j in mv2),
+        cfg=cfg
     )
 
 
@@ -340,9 +337,10 @@ def _prod_apply_mdm(mv1, func, mv2, cfg=cfg):
     if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
         raise TypeError('Arguments must be a MultiVectors')
     return MultiVector(
-        full(i, j, cfg)
-        for i in mv1
-        for j in func(mv2, cfg=cfg)
+        (full(i, j, cfg)
+         for i in mv1
+         for j in func(mv2, cfg=cfg)),
+        cfg=cfg
     )
 
 
@@ -377,7 +375,7 @@ def _dagger_mvec(mvec, cfg=cfg):
         if pair.alpha in _neg:
             pair.alpha.sign *= -1
         new_vec.append(pair)
-    res = MultiVector(new_vec)
+    res = MultiVector(new_vec, cfg=cfg)
     res.replacements.extend(mvec.replacements)
     return res
 

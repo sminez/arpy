@@ -9,6 +9,8 @@ import re
 from operator import add
 from sys import _getframe, stderr
 from collections import namedtuple
+from itertools import permutations
+
 from ..algebra.ar_types import Alpha, Pair
 from ..algebra.config import ARConfig
 from ..algebra.config import config as cfg
@@ -23,7 +25,7 @@ tags = [
     ('DIFF',  r'<([p0213, -]*)\>'),
     ('ALPHA', r'-?a[0123]{1,4}|-?ap'),
     ('PAIR',  r'-?p[0123]{1,4}'),
-    ('VAR',   r'[a-zA-Z_][a-zA-Z_0-9]*'),
+    ('VAR',   r'-?[a-zA-Z_][a-zA-Z_0-9]*'),
     ('INDEX', r'[01234]')
 ]
 literals = [
@@ -31,9 +33,9 @@ literals = [
     ('ANGLE_OPEN',  r'\<'), ('ANGLE_CLOSE',  r'\>'),
     ('SQUARE_OPEN', r'\['), ('SQUARE_CLOSE', r'\]'),
     ('CURLY_OPEN',  r'\{'), ('CURLY_CLOSE', r'\}'),
-    ('PLUS', r'\+'), ('COMMA', r','), ('FULL', r'\^'),
-    ('BY', r'/'), ('INTO', r'\\'), ('DOT', r'\.'),
-    ('DAG', r'!')
+    ('PLUS', r'\+'), ('MINUS', r'-'), ('COMMA', r','),
+    ('FULL', r'\^'), ('BY', r'/'), ('INTO', r'\\'),
+    ('DOT', r'\.'), ('DAG', r'!')
 ]
 
 _tags = '|'.join('(?P<{}>{})'.format(t[0], t[1]) for t in tags + literals)
@@ -69,16 +71,19 @@ class ArpyLexer:
             if lex_tag == 'MVEC':
                 alphas = re.split(', |,| ', text.strip())
                 token = Token('EXPR', MultiVector(alphas, cfg=self.cfg))
+
             elif lex_tag == 'DIFF':
                 alphas = re.split(', |,| ', text.strip())
                 token = Token(
                     'EXPR',
                     differential_operator(alphas, cfg=self.cfg))
+
             elif lex_tag == 'ALPHA':
                 if text.startswith('-'):
                     token = Token('EXPR', Alpha(text[2:], -1, cfg=self.cfg))
                 else:
                     token = Token('EXPR', Alpha(text[1:], cfg=self.cfg))
+
             elif lex_tag == 'PAIR':
                 if text.startswith('-'):
                     token = Token(
@@ -88,23 +93,32 @@ class ArpyLexer:
                     token = Token(
                         'EXPR', Pair(Alpha(text[1:], cfg=self.cfg),
                                      cfg=self.cfg))
+
             elif lex_tag == 'INDEX':
                 token = Token('INDEX', int(text))
+
             elif lex_tag == 'VAR':
+                is_negated = False
+                if text.startswith('-'):
+                    is_negated = True
+                    text = text[1:]
                 try:
                     # Use definitions from the context over the global values
-                    token = Token(
-                        'EXPR', eval(text, self.context_vars))
+                    val = eval(text, self.context_vars)
                 except NameError:
                     try:
-                        token = Token('EXPR', eval(text, self._globals))
+                        val = eval(text, self._globals)
                     except:
                         stderr.write(
                             '"{}" is not currently defined\n'.format(text)
                         )
                         raise AR_Error()
+
+                token = Token('EXPR', -val if is_negated else val)
+
             elif lex_tag in self.literals:
                 token = Token(lex_tag, text)
+
             else:
                 message = (
                     'Input contains invalid syntax for the ar() function: {}\n'
@@ -116,7 +130,7 @@ class ArpyLexer:
 
 
 class ArpyParser:
-    unops = {'DAG': dagger}
+    unops_postfix = {'DAG': dagger}
     binops = {'FULL': full, 'BY': div_by, 'INTO': div_into, 'PLUS': add}
 
     def __init__(self, cfg=cfg):
@@ -195,14 +209,14 @@ class ArpyParser:
                                 val = op(LHS.val, RHS.val, cfg=self.cfg)
                             previous_token = Token('EXPR', val)
 
-                elif token.tag in self.unops:
+                elif token.tag in self.unops_postfix:
                     if previous_token is None:
                         msg = 'Missing argument to "{}" in "{}"\n'
                         stderr.write(msg.format(token.val, raw_text))
                         raise AR_Error()
                     else:
                         LHS, previous_token = previous_token, None
-                        op = self.unops.get(token.tag)
+                        op = self.unops_postfix.get(token.tag)
                         val = op(LHS.val, cfg=self.cfg)
                         previous_token = Token('EXPR', val)
 
@@ -336,6 +350,53 @@ class ARContext:
 
         self.cfg.allowed = allowed
         self._initialise_vars()
+
+    def decompose(self):
+        '''Decompose the algebra into Zets'''
+        def _decompose_zet(zet, components):
+            # Define the additional components required
+            Bs = {'zet_B': 'ζ', '(zet_B!)': 'ζ†'}
+
+            # Pull out the target set of alphas (always +ve)
+            target = {z[0] for z in self(zet).iter_alphas()}
+            for b in Bs:
+                for sign in ['', '-']:
+                    for comps in permutations([b] + components):
+                        # a0 can be popped to be before ζ without sign change
+                        # so discard anything where it is after ζ so we have a
+                        # consistant output format.
+                        if 'a0' in comps:
+                            if comps.index('a0') - comps.index(b) == 1:
+                                continue
+
+                        expr = sign + ' ^ '.join(comps)
+                        res = self(expr)
+                        signs = [p.xi.sign for p in res]
+                        if all(map(lambda s: s == 1, signs)):
+                            candidate = {z[0] for z in res.iter_alphas()}
+                            if candidate == target:
+                                return '{} = {}'.format(
+                                    zet, expr.replace(b, Bs[b]))
+
+        # Bring the component definitions into scope
+        self.cfg.update_env()
+
+        quedgehog = [p for p in self.cfg.q][0].alpha.index
+        requirements = {
+            'zet_T': ['a0'],
+            'zet_E': ['a{}'.format(quedgehog)],
+            'zet_A': ['a0', 'a{}'.format(quedgehog)],
+        }
+
+        decompositions = []
+        for zet, components in requirements.items():
+            decompositions.append(_decompose_zet(zet, components))
+
+        if len(decompositions) == 3:
+            # We succeeded
+            print('zet_B = ζ')
+            for d in decompositions:
+                print(d)
 
     def __call__(self, text, *, cancel_terms=False):
         # NOTE:: The following is a horrible hack that allows you to
