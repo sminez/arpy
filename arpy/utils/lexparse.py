@@ -353,50 +353,54 @@ class ARContext:
 
     def decompose(self):
         '''Decompose the algebra into Zets'''
-        def _decompose_zet(zet, components):
-            # Define the additional components required
-            Bs = {'zet_B': 'ζ', '(zet_B!)': 'ζ†'}
+        # Bring the component definitions into scope
+        self.cfg.update_env()
 
+        # Define the additional components required
+        quedgehog = 'a{}'.format([p for p in self.cfg.q][0].alpha.index)
+        bases = (('zet_{}', 'ζ'), ('(zet_{}!)', 'ζ†'),
+                 # This is easier than hacking the '-' into the correct place!
+                 ('-zet_{}', '-ζ'), ('(-zet_{}!)', '-ζ†'))
+        zets = ['B', 'T', 'A', 'E']
+
+        def _decompose_zet(base_zet, zet):
             # Pull out the target set of alphas (always +ve)
-            target = {z[0] for z in self(zet).iter_alphas()}
-            for b in Bs:
-                for sign in ['', '-']:
-                    for comps in permutations([b] + components):
-                        # a0 can be popped to be before ζ without sign change
-                        # so discard anything where it is after ζ so we have a
-                        # consistant output format.
-                        if 'a0' in comps:
-                            if comps.index('a0') - comps.index(b) == 1:
-                                continue
+            target = {z[0] for z in self('zet_{}'.format(zet)).iter_alphas()}
 
-                        expr = sign + ' ^ '.join(comps)
+            for tmp, str_rep in bases:
+                base = tmp.format(base_zet)
+                # Try all versions but try to float a0 to the front and the
+                # quedgehog to the back if possible.
+                all_comps = [
+                    ['a0', base], [base, quedgehog], ['a0', base, quedgehog]
+                ]
+                for components in all_comps:
+                    for permutation in permutations(components):
+                        expr = ' ^ '.join(permutation)
                         res = self(expr)
                         signs = [p.xi.sign for p in res]
                         if all(map(lambda s: s == 1, signs)):
                             candidate = {z[0] for z in res.iter_alphas()}
                             if candidate == target:
                                 return '{} = {}'.format(
-                                    zet, expr.replace(b, Bs[b]))
+                                    zet, expr.replace(base, str_rep))
 
-        # Bring the component definitions into scope
-        self.cfg.update_env()
+            raise AR_Error('Unable to decompose in terms of {}'.format(
+                base_zet))
 
-        quedgehog = [p for p in self.cfg.q][0].alpha.index
-        requirements = {
-            'zet_T': ['a0'],
-            'zet_E': ['a{}'.format(quedgehog)],
-            'zet_A': ['a0', 'a{}'.format(quedgehog)],
-        }
+        # Attempt to decompose everything in terms of everything else!
+        print(self)
+        print('-' * 20)
 
-        decompositions = []
-        for zet, components in requirements.items():
-            decompositions.append(_decompose_zet(zet, components))
+        for base_zet in zets:
+            decompositions = []
+            for zet in filter(lambda z: z != base_zet, zets):
+                decompositions.append(_decompose_zet(base_zet, zet))
 
-        if len(decompositions) == 3:
-            # We succeeded
-            print('zet_B = ζ')
-            for d in decompositions:
-                print(d)
+            print('zet_{} = ζ'.format(base_zet))
+            for decomp in decompositions:
+                print(decomp)
+            print('-' * 20)
 
     def __call__(self, text, *, cancel_terms=False):
         # NOTE:: The following is a horrible hack that allows you to
