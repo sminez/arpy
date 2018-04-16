@@ -23,10 +23,14 @@ def test_dagger():
     for metric in metrics:
         new_config = ARConfig(config.allowed, metric, config.division_type)
         alphas = [
-            Alpha(a, find_prod(Alpha(a), Alpha(a), cfg=new_config).sign)
+            Alpha(
+                index=a,
+                sign=find_prod(Alpha(a), Alpha(a), cfg=new_config).sign,
+                cfg=new_config
+            )
             for a in config.allowed
         ]
-        negated = MultiVector([Pair(a) for a in alphas])
+        negated = MultiVector([Pair(a) for a in alphas], cfg=new_config)
         assert negated == dagger(MultiVector(config.allowed), cfg=new_config)
 
 
