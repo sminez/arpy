@@ -4,7 +4,7 @@ Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
 '''
 from copy import deepcopy
 from .config import config as cfg
-from ..utils.utils import SUB_SCRIPTS
+from ..utils.utils import SUB_SCRIPTS, Nat
 
 
 class Alpha:
@@ -136,9 +136,9 @@ class Xi:
     def exyz(self):
         '''Return a string representing only {e,x,y,z} information'''
         sign = '+' if self.sign == 1 else '-'
-        partials = [cfg.exyz_like[p.index] for p in self.partials]
+        partials = [Nat(p) for p in self.partials]
         partial_str = ''.join(['∂{}'.format(p) for p in reversed(partials)])
-        val = cfg.exyz_like[self.val]
+        val = Nat(self.val)
         return sign + partial_str + '[' + val + ']'
 
 

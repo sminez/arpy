@@ -102,29 +102,14 @@ class ARConfig:
         self._A = [a for a in self.allowed if len(a) == 1 and a not in 'p0']
         self._E = [a for a in self.allowed if len(a) == 2 and '0' in a]
 
-        # Map α to 4set membership
-        self.four_sets = {comp: 'B' for comp in ['p'] + self._B}
-        self.four_sets.update({comp: 'T' for comp in ['0'] + self._T})
-        self.four_sets.update({comp: 'A' for comp in [self._h] + self._A})
-        self.four_sets.update({comp: 'E' for comp in [self._q] + self._E})
-
-        # Fast lookup of 4set components in {e,x,y,z} order
+        # Fast lookup of zet components in {e,x,y,z} order
         _dims = 'e x y z'.split()
-        self.four_set_comps = {
+        self.zet_comps = {
             'B': dict(zip(_dims, ['p'] + self._B)),
             'T': dict(zip(_dims, ['0'] + self._T)),
             'A': dict(zip(_dims, [self._h] + self._A)),
             'E': dict(zip(_dims, [self._q] + self._E))
         }
-
-        _groups = [['p'] + self._B, ['0'] + self._T,
-                   [self._h] + self._A, [self._q] + self._E]
-        exyz_pairings = [(s[0], 'e') for s in _groups]
-        exyz_pairings.extend([(s[1], 'x') for s in _groups])
-        exyz_pairings.extend([(s[2], 'y') for s in _groups])
-        exyz_pairings.extend([(s[3], 'z') for s in _groups])
-
-        self.exyz_like = dict(exyz_pairings)
 
         e_key = '0i' if self._E[0][0] == '0' else 'i0'
 
@@ -137,25 +122,11 @@ class ARConfig:
             '0jk': self._T,
         }
 
-        self.group_to_4set = {'jk': 'B', 'i': 'A', '0jk': 'T', e_key: 'E'}
+        self.group_to_zet = {'jk': 'B', 'i': 'A', '0jk': 'T', e_key: 'E'}
 
         # Names to group the results of calculations under: scalars & 3-vectors
         self.allowed_groups = ['p', '0', '123', '0123'] + \
             [g for g in self.xi_groups.keys()]
-
-        # For a given alpha, find the group it should be assigned to
-        self.alpha_to_group = self._build_alpha_to_group()
-
-    def _build_alpha_to_group(self):
-        # Scalars are grouped individually
-        _pairs = [
-            ('p', 'p'), ('0', '0'), (self._h, self._h), (self._q, self._q)]
-        # 3-vector components are grouped under the vector name
-        flipped = [[(v, group) for v in vals]
-                   for group, vals in self.xi_groups.items()]
-        for group in flipped:
-            _pairs.extend(group)
-        return dict(_pairs)
 
 
 # The labelling and ordering of the 16 elements of the algebra.

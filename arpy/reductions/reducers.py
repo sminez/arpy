@@ -17,11 +17,23 @@ from itertools import groupby
 
 from ..algebra.ar_types import Xi, Pair, Alpha
 from ..algebra.config import config as cfg
-from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS
+from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS, Nat, Zet
 
 
 class FailedMatch(Exception):
     pass
+
+
+def alpha_to_group(index):
+    '''Group `e` elements separately from 3Vecs'''
+    # Check first index of to determine 01/10
+    E_key = '0i' if cfg._E[0][0] == '0' else 'i0'
+    groups = {'B': 'jk', 'T': '0jk', 'A': 'i', 'E': E_key}
+
+    if Nat(index) == 'e':
+        return index
+
+    return groups[Zet(index)]
 
 
 class Term:
@@ -79,20 +91,20 @@ class Template:
                     pairs = zip(term.xis, value.xi.components)
 
                 # Confirm that exyz-ness is correct
-                ok = (cfg.exyz_like.get(have.val) == want[0]
+                ok = (Nat(have.val) == want[0]
                       for want, have in pairs if want[0] in 'exyz')
                 if not all(ok):
                     continue
 
             # Check that we have the correct kind of alpha
             if term.alpha_exyz != "_" and term.alpha_exyz in 'exyz':
-                if cfg.exyz_like[value.alpha.index] != term.alpha_exyz:
+                if Nat(value.alpha) != term.alpha_exyz:
                     continue
 
             # Check partials (Xi partials are Alpha objects)
             if term.partials not in [tuple("_"), None]:
                 if len(value.xi.partials) == len(term.partials):
-                    ok = (cfg.exyz_like.get(have.index) == want[0]
+                    ok = (Nat(have) == want[0]
                           for want, have
                           in zip(term.partials, value.xi.partials))
                     if not all(ok):
@@ -203,7 +215,7 @@ class Template:
         '''
         def check_group(want, have, reqs):
             required_group = reqs.get(want)
-            a_group = cfg.four_sets[have]
+            a_group = Zet(have)
 
             if required_group is None:
                 reqs[want] = a_group
@@ -315,51 +327,48 @@ def cancel_like_terms(terms, cfg=None):
 def grad_termfunc(reqs, cfg):
     xi = ''.join(SUB_SCRIPTS[x] for x in reqs['k'])
     tex_xi = reqs['k']
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['G']]['x']]
+    alpha = alpha_to_group(cfg.zet_comps[reqs['G']]['x'])
 
-    tex_fourset = '' if reqs['H'] == 'A' else '^' + reqs['H']
-    _fourset = '' if reqs['H'] == 'A' else SUPER_SCRIPTS[reqs['H']]
+    tex_zet = '' if reqs['H'] == 'A' else '^' + reqs['H']
+    _zet = '' if reqs['H'] == 'A' else SUPER_SCRIPTS[reqs['H']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∇{}Ξ{}'.format(_fourset, xi),
-           tex='\\nabla' + tex_fourset + '\\Xi_{' + tex_xi + '}'),
+        Xi('∇{}Ξ{}'.format(_zet, xi),
+           tex='\\nabla' + tex_zet + '\\Xi_{' + tex_xi + '}'),
         cfg=cfg)
 
 
 def div_termfunc(reqs, cfg):
-    proxy_alpha = cfg.four_set_comps[reqs['H']]['x']
-    xi = cfg.group_to_4set[cfg.alpha_to_group[proxy_alpha]]
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['e']]
+    xi = Zet(reqs['H']['x'])
+    alpha = cfg.zet_comps[reqs['F']]['e']
 
-    tex_fourset = '' if reqs['G'] == 'A' else '^' + reqs['G']
-    _fourset = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
+    tex_zet = '' if reqs['G'] == 'A' else '^' + reqs['G']
+    _zet = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∇{}•{}'.format(_fourset, xi),
-           tex='\\nabla{}\\cdot {}'.format(tex_fourset, xi)),
+        Xi('∇{}•{}'.format(_zet, xi),
+           tex='\\nabla{}\\cdot {}'.format(tex_zet, xi)),
         cfg=cfg)
 
 
 def curl_termfunc(reqs, cfg):
-    proxy_alpha = cfg.four_set_comps[reqs['H']]['x']
-    xi = cfg.group_to_4set[cfg.alpha_to_group[proxy_alpha]]
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    xi = Zet(reqs['H']['x'])
+    alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
 
-    tex_fourset = '' if reqs['G'] == 'A' else '^' + reqs['G']
-    _fourset = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
+    tex_zet = '' if reqs['G'] == 'A' else '^' + reqs['G']
+    _zet = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∇{}x{}'.format(_fourset, xi),
-           tex='\\nabla{}\\times {}'.format(tex_fourset, xi)),
+        Xi('∇{}x{}'.format(_zet, xi),
+           tex='\\nabla{}\\times {}'.format(tex_zet, xi)),
         cfg=cfg)
 
 
 def partial_termfunc(reqs, cfg):
-    proxy_alpha = cfg.four_set_comps[reqs['H']]['x']
-    xi = cfg.group_to_4set[cfg.alpha_to_group[proxy_alpha]]
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    xi = Zet(reqs['H']['x'])
+    alpha = alpha_to_group[cfg.zet_comps[reqs['F']]['x']]
 
-    partial = cfg.four_set_comps[reqs['G']]['e']
+    partial = cfg.zet_comps[reqs['G']]['e']
     _partial = ''.join(SUB_SCRIPTS[b] for b in partial)
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
@@ -369,7 +378,7 @@ def partial_termfunc(reqs, cfg):
 
 
 def dot_termfunc(reqs, cfg):
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['e']]
+    alpha = cfg.zet_comps[reqs['F']]['e']
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}•{}'.format(reqs['G'], reqs['H']),
@@ -378,7 +387,7 @@ def dot_termfunc(reqs, cfg):
 
 
 def wedge_termfunc(reqs, cfg):
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}Λ{}'.format(reqs['G'], reqs['H']),
@@ -390,8 +399,8 @@ def blade_3vec_termfunc(reqs, cfg):
     b_map = {frozenset('p'): 'p', frozenset('0123'): 'q',
              frozenset('0'): 't', frozenset('123'): 'h'}
 
-    blade = b_map[frozenset(cfg.four_set_comps[reqs['G']]['e'])]
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['x']]
+    blade = b_map[frozenset(cfg.zet_comps[reqs['G']]['e'])]
+    alpha = cfg.zet_comps[reqs['F']]['x']
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}{}'.format(blade, reqs['H']),
@@ -416,7 +425,7 @@ def whole_3vec_squared_termfunc(reqs, cfg):
 
 
 def dot_square_termfunc(reqs, cfg):
-    alpha = cfg.alpha_to_group[cfg.four_set_comps[reqs['F']]['e']]
+    alpha = cfg.zet_comps[reqs['F']]['e']
     return Pair(
         Alpha(alpha, reqs['+_sign'], cfg=cfg),
         Xi('{}²'.format(reqs['G']),
@@ -539,7 +548,12 @@ def chain_reducers(reducers):
     '''
     def _chained(terms, cfg):
         for reducer in reducers:
-            terms = reducer.replace(terms, cfg)
+            if callable(reducer):
+                # Raw function
+                terms = reducer(terms, cfg)
+            else:
+                # Template instance
+                terms = reducer.replace(terms, cfg)
 
         return terms
 
@@ -552,4 +566,10 @@ replace_all = chain_reducers([
     curl_template, blade_3vec_template, blade_3vec_flipped_template,
     dot_template, wedge_template, whole_3vec_squared_template,
     whole_3vec_template
+])
+
+# Just run del grouping
+del_grouped = chain_reducers([
+    cancel_like_terms, partial_template, grad_template,
+    div_template, curl_template
 ])

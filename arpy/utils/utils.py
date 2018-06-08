@@ -20,29 +20,46 @@ def Zet(alpha):
     # Conditions for being a member of each Zet
     zet_map = {
         # `e` elements (NOTE: `p` is a special case)
+        # --> 0, 123, 0123 (ordering doesn't matter)
         (1, True): 'T', (3, False): 'A', (4, True): 'E',
         # `x, y, z` elements: (len, has '0')
+        # --> jk, 0jk, i, 0i (ordering doesn't matter)
         (2, False): 'B', (3, True): 'T', (1, False): 'A', (2, True): 'E',
     }
-    ix = alpha.index
+
+    # Allow for raw string indices to be passed
+    if isinstance(alpha, str):
+        ix = alpha
+    else:
+        ix = alpha.index
 
     if ix == 'p':
         return 'B'
     else:
-        return zet_map[(len(ix), 0 in ix)]
+        return zet_map.get((len(ix), '0' in ix))
 
 
 def Nat(alpha):
     '''Return the Nature of a given Alpha.'''
     # Element sets for each e,x,y,z nature
     nat_map = {
-        set('p'): 'e', set('123'): 'e', set('0'): 'e', set('0123'): 'e',
-        set('1'): 'x', set('23'): 'x', set('023'): 'x', set('01'): 'x',
-        set('2'): 'y', set('31'): 'y', set('031'): 'y', set('02'): 'y',
-        set('3'): 'z', set('12'): 'z', set('012'): 'z', set('03'): 'z',
+        frozenset('p'): 'e', frozenset('123'): 'e',
+        frozenset('0'): 'e', frozenset('0123'): 'e',
+        frozenset('1'): 'x', frozenset('23'): 'x',
+        frozenset('023'): 'x', frozenset('01'): 'x',
+        frozenset('2'): 'y', frozenset('31'): 'y',
+        frozenset('031'): 'y', frozenset('02'): 'y',
+        frozenset('3'): 'z', frozenset('12'): 'z',
+        frozenset('012'): 'z', frozenset('03'): 'z',
     }
 
-    return nat_map[set(alpha.index)]
+    # Allow for raw string indices to be passed
+    if isinstance(alpha, str):
+        ix = alpha
+    else:
+        ix = alpha.index
+
+    return nat_map.get(frozenset(ix))
 
 
 def reorder_allowed(allowed, order='pBtThAqE'):

@@ -15,10 +15,11 @@ from .algebra.multivector import MultiVector, DelMultiVector, \
 from .algebra.operations import find_prod, inverse, full, div_by, div_into, \
         project, prod_apply, dagger, commutator
 from .algebra.differential import AR_differential, differential_operator
-from .reductions.del_grouping import del_grouped
-from .reductions.reducers import cancel_like_terms
+# NOTE: Now replaced by the generic functionality in reducers.py
+# from .reductions.del_grouping import del_grouped
+from .reductions.reducers import cancel_like_terms, del_grouped, replace_all
 from .utils.lexparse import ARContext
-from .utils.utils import Tex, reorder_allowed
+from .utils.utils import Tex, reorder_allowed, Zet, Nat
 from .utils.visualisation import cayley, sign_cayley, sign_distribution, \
         js_cayley, op_block
 
@@ -139,5 +140,5 @@ __all__ = [
     'zet_B', 'zet_T', 'zet_A', 'zet_E', 'zet_F',
     # Util functions
     'ar', 'Tex', 'arpy_info', 'config', 'ARConfig', 'ARContext',
-    'reorder_allowed', 'cancel_like_terms'
+    'reorder_allowed', 'cancel_like_terms', 'Zet', 'Nat', 'replace_all'
 ]

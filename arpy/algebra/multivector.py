@@ -11,8 +11,10 @@ import collections.abc
 from copy import deepcopy
 from itertools import groupby
 from collections import namedtuple, Counter
+
+from ..utils.utils import Nat
 from .ar_types import Alpha, Pair, Xi, XiProduct
-from ..reductions.del_grouping import del_grouped
+from ..reductions.reducers import del_grouped
 from ..reductions.reducers import replace_all
 from .config import config as cfg
 
@@ -322,7 +324,7 @@ class MultiVector(collections.abc.Set):
                         seen.append(comps[0].alpha)
 
                     if exyz:
-                        x = str(self.cfg.exyz_like[common_xi.val]).ljust(3)
+                        x = Nat(common_xi.val).ljust(3)
                         if sign:
                             signs = [c.xi.exyz()[0] for c in comps]
                             blocks = ['■' if s == '-' else '□' for s in signs]
