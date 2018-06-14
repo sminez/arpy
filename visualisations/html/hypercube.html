@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"></script>
+</head>
+
+<body>
+  <!-- <input id="alphas" type="text"> -->
+  <!-- <br> -->
+  <!-- Placeholder for injecting the SVG element via d3 -->
+  <div id="hypercube"></div>
+
+  <script>
+    // The 16 points we need for drawing the cube
+    var A = [0, 2],
+        B = [0, 5],
+        C = [2, 0],
+        D = [2, 3],
+        E = [2, 4],
+        F = [2, 7],
+        G = [3, 2],
+        H = [3, 5],
+        I = [4, 2],
+        J = [4, 5],
+        K = [5, 0],
+        L = [5, 3],
+        M = [5, 4],
+        N = [5, 7],
+        O = [7, 2],
+        P = [7, 5];
+
+    // Which sides correspond to each of the basis vectors
+    var sides = {
+        "0": [[A,C], [B,D], [E,I], [F,J], [G,K], [H,L], [M,O], [N,P]],
+        "1": [[A,G], [B,H], [C,K], [D,L], [E,M], [F,N], [I,O], [J,P]],
+        "2": [[A,B], [C,D], [E,F], [G,H], [I,J], [K,L], [M,N], [O,P]],
+        "3": [[A,E], [B,F], [C,I], [D,J], [G,M], [H,N], [K,O], [L,P]],
+    };
+
+    // Colors for each of the Zets
+    var colours = {
+        0: { false: "#bd4442", true: "#872e2e"},
+        1: { false: "#bd4442", true: "#872e2e"},
+        2: { false: "#4a778f", true: "#498c6b"},
+        3: { false: "#4c4861", true: "#76718f"},
+        4: { true: "#dbaa56"},
+    };
+
+    var transitionDuration = 250;
+    var strokeWidth = 3;
+    var showWireframe = false;
+
+    // Set up the SVG element in the body
+    var margin = {top: 40, right: 40, bottom: 40, left: 40},
+        width = 520 - margin.left - margin.right,
+        height = 520 - margin.top - margin.bottom;
+
+    var svg = d3.select("#hypercube").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // White background to attach click events to for toggling wireframe
+    svg.append("rect")
+        .attr("class", "overlay")
+        .style("fill", "#FFFFFF")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .on("click", function() {
+            if (showWireframe) {
+                removeWireframe();
+            } else {
+                addWireframe();
+            }
+            showWireframe = !showWireframe;
+        });
+
+    var textAlphas = [];
+
+    // Bind a handler for the input box
+    d3.select("#alphas").on("input", function() {
+        var txt = this.value;
+
+        // Get the alpha values
+        var newAlphas = [];
+        for (i=0; i<txt.length; i++) {
+            newAlphas.push(parseInt(txt[i]));
+        }
+
+        var newValues = _.difference(newAlphas, textAlphas);
+        if (newValues.length > 0) {
+            _.forEach(newValues, function(val) {
+                addLine(val, textAlphas);
+            });
+        }
+
+        var removedValues = _.difference(textAlphas, newAlphas);
+        if (removedValues.length > 0) {
+            _.forEach(removedValues, function(val) {
+                removeLine(val, textAlphas);
+            });
+        }
+
+        textAlphas = newAlphas;
+    });
+
+    // Animated walk of all 16 elements
+    var walk = [
+        [1], [1,2], [1,2,3], [3,1], [0,3,1],
+        [0,1,2,3], [0,2,3], [2,3], [2], [0,2],
+        [0,1,2], [0,1], [0], [0,3], [3], [],
+    ];
+    var ix = 0;
+    var currentAlphas = [];
+
+    var inter = setInterval(function() {
+        var nextAlphas = walk[ix];
+        
+        var newAlphas = _.difference(nextAlphas, currentAlphas);
+        if (newAlphas.length > 0) {
+            _.forEach(newAlphas, function(val) {
+                addLine(val, currentAlphas);
+            });
+        }
+
+        var removedAlphas = _.difference(currentAlphas, nextAlphas);
+        if (removedAlphas.length > 0) {
+            _.forEach(removedAlphas, function(val) {
+                removeLine(val, currentAlphas);
+            });
+        }
+
+        currentAlphas = nextAlphas;
+
+        // Track the step we are on
+        ix += 1;
+        if (ix === 16) {
+            ix = 0;
+        };
+    }, 500);
+
+    function addWireframe() {
+        _.forEach(["0", "1", "2", "3"], function(alpha) {
+            for (i=0; i<8; i++) {
+              var a = sides[alpha][i][0];
+              var b = sides[alpha][i][1];
+
+              svg.append('line')
+                  .style('stroke', '#000000')
+                  .style('stroke-width', 0.4)
+                  .attr('class', 'wireframe')
+                  .attr('x1', a[0]*60)
+                  .attr('y1', a[1]*60)
+                  .attr('x2', b[0]*60)
+                  .attr('y2', b[1]*60);
+            }
+        });
+    }
+
+    function removeWireframe() {
+        d3.selectAll('.wireframe').remove();
+    }
+
+    function getColour(alphas) {
+        return colours[alphas.length][alphas.indexOf(0) > -1];
+    }
+
+    // Remove a chosen base-element from the SVG
+    function removeLine(alpha, currentAlphas) {
+        var remaining = _.difference(currentAlphas, [alpha]);
+        var colour = getColour(remaining);
+
+        // Update the colour for the remaining line
+        _.forEach(remaining, function(val) {
+            d3.selectAll('.alpha' + val).style('stroke', colour);
+        });
+
+        // Remove the target lines
+        for (i=0; i<8; i++) {
+            var line = d3.select('#alpha' + alpha + '-' + i);
+            line.transition()
+                .duration(transitionDuration)
+                .style('stroke', colour)
+                .style('stroke-width', strokeWidth)
+                .attr('x2', line[0][0].getAttribute('x1'))
+                .attr('y2', line[0][0].getAttribute('y1'))
+                .ease("linear")
+                .attr("stroke-dashoffset", 0)
+                .remove();
+        }
+    }
+
+    // Add a chosen base-element to the SVG
+    function addLine(alpha, currentAlphas) {
+        // Draw the lines
+        var newAlphas = _.union(currentAlphas, [alpha]);
+        var oldColour = getColour(currentAlphas);
+        var newColour = getColour(newAlphas);
+
+        for (i=0; i<8; i++) {
+          var a = sides[alpha][i][0];
+          var b = sides[alpha][i][1];
+
+          svg.append('line')
+              .style('stroke', newColour)
+              .style('stroke-width', strokeWidth)
+              .attr('x1', a[0]*60)
+              .attr('y1', a[1]*60)
+              .attr('x2', a[0]*60)
+              .attr('y2', a[1]*60)
+              .attr('class', 'alpha' + alpha)        // To allow for colouring
+              .attr('id', 'alpha' + alpha + '-' + i) // To allow for removal
+              .transition()
+                  .duration(transitionDuration)
+                  .attr('x2', b[0]*60)
+                  .attr('y2', b[1]*60)
+                  .ease("linear")
+                  .attr("stroke-dashoffset", 0);
+        }
+
+        _.forEach(currentAlphas, function(val) {
+            d3.selectAll('.alpha' + val).style('stroke', newColour);
+        });
+    }
+  </script>
+</body>
