@@ -22,6 +22,11 @@ setup(
     extras_require={'test': ['pytest']},
     packages=find_packages(),
     package_dir={'arpy': 'arpy'},
+    entry_points={
+        'console_scripts': [
+            'arpy = arpy.__main__:main',
+        ]
+    },
     classifiers=[
         'Programming Language :: Python :: 3',
         'Development Status :: 4 - Beta'
