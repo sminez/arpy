@@ -1,6 +1,6 @@
 '''
 arpy (Absolute Relativity in Python)
-Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
 This module provides helper functions for writing reductions on multivectors.
 

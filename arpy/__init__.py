@@ -1,5 +1,5 @@
 # arpy (Absolute Relativity in Python)
-# Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+# Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
 __version__ = '0.2.8'
 

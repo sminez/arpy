@@ -1,6 +1,6 @@
 '''
 arpy (Absolute Relativity in Python)
-Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
 Lexing and Parsing of a more mathematical syntax for performing calculations
 with the arpy Absolute Relativity library.

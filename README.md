@@ -2,7 +2,7 @@
 
 arpy (Absolute Relativity in Python) Version 0.2.0
 
-Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
 ![Cayley Table for the Williamson Algebra](readme_icon.png)
 

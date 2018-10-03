@@ -1,6 +1,6 @@
 '''
 arpy (Absolute Relativity in Python)
-Copyright (C) 2016-2017 Innes D. Anderson-Morrison All rights reserved.
+Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
 NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
        returns the Hermitian conjugate) is written in the arpy __init__ file!
