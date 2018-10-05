@@ -74,6 +74,18 @@ class AR_differential:
         ]
         return '{ ' + ' '.join(elements) + ' }'
 
+    def __tex__(self):
+        elements = []
+        for a in self.wrt:
+            inv = inverse(a, cfg=self.cfg)
+            sign = '' if inv.sign == 1 else '-'
+
+            elements.append(
+                '%s\\alpha_{%s}\\partial_{%s}' % (sign, a.index, a.index)
+            )
+
+        return r'\{ ' + ' '.join(elements) + r' \}'
+
 
 def _div(alpha, wrt, cfg, div=None):
     '''Divide an alpha component based on the set division type'''
