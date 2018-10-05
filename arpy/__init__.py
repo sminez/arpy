@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = '0.2.9'
+__version__ = '0.2.10'
 
 import types
 from sys import _getframe
