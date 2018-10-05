@@ -108,7 +108,7 @@ class ArpyLexer:
                 except NameError:
                     try:
                         val = eval(text, self._globals)
-                    except:
+                    except Exception:
                         stderr.write(
                             '"{}" is not currently defined\n'.format(text)
                         )
@@ -311,6 +311,7 @@ class ARContext:
             'Fp': MultiVector(['p'] + _B + _E, cfg=self.cfg),
             'zet_F': MultiVector(['p'] + _B + [_q] + _E, cfg=self.cfg),
             # Differentials
+            'Dmu': differential_operator(['0', '1', '2', '3'], cfg=self.cfg),
             'DG': differential_operator(self.cfg.allowed, cfg=self.cfg),
             'DF': differential_operator(_B + _E, cfg=self.cfg),
             'DB': differential_operator(['p'] + _B, cfg=self.cfg),

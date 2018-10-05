@@ -339,7 +339,8 @@ def grad_termfunc(reqs, cfg):
 
 
 def div_termfunc(reqs, cfg):
-    xi = Zet(reqs['H']['x'])
+    # xi = Zet(reqs['H']['x'])
+    xi = reqs['H']
     alpha = cfg.zet_comps[reqs['F']]['e']
 
     tex_zet = '' if reqs['G'] == 'A' else '^' + reqs['G']
@@ -352,7 +353,8 @@ def div_termfunc(reqs, cfg):
 
 
 def curl_termfunc(reqs, cfg):
-    xi = Zet(reqs['H']['x'])
+    # xi = Zet(reqs['H']['x'])
+    xi = reqs['H']
     alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
 
     tex_zet = '' if reqs['G'] == 'A' else '^' + reqs['G']
@@ -365,8 +367,9 @@ def curl_termfunc(reqs, cfg):
 
 
 def partial_termfunc(reqs, cfg):
-    xi = Zet(reqs['H']['x'])
-    alpha = alpha_to_group[cfg.zet_comps[reqs['F']]['x']]
+    # xi = Zet(reqs['H']['x'])
+    xi = reqs['H']
+    alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
 
     partial = cfg.zet_comps[reqs['G']]['e']
     _partial = ''.join(SUB_SCRIPTS[b] for b in partial)
