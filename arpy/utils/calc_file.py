@@ -127,7 +127,7 @@ def run_calculation(script, modifier=''):
 
         elif isinstance(l, raw):
             mod = step_modifier if step_modifier else modifier
-            eval('''print('{} = ', {}{}, file=output)'''.format(
+            eval('''print('{} = ', context("{}"){}, file=output)'''.format(
                 l.var, l.var, mod))
 
         elif isinstance(l, context_update):
