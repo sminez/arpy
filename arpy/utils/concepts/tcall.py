@@ -1,12 +1,12 @@
-'''
+"""
 @tcall is a simple tail call optimisation decorator in pure python
 You _will_ loose stack frame information for debugging so be warned!
-'''
+"""
 from functools import wraps
 
 
 def tcall(func):
-    '''
+    """
     Tail call optimise a function. This decorator will run your function
     in a while loop which can also call out to other functions.
     Any function being called in the tail call position _must_ return a
@@ -18,7 +18,7 @@ def tcall(func):
                     function call.
         `kwargs`    is an optional dictionary of keyword arguments for the
                     next function call.
-    '''
+    """
     # stash the original function so we can use it in tail calls
     # NOTE: if the user returns "the original" we are actually getting the
     #       decorated version.
@@ -40,12 +40,12 @@ def tcall(func):
                 return result
 
             # Allow for chained tailcalling functions
-            f = f._original if getattr(f, '_tcalling', None) else f
+            f = f._original if getattr(f, "_tcalling", None) else f
 
             if len(result_or_args) > 2 or len(result_or_args) == 0:
                 raise IndexError(
-                    'tcall functions must return (func, args, kwargs)'
-                    ' or (func, args)')
+                    "tcall functions must return (func, args, kwargs)" " or (func, args)"
+                )
 
             try:
                 args, kwargs = result_or_args

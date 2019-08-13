@@ -1,4 +1,4 @@
-'''
+"""
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
@@ -12,7 +12,7 @@ possibility that there may be a XiProduct with nested partials inside.
 TODO:
     Second Derivatives
     Product and derivatives (F dF etc)
-'''
+"""
 from itertools import groupby
 
 from ..algebra.ar_types import Xi, Pair, Alpha
@@ -25,12 +25,12 @@ class FailedMatch(Exception):
 
 
 def alpha_to_group(index):
-    '''Group `e` elements separately from 3Vecs'''
+    """Group `e` elements separately from 3Vecs"""
     # Check first index of to determine 01/10
-    E_key = '0i' if cfg._E[0][0] == '0' else 'i0'
-    groups = {'B': 'jk', 'T': '0jk', 'A': 'i', 'E': E_key}
+    E_key = "0i" if cfg._E[0][0] == "0" else "i0"
+    groups = {"B": "jk", "T": "0jk", "A": "i", "E": E_key}
 
-    if Nat(index) == 'e':
+    if Nat(index) == "e":
         return index
 
     return groups[Zet(index)]
@@ -38,15 +38,15 @@ def alpha_to_group(index):
 
 class Term:
     def __init__(self, sign, alpha, partials, xis):
-        '''
+        """
         sign :    + -
         alpha:    [exyz][group]    (group is a capital letter)
         partials: list of strings
         xis:      list of strings
-        '''
+        """
         self.sign = sign
         self.alpha_exyz = alpha[0]
-        self.alpha_group = '_' if len(alpha) == 1 else alpha[1]
+        self.alpha_group = "_" if len(alpha) == 1 else alpha[1]
         self.partials = None if partials is None else tuple(partials)
         self.xis = None if xis is None else tuple(xis)
 
@@ -65,16 +65,16 @@ class Template:
         self.can_match = can_match
 
     def replace(self, terms, cfg):
-        '''Use a template to replace terms in a multivector'''
+        """Use a template to replace terms in a multivector"""
         self.match_map = {t: [] for t in self.terms}
         self.non_matching = []
         self.bind(terms)
         return self.validate_and_substitute(cfg)
 
     def match(self, value):
-        '''
+        """
         Check to see if a given value matches on of the template terms.
-        '''
+        """
         for term in self.terms:
             # Check that we correctly have either a Xi or a
             # XiProduct with the correct number of components
@@ -91,22 +91,21 @@ class Template:
                     pairs = zip(term.xis, value.xi.components)
 
                 # Confirm that exyz-ness is correct
-                ok = (Nat(have.val) == want[0]
-                      for want, have in pairs if want[0] in 'exyz')
+                ok = (Nat(have.val) == want[0] for want, have in pairs if want[0] in "exyz")
                 if not all(ok):
                     continue
 
             # Check that we have the correct kind of alpha
-            if term.alpha_exyz != "_" and term.alpha_exyz in 'exyz':
+            if term.alpha_exyz != "_" and term.alpha_exyz in "exyz":
                 if Nat(value.alpha) != term.alpha_exyz:
                     continue
 
             # Check partials (Xi partials are Alpha objects)
             if term.partials not in [tuple("_"), None]:
                 if len(value.xi.partials) == len(term.partials):
-                    ok = (Nat(have) == want[0]
-                          for want, have
-                          in zip(term.partials, value.xi.partials))
+                    ok = (
+                        Nat(have) == want[0] for want, have in zip(term.partials, value.xi.partials)
+                    )
                     if not all(ok):
                         continue
                 else:
@@ -116,9 +115,9 @@ class Template:
         return None
 
     def bind(self, values):
-        '''
+        """
         Bind input terms to the individual term templates provided.
-        '''
+        """
         for v in values:
             try:
                 matching_template = self.match(v)
@@ -131,11 +130,11 @@ class Template:
                 self.non_matching.append(v)
 
     def validate_and_substitute(self, cfg):
-        '''
+        """
         Check that we a consistent matches for the terms in the template. For
         any complete match that we are able to build, remove the matching terms
         and substitute the replacement.
-        '''
+        """
         output = self.non_matching
 
         # If there is only one term in the pattern then we are done. Just
@@ -154,7 +153,8 @@ class Template:
             # Get the initial requirements for this match
             try:
                 requirements = self.update_match_or_fail(
-                    self.terms[0], t1_candidate, {'+_sign': None})
+                    self.terms[0], t1_candidate, {"+_sign": None}
+                )
             except FailedMatch:
                 continue
 
@@ -164,8 +164,7 @@ class Template:
                 match = None
                 for candidate in self.match_map.get(term, []):
                     try:
-                        new_requirements = self.update_match_or_fail(
-                            term, candidate, requirements)
+                        new_requirements = self.update_match_or_fail(term, candidate, requirements)
                         # We need to do this so we don't accidentally mutate
                         # the requirements as part of a failed match.
                         requirements = new_requirements
@@ -207,12 +206,13 @@ class Template:
         return output
 
     def update_match_or_fail(self, term, candidate, reqs):
-        '''
+        """
         Given a term and the current requirements, check to see if we
         can continue. Returns the new requirements.
 
         NOTE: here, a candiate is a pair.
-        '''
+        """
+
         def check_group(want, have, reqs):
             required_group = reqs.get(want)
             a_group = Zet(have)
@@ -222,17 +222,17 @@ class Template:
             else:
                 if required_group != a_group:
                     raise FailedMatch(
-                        '{} != {} ({} {})'.format(
-                            want, have, required_group, a_group))
+                        "{} != {} ({} {})".format(want, have, required_group, a_group)
+                    )
 
             return reqs
 
         # It's ok for terms to be negated so long as _all_ terms are
-        sign = reqs['+_sign']
-        tsign = 1 if term.sign == '+' else -1
+        sign = reqs["+_sign"]
+        tsign = 1 if term.sign == "+" else -1
 
         if sign is None:
-            reqs['+_sign'] = 1 if tsign == candidate.xi.sign else -1
+            reqs["+_sign"] = 1 if tsign == candidate.xi.sign else -1
         else:
             if (tsign * sign) != candidate.xi.sign:
                 raise FailedMatch
@@ -242,11 +242,11 @@ class Template:
         # of partials and xi components and that the sign is correct.
         # All we need to do now is confirm that the match groups (capital
         # letters in the patterns) are consistent.
-        if term.alpha_group is not '_':
+        if term.alpha_group is not "_":
             reqs = check_group(term.alpha_group, candidate.alpha.index, reqs)
 
-        if term.alpha_exyz is not '_':
-            if term.alpha_exyz not in 'exyz':
+        if term.alpha_exyz is not "_":
+            if term.alpha_exyz not in "exyz":
                 required = reqs.get(term.alpha_exyz)
                 if required is None:
                     reqs[term.alpha_exyz] = candidate.alpha.index
@@ -273,9 +273,9 @@ class Template:
         return reqs
 
     def generate_replacement(self, requirements, cfg):
-        '''
+        """
         Given the assembled requirements, build the replacement term.
-        '''
+        """
         for r in self.replacements:
             unallowed_bindings = [requirements[r] for r in r.unallowed]
             if len(set(unallowed_bindings)) != len(unallowed_bindings):
@@ -290,10 +290,10 @@ class Template:
 
 
 def cancel_like_terms(terms, cfg=None):
-    '''
+    """
     For each alpha in the multivector, cancel terms that match their
     negative and return a new multivector of the remaining terms.
-    '''
+    """
     filtered_pairs = []
     for g in groupby(terms, lambda p: p.alpha):
         alpha, pairs = g
@@ -325,115 +325,119 @@ def cancel_like_terms(terms, cfg=None):
 # Termfuncs need to take a requirements dict and a config, and return
 # a new pair based on the requirements.
 def grad_termfunc(reqs, cfg):
-    xi = ''.join(SUB_SCRIPTS[x] for x in reqs['k'])
-    tex_xi = reqs['k']
-    alpha = alpha_to_group(cfg.zet_comps[reqs['G']]['x'])
+    xi = "".join(SUB_SCRIPTS[x] for x in reqs["k"])
+    tex_xi = reqs["k"]
+    alpha = alpha_to_group(cfg.zet_comps[reqs["G"]]["x"])
 
-    tex_zet = '' if reqs['H'] == 'A' else '^' + reqs['H']
-    _zet = '' if reqs['H'] == 'A' else SUPER_SCRIPTS[reqs['H']]
+    tex_zet = "" if reqs["H"] == "A" else "^" + reqs["H"]
+    _zet = "" if reqs["H"] == "A" else SUPER_SCRIPTS[reqs["H"]]
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∇{}Ξ{}'.format(_zet, xi),
-           tex='\\nabla' + tex_zet + '\\Xi_{' + tex_xi + '}'),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("∇{}Ξ{}".format(_zet, xi), tex="\\nabla" + tex_zet + "\\Xi_{" + tex_xi + "}"),
+        cfg=cfg,
+    )
 
 
 def div_termfunc(reqs, cfg):
     # xi = Zet(reqs['H']['x'])
-    xi = reqs['H']
-    alpha = cfg.zet_comps[reqs['F']]['e']
+    xi = reqs["H"]
+    alpha = cfg.zet_comps[reqs["F"]]["e"]
 
-    tex_zet = '' if reqs['G'] == 'A' else '^' + reqs['G']
-    _zet = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
+    tex_zet = "" if reqs["G"] == "A" else "^" + reqs["G"]
+    _zet = "" if reqs["G"] == "A" else SUPER_SCRIPTS[reqs["G"]]
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∇{}•{}'.format(_zet, xi),
-           tex='\\nabla{}\\cdot {}'.format(tex_zet, xi)),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("∇{}•{}".format(_zet, xi), tex="\\nabla{}\\cdot {}".format(tex_zet, xi)),
+        cfg=cfg,
+    )
 
 
 def curl_termfunc(reqs, cfg):
     # xi = Zet(reqs['H']['x'])
-    xi = reqs['H']
-    alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
+    xi = reqs["H"]
+    alpha = alpha_to_group(cfg.zet_comps[reqs["F"]]["x"])
 
-    tex_zet = '' if reqs['G'] == 'A' else '^' + reqs['G']
-    _zet = '' if reqs['G'] == 'A' else SUPER_SCRIPTS[reqs['G']]
+    tex_zet = "" if reqs["G"] == "A" else "^" + reqs["G"]
+    _zet = "" if reqs["G"] == "A" else SUPER_SCRIPTS[reqs["G"]]
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∇{}x{}'.format(_zet, xi),
-           tex='\\nabla{}\\times {}'.format(tex_zet, xi)),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("∇{}x{}".format(_zet, xi), tex="\\nabla{}\\times {}".format(tex_zet, xi)),
+        cfg=cfg,
+    )
 
 
 def partial_termfunc(reqs, cfg):
     # xi = Zet(reqs['H']['x'])
-    xi = reqs['H']
-    alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
+    xi = reqs["H"]
+    alpha = alpha_to_group(cfg.zet_comps[reqs["F"]]["x"])
 
-    partial = cfg.zet_comps[reqs['G']]['e']
-    _partial = ''.join(SUB_SCRIPTS[b] for b in partial)
+    partial = cfg.zet_comps[reqs["G"]]["e"]
+    _partial = "".join(SUB_SCRIPTS[b] for b in partial)
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('∂{}{}'.format(_partial, xi),
-           tex='\\partial_{}{}'.format(partial, xi)),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("∂{}{}".format(_partial, xi), tex="\\partial_{}{}".format(partial, xi)),
+        cfg=cfg,
+    )
 
 
 def dot_termfunc(reqs, cfg):
-    alpha = cfg.zet_comps[reqs['F']]['e']
+    alpha = cfg.zet_comps[reqs["F"]]["e"]
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('{}•{}'.format(reqs['G'], reqs['H']),
-           tex='{}\\cdot {}'.format(reqs['G'], reqs['H'])),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("{}•{}".format(reqs["G"], reqs["H"]), tex="{}\\cdot {}".format(reqs["G"], reqs["H"])),
+        cfg=cfg,
+    )
 
 
 def wedge_termfunc(reqs, cfg):
-    alpha = alpha_to_group(cfg.zet_comps[reqs['F']]['x'])
+    alpha = alpha_to_group(cfg.zet_comps[reqs["F"]]["x"])
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('{}Λ{}'.format(reqs['G'], reqs['H']),
-           tex='{}\\Lambda {}'.format(reqs['G'], reqs['H'])),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("{}Λ{}".format(reqs["G"], reqs["H"]), tex="{}\\Lambda {}".format(reqs["G"], reqs["H"])),
+        cfg=cfg,
+    )
 
 
 def blade_3vec_termfunc(reqs, cfg):
-    b_map = {frozenset('p'): 'p', frozenset('0123'): 'q',
-             frozenset('0'): 't', frozenset('123'): 'h'}
+    b_map = {
+        frozenset("p"): "p",
+        frozenset("0123"): "q",
+        frozenset("0"): "t",
+        frozenset("123"): "h",
+    }
 
-    blade = b_map[frozenset(cfg.zet_comps[reqs['G']]['e'])]
-    alpha = cfg.zet_comps[reqs['F']]['x']
+    blade = b_map[frozenset(cfg.zet_comps[reqs["G"]]["e"])]
+    alpha = cfg.zet_comps[reqs["F"]]["x"]
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('{}{}'.format(blade, reqs['H']),
-           tex='{}{}'.format(blade, reqs['H'])),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("{}{}".format(blade, reqs["H"]), tex="{}{}".format(blade, reqs["H"])),
+        cfg=cfg,
+    )
 
 
 def whole_3vec_termfunc(reqs, cfg):
     return Pair(
-        Alpha(reqs['k'], reqs['+_sign'], cfg=cfg),
-        Xi('{}'.format(reqs['G']),
-           tex='{}'.format(reqs['G'])),
-        cfg=cfg)
+        Alpha(reqs["k"], reqs["+_sign"], cfg=cfg),
+        Xi("{}".format(reqs["G"]), tex="{}".format(reqs["G"])),
+        cfg=cfg,
+    )
 
 
 def whole_3vec_squared_termfunc(reqs, cfg):
     return Pair(
-        Alpha(reqs['k'], reqs['+_sign'], cfg=cfg),
-        Xi('{}²'.format(reqs['G']),
-           tex='{}^2'.format(reqs['G'])),
-        cfg=cfg)
+        Alpha(reqs["k"], reqs["+_sign"], cfg=cfg),
+        Xi("{}²".format(reqs["G"]), tex="{}^2".format(reqs["G"])),
+        cfg=cfg,
+    )
 
 
 def dot_square_termfunc(reqs, cfg):
-    alpha = cfg.zet_comps[reqs['F']]['e']
+    alpha = cfg.zet_comps[reqs["F"]]["e"]
     return Pair(
-        Alpha(alpha, reqs['+_sign'], cfg=cfg),
-        Xi('{}²'.format(reqs['G']),
-           tex='{}^2'.format(reqs['G'])),
-        cfg=cfg)
+        Alpha(alpha, reqs["+_sign"], cfg=cfg),
+        Xi("{}²".format(reqs["G"]), tex="{}^2".format(reqs["G"])),
+        cfg=cfg,
+    )
 
 
 # Terms are specified according to their component parts.
@@ -446,109 +450,112 @@ def dot_square_termfunc(reqs, cfg):
 #         replacements are the unallowed and required group matches.
 grad_template = Template(
     terms=[
-        Term('+', 'xG', ('xH',), ('k',)),
-        Term('+', 'yG', ('yH',), ('k',)),
-        Term('+', 'zG', ('zH',), ('k',))
+        Term("+", "xG", ("xH",), ("k",)),
+        Term("+", "yG", ("yH",), ("k",)),
+        Term("+", "zG", ("zH",), ("k",)),
     ],
-    replacements=[Replacement(set(), set(), grad_termfunc)]
+    replacements=[Replacement(set(), set(), grad_termfunc)],
 )
 
 div_template = Template(
     terms=[
-        Term('+', 'eF', ('xG',), ('xH',)),
-        Term('+', 'eF', ('yG',), ('yH',)),
-        Term('+', 'eF', ('zG',), ('zH',))
+        Term("+", "eF", ("xG",), ("xH",)),
+        Term("+", "eF", ("yG",), ("yH",)),
+        Term("+", "eF", ("zG",), ("zH",)),
     ],
-    replacements=[Replacement(set(), set(), div_termfunc)]
+    replacements=[Replacement(set(), set(), div_termfunc)],
 )
 
 curl_template = Template(
     terms=[
-        Term('+', 'xF', ('yG',), ('zH',)),
-        Term('-', 'xF', ('zG',), ('yH',)),
-        Term('+', 'yF', ('zG',), ('xH',)),
-        Term('-', 'yF', ('xG',), ('zH',)),
-        Term('+', 'zF', ('xG',), ('yH',)),
-        Term('-', 'zF', ('yG',), ('xH',))
+        Term("+", "xF", ("yG",), ("zH",)),
+        Term("-", "xF", ("zG",), ("yH",)),
+        Term("+", "yF", ("zG",), ("xH",)),
+        Term("-", "yF", ("xG",), ("zH",)),
+        Term("+", "zF", ("xG",), ("yH",)),
+        Term("-", "zF", ("yG",), ("xH",)),
     ],
-    replacements=[Replacement(set(), set(), curl_termfunc)]
+    replacements=[Replacement(set(), set(), curl_termfunc)],
 )
 
 partial_template = Template(
     terms=[
-        Term('+', 'xF', ('eG',), ('xH',)),
-        Term('+', 'yF', ('eG',), ('yH',)),
-        Term('+', 'zF', ('eG',), ('zH',))
+        Term("+", "xF", ("eG",), ("xH",)),
+        Term("+", "yF", ("eG",), ("yH",)),
+        Term("+", "zF", ("eG",), ("zH",)),
     ],
-    replacements=[Replacement(set(), set(), partial_termfunc)]
+    replacements=[Replacement(set(), set(), partial_termfunc)],
 )
 
 dot_template = Template(
     terms=[
-        Term('+', 'eF', tuple(), ('xG', 'xH')),
-        Term('+', 'eF', tuple(), ('yG', 'yH')),
-        Term('+', 'eF', tuple(), ('zG', 'zH'))
+        Term("+", "eF", tuple(), ("xG", "xH")),
+        Term("+", "eF", tuple(), ("yG", "yH")),
+        Term("+", "eF", tuple(), ("zG", "zH")),
     ],
-    replacements=[Replacement(set(), set({'G', 'H'}), dot_square_termfunc),
-                  Replacement(set(), set(), dot_termfunc)]
+    replacements=[
+        Replacement(set(), set({"G", "H"}), dot_square_termfunc),
+        Replacement(set(), set(), dot_termfunc),
+    ],
 )
 
 wedge_template = Template(
     terms=[
-        Term('+', 'xF', tuple(), ('yG', 'zH')),
-        Term('-', 'xF', tuple(), ('zG', 'yH')),
-        Term('+', 'yF', tuple(), ('zG', 'xH')),
-        Term('-', 'yF', tuple(), ('xG', 'zH')),
-        Term('+', 'zF', tuple(), ('xG', 'yH')),
-        Term('-', 'zF', tuple(), ('yG', 'xH'))
+        Term("+", "xF", tuple(), ("yG", "zH")),
+        Term("-", "xF", tuple(), ("zG", "yH")),
+        Term("+", "yF", tuple(), ("zG", "xH")),
+        Term("-", "yF", tuple(), ("xG", "zH")),
+        Term("+", "zF", tuple(), ("xG", "yH")),
+        Term("-", "zF", tuple(), ("yG", "xH")),
     ],
-    replacements=[Replacement(set(), set(), wedge_termfunc)]
+    replacements=[Replacement(set(), set(), wedge_termfunc)],
 )
 
 blade_3vec_template = Template(
     terms=[
-        Term('+', 'xF', tuple(), ('eG', 'xH')),
-        Term('+', 'yF', tuple(), ('eG', 'yH')),
-        Term('+', 'zF', tuple(), ('eG', 'zH'))
+        Term("+", "xF", tuple(), ("eG", "xH")),
+        Term("+", "yF", tuple(), ("eG", "yH")),
+        Term("+", "zF", tuple(), ("eG", "zH")),
     ],
-    replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
+    replacements=[Replacement(set(), set(), blade_3vec_termfunc)],
 )
 
 # This is to allow for Sb as well as bS (which is caught by the
 # template above)
 blade_3vec_flipped_template = Template(
     terms=[
-        Term('+', 'xF', tuple(), ('xH', 'eG')),
-        Term('+', 'yF', tuple(), ('yH', 'eG')),
-        Term('+', 'zF', tuple(), ('zH', 'eG'))
+        Term("+", "xF", tuple(), ("xH", "eG")),
+        Term("+", "yF", tuple(), ("yH", "eG")),
+        Term("+", "zF", tuple(), ("zH", "eG")),
     ],
-    replacements=[Replacement(set(), set(), blade_3vec_termfunc)]
+    replacements=[Replacement(set(), set(), blade_3vec_termfunc)],
 )
 
 whole_3vec_template = Template(
     terms=[
-        Term('+', 'k', tuple(), ('xG',)),
-        Term('+', 'k', tuple(), ('yG',)),
-        Term('+', 'k', tuple(), ('zG',))
+        Term("+", "k", tuple(), ("xG",)),
+        Term("+", "k", tuple(), ("yG",)),
+        Term("+", "k", tuple(), ("zG",)),
     ],
-    replacements=[Replacement(set(), set(), whole_3vec_termfunc)]
+    replacements=[Replacement(set(), set(), whole_3vec_termfunc)],
 )
 
 whole_3vec_squared_template = Template(
     terms=[
-        Term('+', 'k', tuple(), ('xG', 'xG')),
-        Term('+', 'k', tuple(), ('yG', 'yG')),
-        Term('+', 'k', tuple(), ('zG', 'zG'))
+        Term("+", "k", tuple(), ("xG", "xG")),
+        Term("+", "k", tuple(), ("yG", "yG")),
+        Term("+", "k", tuple(), ("zG", "zG")),
     ],
-    replacements=[Replacement(set(), set(), whole_3vec_squared_termfunc)]
+    replacements=[Replacement(set(), set(), whole_3vec_squared_termfunc)],
 )
 
 
 def chain_reducers(reducers):
-    '''
+    """
     Chain together multiple reductions and return the list of terms produced
     by running them sequentially over the input terms.
-    '''
+    """
+
     def _chained(terms, cfg):
         for reducer in reducers:
             if callable(reducer):
@@ -564,15 +571,23 @@ def chain_reducers(reducers):
 
 
 # Run all default reductions on a MultiVector
-replace_all = chain_reducers([
-    cancel_like_terms, partial_template, grad_template, div_template,
-    curl_template, blade_3vec_template, blade_3vec_flipped_template,
-    dot_template, wedge_template, whole_3vec_squared_template,
-    whole_3vec_template
-])
+replace_all = chain_reducers(
+    [
+        cancel_like_terms,
+        partial_template,
+        grad_template,
+        div_template,
+        curl_template,
+        blade_3vec_template,
+        blade_3vec_flipped_template,
+        dot_template,
+        wedge_template,
+        whole_3vec_squared_template,
+        whole_3vec_template,
+    ]
+)
 
 # Just run del grouping
-del_grouped = chain_reducers([
-    cancel_like_terms, partial_template, grad_template,
-    div_template, curl_template
-])
+del_grouped = chain_reducers(
+    [cancel_like_terms, partial_template, grad_template, div_template, curl_template]
+)

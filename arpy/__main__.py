@@ -1,4 +1,4 @@
-'''
+"""
 Attempt at making this work:
 
     $ python3 -m arpy <calculation_file> [--vector --simplify --latex]
@@ -6,17 +6,17 @@ Attempt at making this work:
 The file is fed through and ARContext with some aditional pre-parsing in
 order to deal with assignment and paramater setting. All Variables are printed
 when at the head of the output and calculations are labelled.
-'''
+"""
 import argparse
 from .utils.calc_file import run_calculation
 
 
-description = '''\
+description = """\
 .: arpy :: Absolute Relativity and the Algebra of Reality :.
 ------------------------------------------------------------
-'''
+"""
 
-epilog = '''\
+epilog = """\
 ------------------------------------------------------------------------------
 
 This is the command line interface for arpy. Input should be provided in the
@@ -43,20 +43,15 @@ permitted values are "ALLOWED" and "METRIC" as in the example.
 Lines begining "#" are calculation comments and will be printed as given.
 
 Assigning a result to a name will compute a result and display it.
-'''
+"""
 
 
 parser = argparse.ArgumentParser(
-    description=description,
-    epilog=epilog,
-    formatter_class=argparse.RawDescriptionHelpFormatter
+    description=description, epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter
 )
 
 parser.add_argument(
-    '-v',
-    '--vector',
-    action='store_true',
-    help='display the result in vector calculus notation'
+    "-v", "--vector", action="store_true", help="display the result in vector calculus notation"
 )
 # parser.add_argument(
 #     '-s',
@@ -65,26 +60,23 @@ parser.add_argument(
 #     help='simplify results before printing'
 # )
 parser.add_argument(
-    '-l',
-    '--latex',
-    action='store_true',
-    help='print results as LaTex instead of unicode'
+    "-l", "--latex", action="store_true", help="print results as LaTex instead of unicode"
 )
-parser.add_argument('script')
+parser.add_argument("script")
 args = parser.parse_args()
 
 # Read in the contents of the script
-with open(args.script, 'r') as f:
-    script = [s.strip() for s in f.readlines() if s != '\n']
+with open(args.script, "r") as f:
+    script = [s.strip() for s in f.readlines() if s != "\n"]
 
-modifier = ''
+modifier = ""
 
 if args.vector:
-    modifier = '.v'
+    modifier = ".v"
 
 if args.latex:
-    modifier += '.__tex__()'
+    modifier += ".__tex__()"
 
 
 output = run_calculation(script, modifier)
-print('\n'.join(output))
+print("\n".join(output))

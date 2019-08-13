@@ -1,4 +1,4 @@
-'''
+"""
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
@@ -12,7 +12,7 @@ All other differential operators follow the same restrictions of
 Absolute Relativity and should only operate on MultiVectors.
 
 NOTE:: Specific operators (such as Dmu) are defined in the __init__ file.
-'''
+"""
 from copy import deepcopy
 from .config import config as cfg
 from ..utils.utils import SUB_SCRIPTS
@@ -22,7 +22,8 @@ from .operations import div_by, div_into, inverse, full
 
 
 class AR_differential:
-    '''Differential operator: can be used inside of ar()'''
+    """Differential operator: can be used inside of ar()"""
+
     def __init__(self, wrt, cfg=cfg):
         if isinstance(wrt, MultiVector):
             self.wrt = [pair.alpha for pair in wrt]
@@ -35,19 +36,20 @@ class AR_differential:
                 self.wrt = [Alpha(comp, cfg=cfg) for comp in wrt]
             else:
                 raise ValueError(
-                    'Differential operators must be initialised with either'
-                    ' a MultiVector, list or string of alpha indices')
+                    "Differential operators must be initialised with either"
+                    " a MultiVector, list or string of alpha indices"
+                )
 
         self.cfg = cfg
 
-        alphas = ', '.join([str(a) for a in self.wrt])
-        self.__doc__ = 'Differnetiate with respect to: {}'.format(alphas)
+        alphas = ", ".join([str(a) for a in self.wrt])
+        self.__doc__ = "Differnetiate with respect to: {}".format(alphas)
 
     def __call__(self, mvec, cfg=None, div=None, as_del=False):
-        '''
+        """
         Compute the result of Differentiating a each component of a MultiVector
         with respect to a given list of unit elements under the algebra.
-        '''
+        """
         comps = []
         if cfg is None:
             cfg = self.cfg
@@ -66,44 +68,38 @@ class AR_differential:
 
     def __repr__(self):
         elements = [
-            '{}∂{}'.format(
-                str(inverse(a, cfg=self.cfg)),
-                ''.join(SUB_SCRIPTS[i] for i in a.index)
-            )
+            "{}∂{}".format(str(inverse(a, cfg=self.cfg)), "".join(SUB_SCRIPTS[i] for i in a.index))
             for a in self.wrt
         ]
-        return '{ ' + ' '.join(elements) + ' }'
+        return "{ " + " ".join(elements) + " }"
 
     def __tex__(self):
         elements = []
         for a in self.wrt:
             inv = inverse(a, cfg=self.cfg)
-            sign = '' if inv.sign == 1 else '-'
+            sign = "" if inv.sign == 1 else "-"
 
-            elements.append(
-                '%s\\alpha_{%s}\\partial_{%s}' % (sign, a.index, a.index)
-            )
+            elements.append("%s\\alpha_{%s}\\partial_{%s}" % (sign, a.index, a.index))
 
-        return r'\{ ' + ' '.join(elements) + r' \}'
+        return r"\{ " + " ".join(elements) + r" \}"
 
 
 def _div(alpha, wrt, cfg, div=None):
-    '''Divide an alpha component based on the set division type'''
+    """Divide an alpha component based on the set division type"""
     div = div if div else cfg.division_type
-    if div == 'by':
+    if div == "by":
         return div_by(alpha, wrt, cfg)
-    elif div == 'into':
+    elif div == "into":
         return div_into(wrt, alpha, cfg)
     else:
-        raise ValueError(
-            'Invalid division specification: {}'.format(cfg.division_type))
+        raise ValueError("Invalid division specification: {}".format(cfg.division_type))
 
 
 def component_partial(component, wrt, cfg, div):
-    '''
+    """
     Symbolically differentiate a component by storing the partials and
     converting the alpha value using the correct division type.
-    '''
+    """
     # NOTE:: using deep copy so that all of the objects inside of the
     #        component get copied as well.
     new_component = deepcopy(component)
@@ -113,7 +109,7 @@ def component_partial(component, wrt, cfg, div):
 
 
 def differential_operator(wrt, cfg=cfg):
-    '''Define a new operator as a function for later use'''
+    """Define a new operator as a function for later use"""
     return AR_differential(wrt, cfg=cfg)
 
 
@@ -125,5 +121,5 @@ def _full_differential_mvec(diff, mvec, cfg=cfg):
 
 @full.add((MultiVector, AR_differential))
 def _full_mvec_differential_mvec(mvec, diff, cfg=cfg):
-    res = diff(mvec, cfg=cfg, div='by')
+    res = diff(mvec, cfg=cfg, div="by")
     return res

@@ -1,51 +1,51 @@
-'''
+"""
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
-'''
+"""
 from copy import deepcopy
 from .config import config as cfg
 from ..utils.utils import SUB_SCRIPTS, Nat
 
 
 class Alpha:
-    '''Unit elements in the algebra'''
-    __slots__ = ('allowed', 'allowed_groups', 'index', 'sign')
+    """Unit elements in the algebra"""
+
+    __slots__ = ("allowed", "allowed_groups", "index", "sign")
 
     def __init__(self, index, sign=None, cfg=cfg):
-        '''
+        """
         Handle multiple constructor methods for αs
-        '''
+        """
         self.allowed = cfg.allowed
         self.allowed_groups = cfg.allowed_groups
 
         if sign is None:
-            if index.startswith('-'):
+            if index.startswith("-"):
                 index, sign = index[1:], -1
             else:
                 sign = 1
 
         if index not in cfg.allowed and index not in cfg.allowed_groups:
-            raise ValueError('Invalid α index: {}'.format(index))
+            raise ValueError("Invalid α index: {}".format(index))
 
         if sign not in [1, -1]:
-            raise ValueError('Invalid α sign: {}'.format(sign))
+            raise ValueError("Invalid α sign: {}".format(sign))
 
         self.index = index
         self.sign = sign
 
     def __repr__(self):
-        neg = '-' if self.sign == -1 else ''
+        neg = "-" if self.sign == -1 else ""
         # return '{}α{}'.format(neg, self.index)
         # Below will use unicode subscript output but it's hard to read :(
         try:
-            return '{}α{}'.format(
-                neg, ''.join(SUB_SCRIPTS[i] for i in self.index))
+            return "{}α{}".format(neg, "".join(SUB_SCRIPTS[i] for i in self.index))
         except:
-            return '{}α{}'.format(neg, self.index)
+            return "{}α{}".format(neg, self.index)
 
     def __tex__(self):
-        neg = '-' if self.sign == -1 else ''
-        return neg + '\\alpha_{' + self.index + '}'
+        neg = "-" if self.sign == -1 else ""
+        return neg + "\\alpha_{" + self.index + "}"
 
     def __eq__(self, other):
         if not isinstance(other, Alpha):
@@ -65,14 +65,15 @@ class Alpha:
 
 
 class Xi:
-    '''A symbolic Real value'''
-    __slots__ = ('partials', 'val', 'sign', '_tex_val')
+    """A symbolic Real value"""
+
+    __slots__ = ("partials", "val", "sign", "_tex_val")
 
     def __init__(self, val, partials=None, sign=1, tex=None):
         if isinstance(val, Alpha):
             val = val.index
 
-        if isinstance(val, str) and val.startswith('-'):
+        if isinstance(val, str) and val.startswith("-"):
             self.sign = sign * -1
             self.val = val[1:]
         else:
@@ -93,9 +94,11 @@ class Xi:
         if not isinstance(other, Xi):
             return False
 
-        return (self.val == other.val) and \
-               (self.partials == other.partials) and \
-               (self.sign == other.sign)
+        return (
+            (self.val == other.val)
+            and (self.partials == other.partials)
+            and (self.sign == other.sign)
+        )
 
     def __lt__(self, other):
         try:
@@ -109,42 +112,40 @@ class Xi:
         return neg
 
     def __repr__(self):
-        sign = '' if self.sign == 1 else '-'
+        sign = "" if self.sign == 1 else "-"
         partials = (
-            '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
-            for p in reversed(self.partials)
+            "∂{}".format("".join(SUB_SCRIPTS[i] for i in p.index)) for p in reversed(self.partials)
         )
         try:
-            display_val = ''.join(SUB_SCRIPTS[i] for i in self.val)
-            return '{}{}ξ{}'.format(sign, ''.join(partials), display_val)
+            display_val = "".join(SUB_SCRIPTS[i] for i in self.val)
+            return "{}{}ξ{}".format(sign, "".join(partials), display_val)
         except KeyError:
             # vector notation or non-standard Xi
-            return '{}{}{}'.format(sign, ''.join(partials), self.val)
+            return "{}{}{}".format(sign, "".join(partials), self.val)
 
     def __tex__(self):
-        sign = '+' if self.sign == 1 else '-'
-        partials = ''.join(
-            '\\partial_{' + p.index + '}' for p in reversed(self.partials)
-        )
+        sign = "+" if self.sign == 1 else "-"
+        partials = "".join("\\partial_{" + p.index + "}" for p in reversed(self.partials))
         if self._tex_val is not None:
             return sign + partials + self._tex_val
         elif self.val in cfg.allowed + cfg.allowed_groups:
-            return sign + partials + '\\xi_{' + self.val + '}'
+            return sign + partials + "\\xi_{" + self.val + "}"
         else:
             return sign + partials + self.val
 
     def exyz(self):
-        '''Return a string representing only {e,x,y,z} information'''
-        sign = '+' if self.sign == 1 else '-'
+        """Return a string representing only {e,x,y,z} information"""
+        sign = "+" if self.sign == 1 else "-"
         partials = [Nat(p) for p in self.partials]
-        partial_str = ''.join(['∂{}'.format(p) for p in reversed(partials)])
+        partial_str = "".join(["∂{}".format(p) for p in reversed(partials)])
         val = Nat(self.val)
-        return sign + partial_str + '[' + val + ']'
+        return sign + partial_str + "[" + val + "]"
 
 
 class XiProduct:
-    '''Symbolic Xi valued products with a single sign'''
-    __slots__ = ('partials', 'components', 'sign')
+    """Symbolic Xi valued products with a single sign"""
+
+    __slots__ = ("partials", "components", "sign")
 
     def __init__(self, components):
         self.sign = 1
@@ -168,7 +169,7 @@ class XiProduct:
         if not isinstance(other, XiProduct):
             return False
 
-        same_sign = (self.sign == other.sign)
+        same_sign = self.sign == other.sign
         same_partials = self.partials == other.partials
         self_comps = [c for c in deepcopy(self.components)]
         for c in self_comps:
@@ -176,7 +177,7 @@ class XiProduct:
         other_comps = [c for c in deepcopy(other.components)]
         for c in other_comps:
             c.sign = 1
-        same_components = (set(self_comps) == set(other_comps))
+        same_components = set(self_comps) == set(other_comps)
         return same_sign and same_partials and same_components
 
     def __neg__(self):
@@ -185,48 +186,46 @@ class XiProduct:
         return neg
 
     def __repr__(self):
-        superscripts = dict(zip('0123456789', '⁰¹²³⁴⁵⁶⁷⁸⁹'))
+        superscripts = dict(zip("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"))
         partials = (
-            '∂{}'.format(''.join(SUB_SCRIPTS[i] for i in p.index))
-            for p in reversed(self.partials)
+            "∂{}".format("".join(SUB_SCRIPTS[i] for i in p.index)) for p in reversed(self.partials)
         )
         # Allow nicer formatting for powers
         comps = [str(c) for c in self.components]
-        comps = [c[1:] if c[0] == '-' else c for c in comps]
+        comps = [c[1:] if c[0] == "-" else c for c in comps]
 
         if all((c == comps[0] for c in comps)):
             power = str(len(comps))
-            power = ''.join(superscripts[c] for c in power)
-            comps = '{}{}'.format(comps[0], power)
+            power = "".join(superscripts[c] for c in power)
+            comps = "{}{}".format(comps[0], power)
         else:
-            comps = '.'.join(comps)
+            comps = ".".join(comps)
 
-        sign = '' if self.sign == 1 else '-'
-        return sign + ''.join(partials) + comps
+        sign = "" if self.sign == 1 else "-"
+        return sign + "".join(partials) + comps
 
     def __tex__(self):
-        partials = ''.join(
-            '\\partial{}'.format(p.index) for p in reversed(self.partials)
-        )
+        partials = "".join("\\partial{}".format(p.index) for p in reversed(self.partials))
         comps = [c.__tex__()[1:] for c in self.components]
 
         if all((c == comps[0] for c in comps)):
             power = str(len(comps))
-            comps = '{' + comps[0] + '}^{' + power + '}'
+            comps = "{" + comps[0] + "}^{" + power + "}"
         else:
-            comps = '.'.join(comps)
+            comps = ".".join(comps)
 
-        sign = '+' if self.sign == 1 else '-'
+        sign = "+" if self.sign == 1 else "-"
         return sign + partials + comps
 
 
 class Pair:
-    '''A Pair may be any object along with an Alpha value'''
-    __slots__ = ('alpha', 'xi')
+    """A Pair may be any object along with an Alpha value"""
+
+    __slots__ = ("alpha", "xi")
 
     def __init__(self, a, x=None, cfg=cfg):
         if x is None:
-            if isinstance(a, str) and a.startswith('-'):
+            if isinstance(a, str) and a.startswith("-"):
                 x = Xi(a[1:])
             else:
                 x = Xi(a)
@@ -245,7 +244,7 @@ class Pair:
         return (self.alpha == other.alpha) and (self.xi == other.xi)
 
     def __repr__(self):
-        return '({}, {})'.format(self.alpha, self.xi)
+        return "({}, {})".format(self.alpha, self.xi)
 
     def __hash__(self):
         return hash((self.alpha, self.xi))
@@ -260,11 +259,11 @@ class Pair:
         return neg
 
     def extract_alpha(self):
-        '''
+        """
         Pairs can have sign information on either the Xi or the Alpha
         so we need to combine the information whenever we want to deal with
         the Alpha on its own.
-        '''
+        """
         alpha = deepcopy(self.alpha)
         alpha.sign *= self.xi.sign
         return alpha
