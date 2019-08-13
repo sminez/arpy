@@ -100,7 +100,7 @@ def find_prod(i, j, cfg=cfg):
         components = "".join(c for c in components if c != repeated)
 
     if len(components) == 0:
-        return Alpha(POINT, sign)
+        return Alpha(POINT, sign, cfg=cfg)
 
     target = targets[frozenset(components)]
 
