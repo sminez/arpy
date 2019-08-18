@@ -3,8 +3,9 @@ arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 """
 from copy import deepcopy
-from .config import config as cfg
+
 from ..utils.utils import SUB_SCRIPTS, Nat
+from .config import config as cfg
 
 
 class Alpha:

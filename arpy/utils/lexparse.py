@@ -6,27 +6,27 @@ Lexing and Parsing of a more mathematical syntax for performing calculations
 with the arpy Absolute Relativity library.
 """
 import re
-from operator import add
-from sys import _getframe, stderr
 from collections import namedtuple
 from itertools import permutations
+from operator import add
+from sys import _getframe, stderr
 
-from ..algebra.ar_types import Alpha, Pair
 from ..algebra.config import ARConfig
 from ..algebra.config import config as cfg
-from ..algebra.multivector import MultiVector
-from ..algebra.differential import differential_operator
-from ..algebra.operations import full, div_by, div_into, project, dagger, commutator
-
+from ..algebra.data_types import Alpha, MultiVector, Term
+from ..algebra.differential import AR_differential
+from ..algebra.operations import (commutator, dagger, div_by, div_into, full,
+                                  project)
 
 tags = [
     ("MVEC", r"\{(.*)\}$"),
     ("DIFF", r"<([p0213, -]*)\>"),
     ("ALPHA", r"-?a[0123]{1,4}|-?ap"),
-    ("PAIR", r"-?p[0123]{1,4}"),
+    ("TERM", r"-?p[0123]{1,4}"),
     ("VAR", r"-?[a-zA-Z_][a-zA-Z_0-9]*"),
     ("INDEX", r"[01234]"),
 ]
+
 literals = [
     ("PAREN_OPEN", r"\("),
     ("PAREN_CLOSE", r"\)"),
@@ -82,7 +82,7 @@ class ArpyLexer:
 
             elif lex_tag == "DIFF":
                 alphas = re.split(", |,| ", text.strip())
-                token = Token("EXPR", differential_operator(alphas, cfg=self.cfg))
+                token = Token("EXPR", AR_differential(alphas, cfg=self.cfg))
 
             elif lex_tag == "ALPHA":
                 if text.startswith("-"):
@@ -90,11 +90,11 @@ class ArpyLexer:
                 else:
                     token = Token("EXPR", Alpha(text[1:], cfg=self.cfg))
 
-            elif lex_tag == "PAIR":
+            elif lex_tag == "TERM":
                 if text.startswith("-"):
-                    token = Token("EXPR", Pair(Alpha(text[2:], -1, cfg=self.cfg), cfg=self.cfg))
+                    token = Token("EXPR", Term(Alpha(text[2:], -1, cfg=self.cfg), cfg=self.cfg))
                 else:
-                    token = Token("EXPR", Pair(Alpha(text[1:], cfg=self.cfg), cfg=self.cfg))
+                    token = Token("EXPR", Term(Alpha(text[1:], cfg=self.cfg), cfg=self.cfg))
 
             elif lex_tag == "INDEX":
                 token = Token("INDEX", int(text))
@@ -303,13 +303,13 @@ class ARContext:
             "Fp": MultiVector(["p"] + _B + _E, cfg=self.cfg),
             "zet_F": MultiVector(["p"] + _B + [_q] + _E, cfg=self.cfg),
             # Differentials
-            "Dmu": differential_operator(["0", "1", "2", "3"], cfg=self.cfg),
-            "DG": differential_operator(self.cfg.allowed, cfg=self.cfg),
-            "DF": differential_operator(_B + _E, cfg=self.cfg),
-            "DB": differential_operator(["p"] + _B, cfg=self.cfg),
-            "DT": differential_operator(["0"] + _T, cfg=self.cfg),
-            "DA": differential_operator([_h] + _A, cfg=self.cfg),
-            "DE": differential_operator([_q] + _E, cfg=self.cfg),
+            "Dmu": AR_differential(["0", "1", "2", "3"], cfg=self.cfg),
+            "DG": AR_differential(self.cfg.allowed, cfg=self.cfg),
+            "DF": AR_differential(_B + _E, cfg=self.cfg),
+            "DB": AR_differential(["p"] + _B, cfg=self.cfg),
+            "DT": AR_differential(["0"] + _T, cfg=self.cfg),
+            "DA": AR_differential([_h] + _A, cfg=self.cfg),
+            "DE": AR_differential([_q] + _E, cfg=self.cfg),
         }
 
     @property

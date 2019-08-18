@@ -1,9 +1,3 @@
-"""
-arpy (Absolute Relativity in Python)
-Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
-"""
-
-
 class ARConfig:
     """The arpy paramater configuration object"""
 
@@ -20,16 +14,21 @@ class ARConfig:
         # update_env in the __init__
 
     def __eq__(self, other):
-        if not isinstance(other, ARConfig):
-            return False
-
-        metric = self.metric == other.metric
-        allowed = self.allowed == other.allowed
-        div = self.division_type == other.division_type
-
-        return metric and allowed and div
+        return all(
+            [
+                isinstance(other, ARConfig),
+                self._metric == other._metric,
+                self._allowed == other._allowed,
+                self.division_type == other.division_type,
+            ]
+        )
 
     def __repr__(self):
+        metric = "".join("+" if m == 1 else "-" for m in self.metric)
+        allowed = ",".join(self.allowed)
+        return f"ARConfig({metric}: {allowed})"
+
+    def __details(self):
         metric = "".join("+" if m == 1 else "-" for m in self.metric)
         allowed = "{α" + ", α".join(self.allowed) + "}"
         return (
@@ -95,12 +94,12 @@ class ARConfig:
         NOTE: The ARConfig class is extended to include an `update_env` method
         in the main __init__.py.
         """
-        self._h = [a for a in self.allowed if len(a) == 3 and "0" not in a][0]
-        self._q = [a for a in self.allowed if len(a) == 4][0]
-        self._B = [a for a in self.allowed if len(a) == 2 and "0" not in a]
-        self._T = [a for a in self.allowed if len(a) == 3 and "0" in a]
-        self._A = [a for a in self.allowed if len(a) == 1 and a not in "p0"]
-        self._E = [a for a in self.allowed if len(a) == 2 and "0" in a]
+        self._h = [a for a in self._allowed if len(a) == 3 and "0" not in a][0]
+        self._q = [a for a in self._allowed if len(a) == 4][0]
+        self._B = [a for a in self._allowed if len(a) == 2 and "0" not in a]
+        self._T = [a for a in self._allowed if len(a) == 3 and "0" in a]
+        self._A = [a for a in self._allowed if len(a) == 1 and a not in "p0"]
+        self._E = [a for a in self._allowed if len(a) == 2 and "0" in a]
 
         # Fast lookup of zet components in {e,x,y,z} order
         _dims = "e x y z".split()

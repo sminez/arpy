@@ -5,15 +5,14 @@ Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 Tools for visualising results from calculations and investigations.
 """
 import os
-import time
 import tempfile
+import time
 import webbrowser
 
-from .lexparse import ARContext
+from ..algebra.ar_types import Alpha, Pair
 from ..algebra.config import config
 from ..algebra.operations import full
-from ..algebra.ar_types import Alpha, Pair
-
+from .lexparse import ARContext
 
 # HTML/JS for js_cayley visualisation
 HTML = """\
@@ -198,7 +197,7 @@ def sign_cayley(op=full, cfg=config):
     for i, comp in enumerate(comps):
         comp = "| ".join(comp[n : n + 8] for n in range(0, len(comp), 8))
         print(str(Alpha(cfg.allowed[i], cfg=cfg)).ljust(5), "|", comp, "|")
-        # Divide after each 4-Set
+        # Divide after each zet
         if (i + 1) % 4 == 0:
             print(divider)
 

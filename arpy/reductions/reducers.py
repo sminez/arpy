@@ -1,12 +1,9 @@
 """
-arpy (Absolute Relativity in Python)
-Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
-
 This module provides helper functions for writing reductions on multivectors.
 
 ::NOTE::
 It looks like the issue with parsing Force style equations is that the current
-Term implementation only looks at partials for the full term, not the
+MatchTerm implementation only looks at partials for the full term, not the
 possibility that there may be a XiProduct with nested partials inside.
 
 TODO:
@@ -15,9 +12,9 @@ TODO:
 """
 from itertools import groupby
 
-from ..algebra.ar_types import Xi, Pair, Alpha
 from ..algebra.config import config as cfg
-from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS, Nat, Zet
+from ..algebra.data_types import Alpha, Term, Xi
+from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
 
 
 class FailedMatch(Exception):
@@ -36,7 +33,7 @@ def alpha_to_group(index):
     return groups[Zet(index)]
 
 
-class Term:
+class MatchTerm:
     def __init__(self, sign, alpha, partials, xis):
         """
         sign :    + -
@@ -242,10 +239,10 @@ class Template:
         # of partials and xi components and that the sign is correct.
         # All we need to do now is confirm that the match groups (capital
         # letters in the patterns) are consistent.
-        if term.alpha_group is not "_":
+        if term.alpha_group != "_":
             reqs = check_group(term.alpha_group, candidate.alpha.index, reqs)
 
-        if term.alpha_exyz is not "_":
+        if term.alpha_exyz != "_":
             if term.alpha_exyz not in "exyz":
                 required = reqs.get(term.alpha_exyz)
                 if required is None:
@@ -322,7 +319,7 @@ def cancel_like_terms(terms, cfg=None):
     return filtered_pairs
 
 
-# Termfuncs need to take a requirements dict and a config, and return
+# MatchTermfuncs need to take a requirements dict and a config, and return
 # a new pair based on the requirements.
 def grad_termfunc(reqs, cfg):
     xi = "".join(SUB_SCRIPTS[x] for x in reqs["k"])
@@ -331,7 +328,7 @@ def grad_termfunc(reqs, cfg):
 
     tex_zet = "" if reqs["H"] == "A" else "^" + reqs["H"]
     _zet = "" if reqs["H"] == "A" else SUPER_SCRIPTS[reqs["H"]]
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("∇{}Ξ{}".format(_zet, xi), tex="\\nabla" + tex_zet + "\\Xi_{" + tex_xi + "}"),
         cfg=cfg,
@@ -345,7 +342,7 @@ def div_termfunc(reqs, cfg):
 
     tex_zet = "" if reqs["G"] == "A" else "^" + reqs["G"]
     _zet = "" if reqs["G"] == "A" else SUPER_SCRIPTS[reqs["G"]]
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("∇{}•{}".format(_zet, xi), tex="\\nabla{}\\cdot {}".format(tex_zet, xi)),
         cfg=cfg,
@@ -359,7 +356,7 @@ def curl_termfunc(reqs, cfg):
 
     tex_zet = "" if reqs["G"] == "A" else "^" + reqs["G"]
     _zet = "" if reqs["G"] == "A" else SUPER_SCRIPTS[reqs["G"]]
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("∇{}x{}".format(_zet, xi), tex="\\nabla{}\\times {}".format(tex_zet, xi)),
         cfg=cfg,
@@ -373,7 +370,7 @@ def partial_termfunc(reqs, cfg):
 
     partial = cfg.zet_comps[reqs["G"]]["e"]
     _partial = "".join(SUB_SCRIPTS[b] for b in partial)
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("∂{}{}".format(_partial, xi), tex="\\partial_{}{}".format(partial, xi)),
         cfg=cfg,
@@ -382,7 +379,7 @@ def partial_termfunc(reqs, cfg):
 
 def dot_termfunc(reqs, cfg):
     alpha = cfg.zet_comps[reqs["F"]]["e"]
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("{}•{}".format(reqs["G"], reqs["H"]), tex="{}\\cdot {}".format(reqs["G"], reqs["H"])),
         cfg=cfg,
@@ -391,7 +388,7 @@ def dot_termfunc(reqs, cfg):
 
 def wedge_termfunc(reqs, cfg):
     alpha = alpha_to_group(cfg.zet_comps[reqs["F"]]["x"])
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("{}Λ{}".format(reqs["G"], reqs["H"]), tex="{}\\Lambda {}".format(reqs["G"], reqs["H"])),
         cfg=cfg,
@@ -408,7 +405,7 @@ def blade_3vec_termfunc(reqs, cfg):
 
     blade = b_map[frozenset(cfg.zet_comps[reqs["G"]]["e"])]
     alpha = cfg.zet_comps[reqs["F"]]["x"]
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("{}{}".format(blade, reqs["H"]), tex="{}{}".format(blade, reqs["H"])),
         cfg=cfg,
@@ -416,7 +413,7 @@ def blade_3vec_termfunc(reqs, cfg):
 
 
 def whole_3vec_termfunc(reqs, cfg):
-    return Pair(
+    return Term(
         Alpha(reqs["k"], reqs["+_sign"], cfg=cfg),
         Xi("{}".format(reqs["G"]), tex="{}".format(reqs["G"])),
         cfg=cfg,
@@ -424,7 +421,7 @@ def whole_3vec_termfunc(reqs, cfg):
 
 
 def whole_3vec_squared_termfunc(reqs, cfg):
-    return Pair(
+    return Term(
         Alpha(reqs["k"], reqs["+_sign"], cfg=cfg),
         Xi("{}²".format(reqs["G"]), tex="{}^2".format(reqs["G"])),
         cfg=cfg,
@@ -433,14 +430,14 @@ def whole_3vec_squared_termfunc(reqs, cfg):
 
 def dot_square_termfunc(reqs, cfg):
     alpha = cfg.zet_comps[reqs["F"]]["e"]
-    return Pair(
+    return Term(
         Alpha(alpha, reqs["+_sign"], cfg=cfg),
         Xi("{}²".format(reqs["G"]), tex="{}^2".format(reqs["G"])),
         cfg=cfg,
     )
 
 
-# Terms are specified according to their component parts.
+# MatchTerms are specified according to their component parts.
 # Special characters are:
 #   e,x,y,z     --> exyz-like in general
 #   eG,xG,yG,zG --> where G is a group (any capital letter)
@@ -450,48 +447,48 @@ def dot_square_termfunc(reqs, cfg):
 #         replacements are the unallowed and required group matches.
 grad_template = Template(
     terms=[
-        Term("+", "xG", ("xH",), ("k",)),
-        Term("+", "yG", ("yH",), ("k",)),
-        Term("+", "zG", ("zH",), ("k",)),
+        MatchTerm("+", "xG", ("xH",), ("k",)),
+        MatchTerm("+", "yG", ("yH",), ("k",)),
+        MatchTerm("+", "zG", ("zH",), ("k",)),
     ],
     replacements=[Replacement(set(), set(), grad_termfunc)],
 )
 
 div_template = Template(
     terms=[
-        Term("+", "eF", ("xG",), ("xH",)),
-        Term("+", "eF", ("yG",), ("yH",)),
-        Term("+", "eF", ("zG",), ("zH",)),
+        MatchTerm("+", "eF", ("xG",), ("xH",)),
+        MatchTerm("+", "eF", ("yG",), ("yH",)),
+        MatchTerm("+", "eF", ("zG",), ("zH",)),
     ],
     replacements=[Replacement(set(), set(), div_termfunc)],
 )
 
 curl_template = Template(
     terms=[
-        Term("+", "xF", ("yG",), ("zH",)),
-        Term("-", "xF", ("zG",), ("yH",)),
-        Term("+", "yF", ("zG",), ("xH",)),
-        Term("-", "yF", ("xG",), ("zH",)),
-        Term("+", "zF", ("xG",), ("yH",)),
-        Term("-", "zF", ("yG",), ("xH",)),
+        MatchTerm("+", "xF", ("yG",), ("zH",)),
+        MatchTerm("-", "xF", ("zG",), ("yH",)),
+        MatchTerm("+", "yF", ("zG",), ("xH",)),
+        MatchTerm("-", "yF", ("xG",), ("zH",)),
+        MatchTerm("+", "zF", ("xG",), ("yH",)),
+        MatchTerm("-", "zF", ("yG",), ("xH",)),
     ],
     replacements=[Replacement(set(), set(), curl_termfunc)],
 )
 
 partial_template = Template(
     terms=[
-        Term("+", "xF", ("eG",), ("xH",)),
-        Term("+", "yF", ("eG",), ("yH",)),
-        Term("+", "zF", ("eG",), ("zH",)),
+        MatchTerm("+", "xF", ("eG",), ("xH",)),
+        MatchTerm("+", "yF", ("eG",), ("yH",)),
+        MatchTerm("+", "zF", ("eG",), ("zH",)),
     ],
     replacements=[Replacement(set(), set(), partial_termfunc)],
 )
 
 dot_template = Template(
     terms=[
-        Term("+", "eF", tuple(), ("xG", "xH")),
-        Term("+", "eF", tuple(), ("yG", "yH")),
-        Term("+", "eF", tuple(), ("zG", "zH")),
+        MatchTerm("+", "eF", tuple(), ("xG", "xH")),
+        MatchTerm("+", "eF", tuple(), ("yG", "yH")),
+        MatchTerm("+", "eF", tuple(), ("zG", "zH")),
     ],
     replacements=[
         Replacement(set(), set({"G", "H"}), dot_square_termfunc),
@@ -501,21 +498,21 @@ dot_template = Template(
 
 wedge_template = Template(
     terms=[
-        Term("+", "xF", tuple(), ("yG", "zH")),
-        Term("-", "xF", tuple(), ("zG", "yH")),
-        Term("+", "yF", tuple(), ("zG", "xH")),
-        Term("-", "yF", tuple(), ("xG", "zH")),
-        Term("+", "zF", tuple(), ("xG", "yH")),
-        Term("-", "zF", tuple(), ("yG", "xH")),
+        MatchTerm("+", "xF", tuple(), ("yG", "zH")),
+        MatchTerm("-", "xF", tuple(), ("zG", "yH")),
+        MatchTerm("+", "yF", tuple(), ("zG", "xH")),
+        MatchTerm("-", "yF", tuple(), ("xG", "zH")),
+        MatchTerm("+", "zF", tuple(), ("xG", "yH")),
+        MatchTerm("-", "zF", tuple(), ("yG", "xH")),
     ],
     replacements=[Replacement(set(), set(), wedge_termfunc)],
 )
 
 blade_3vec_template = Template(
     terms=[
-        Term("+", "xF", tuple(), ("eG", "xH")),
-        Term("+", "yF", tuple(), ("eG", "yH")),
-        Term("+", "zF", tuple(), ("eG", "zH")),
+        MatchTerm("+", "xF", tuple(), ("eG", "xH")),
+        MatchTerm("+", "yF", tuple(), ("eG", "yH")),
+        MatchTerm("+", "zF", tuple(), ("eG", "zH")),
     ],
     replacements=[Replacement(set(), set(), blade_3vec_termfunc)],
 )
@@ -524,27 +521,27 @@ blade_3vec_template = Template(
 # template above)
 blade_3vec_flipped_template = Template(
     terms=[
-        Term("+", "xF", tuple(), ("xH", "eG")),
-        Term("+", "yF", tuple(), ("yH", "eG")),
-        Term("+", "zF", tuple(), ("zH", "eG")),
+        MatchTerm("+", "xF", tuple(), ("xH", "eG")),
+        MatchTerm("+", "yF", tuple(), ("yH", "eG")),
+        MatchTerm("+", "zF", tuple(), ("zH", "eG")),
     ],
     replacements=[Replacement(set(), set(), blade_3vec_termfunc)],
 )
 
 whole_3vec_template = Template(
     terms=[
-        Term("+", "k", tuple(), ("xG",)),
-        Term("+", "k", tuple(), ("yG",)),
-        Term("+", "k", tuple(), ("zG",)),
+        MatchTerm("+", "k", tuple(), ("xG",)),
+        MatchTerm("+", "k", tuple(), ("yG",)),
+        MatchTerm("+", "k", tuple(), ("zG",)),
     ],
     replacements=[Replacement(set(), set(), whole_3vec_termfunc)],
 )
 
 whole_3vec_squared_template = Template(
     terms=[
-        Term("+", "k", tuple(), ("xG", "xG")),
-        Term("+", "k", tuple(), ("yG", "yG")),
-        Term("+", "k", tuple(), ("zG", "zG")),
+        MatchTerm("+", "k", tuple(), ("xG", "xG")),
+        MatchTerm("+", "k", tuple(), ("yG", "yG")),
+        MatchTerm("+", "k", tuple(), ("zG", "zG")),
     ],
     replacements=[Replacement(set(), set(), whole_3vec_squared_termfunc)],
 )
@@ -559,10 +556,8 @@ def chain_reducers(reducers):
     def _chained(terms, cfg):
         for reducer in reducers:
             if callable(reducer):
-                # Raw function
                 terms = reducer(terms, cfg)
             else:
-                # Template instance
                 terms = reducer.replace(terms, cfg)
 
         return terms

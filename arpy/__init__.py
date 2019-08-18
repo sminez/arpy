@@ -1,35 +1,23 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = "0.2.11"
+__version__ = "0.3.0"
 
 import types
+from copy import copy
+from ctypes import c_int, py_object, pythonapi
 from sys import _getframe
-from copy import deepcopy
-from ctypes import c_int, pythonapi, py_object
 
-from .algebra.config import config, ARConfig
-from .algebra.ar_types import Alpha, Xi, Pair
-from .algebra.multivector import MultiVector, DelMultiVector, GroupedMultiVector
-from .algebra.operations import (
-    find_prod,
-    inverse,
-    full,
-    div_by,
-    div_into,
-    project,
-    prod_apply,
-    dagger,
-    commutator,
-)
-from .algebra.differential import AR_differential, differential_operator
-
-# NOTE: Now replaced by the generic functionality in reducers.py
-# from .reductions.del_grouping import del_grouped
+from .algebra.config import ARConfig, config
+from .algebra.data_types import Alpha, MultiVector, Term, Xi
+from .algebra.differential import AR_differential
+from .algebra.operations import (commutator, dagger, div_by, div_into,
+                                 find_prod, full, inverse, project)
 from .reductions.reducers import cancel_like_terms, del_grouped, replace_all
 from .utils.lexparse import ARContext
-from .utils.utils import Tex, reorder_allowed, Zet, Nat
-from .utils.visualisation import cayley, sign_cayley, sign_distribution, js_cayley, op_block
+from .utils.utils import Nat, Tex, Zet, reorder_allowed
+from .utils.visualisation import (cayley, js_cayley, op_block, sign_cayley,
+                                  sign_distribution)
 
 
 ##############################################################################
@@ -37,7 +25,7 @@ from .utils.visualisation import cayley, sign_cayley, sign_distribution, js_cayl
 ################################################
 def invert_multivector(self):
     """~mvec as a shortcut for the Hermitian conjugate"""
-    inverted = deepcopy(self)
+    inverted = copy(self)
     for alpha, xis in inverted.components.items():
         if full(alpha, alpha).sign == -1:
             for xi in xis:
@@ -83,18 +71,18 @@ def update_env(self, lvl=2):
     self.zet_T = MultiVector(["0"] + self._T, cfg=self)
     self.zet_A = MultiVector([self._h] + self._A, cfg=self)
     self.zet_E = MultiVector([self._q] + self._E, cfg=self)
-    self.Fp = self.F + self.p
-    self.zet_F = self.F + self.p + self.q
+    self.Fp = MultiVector(["p"] + self._B + self._E, cfg=self)
+    self.zet_F = MultiVector(["p", self._q] + self._B + self._E, cfg=self)
 
     # Differential operators
-    self.Dmu = self.d = differential_operator(["0", "1", "2", "3"], cfg=self)
-    self.DG = differential_operator(self.allowed, cfg=self)
-    self.DF = differential_operator(self.F, cfg=self)
+    self.Dmu = self.d = AR_differential(["0", "1", "2", "3"], cfg=self)
+    self.DG = AR_differential(self.allowed, cfg=self)
+    self.DF = AR_differential(self.F, cfg=self)
 
-    self.DB = differential_operator(self.zet_B, cfg=self)
-    self.DT = differential_operator(self.zet_T, cfg=self)
-    self.DA = differential_operator(self.zet_A, cfg=self)
-    self.DE = differential_operator(self.zet_E, cfg=self)
+    self.DB = AR_differential(self.zet_B, cfg=self)
+    self.DT = AR_differential(self.zet_T, cfg=self)
+    self.DA = AR_differential(self.zet_A, cfg=self)
+    self.DE = AR_differential(self.zet_E, cfg=self)
 
     _vars = [
         "p",
@@ -157,10 +145,11 @@ __all__ = [
     # Data structures
     "Alpha",
     "Xi",
-    "Pair",
+    # "Pair",
+    "Term",
     "MultiVector",
-    "DelMultiVector",
-    "GroupedMultiVector",
+    # "DelMultiVector",
+    # "GroupedMultiVector",
     # Non differential operators
     "find_prod",
     "inverse",
@@ -168,7 +157,6 @@ __all__ = [
     "div_by",
     "div_into",
     "project",
-    "prod_apply",
     "dagger",
     "commutator",
     # Differential operators
@@ -182,7 +170,6 @@ __all__ = [
     "DE",
     # Differential operator helpers
     "AR_differential",
-    "differential_operator",
     "del_grouped",
     # Visulaisation functions
     "cayley",

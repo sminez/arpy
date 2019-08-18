@@ -1,29 +1,30 @@
 import pytest
-from arpy import ar, Alpha, Pair, full
+from arpy import Alpha, Term, ar, full
 
 
 def test_creation():
     """ar creates equivalent types to the standard classes"""
     assert ar("a23") == Alpha("23")
-    assert ar("p1") == Pair("1")
+    assert ar("p1") == Term("1")
 
 
 def test_product():
     """ar full product work correctly"""
     assert ar("a1 ^ a2") == Alpha("12")
+    assert ar("a2 ^ a1") == Alpha("-12")
     assert ar("a2 ^ -a1") == Alpha("12")
-    assert ar("-p1 ^ a2") == Pair("-12", "1")
-    assert ar("p2 ^ a1") == Pair("-12", "2")
-    assert ar("a1 ^ p2") == Pair("12", "2")
-    assert ar("a2 ^ p1") == Pair("-12", "1")
+    assert ar("-p1 ^ a2") == Term("-12", "1")
+    assert ar("p2 ^ a1") == Term("-12", "2")
+    assert ar("a1 ^ p2") == Term("12", "2")
+    assert ar("a2 ^ p1") == Term("-12", "1")
 
 
 def test_division():
     """ar division works correctly"""
     assert ar("a1 / a2") == Alpha("-12")
     assert ar("a2 / a1") == Alpha("12")
-    assert ar("p1 / a2") == Pair("-12", "1")
-    assert ar("p2 / a1") == Pair("12", "2")
+    assert ar("p1 / a2") == Term("-12", "1")
+    assert ar("p2 / a1") == Term("12", "2")
 
     with pytest.raises(NotImplementedError):
         ar("a1 / p2")

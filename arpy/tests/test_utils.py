@@ -1,6 +1,5 @@
 from arpy import reorder_allowed
 
-
 allowed = [
     "p",
     "23",

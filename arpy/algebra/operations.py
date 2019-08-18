@@ -1,7 +1,4 @@
 """
-arpy (Absolute Relativity in Python)
-Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
-
 Multiplying αs
 ==============
 This is based on a set of simplification rules based on allowed manipulations
@@ -34,14 +31,12 @@ number of pops to correctly position it. We can then look only at the remaining
 elements and re-label them with indices 1->(n-1) and repeat the process until
 we are done.
 """
-from copy import deepcopy
+from copy import copy
 from functools import wraps
-from types import FunctionType
-from .config import config as cfg
-from .multivector import MultiVector
-from ..utils.concepts.dispatch import dispatch_on
-from .ar_types import Alpha, Pair, XiProduct
 
+from ..utils.concepts.dispatch import dispatch_on
+from .config import config as cfg
+from .data_types import Alpha, MultiVector, Term
 
 POINT = "p"
 
@@ -55,11 +50,11 @@ def product_cache(func):
         result = cache.get(args)
 
         if result:
-            return result
+            return copy(result)
 
         result = func(i, j, cfg=cfg)
         cache[args] = result
-        return result
+        return copy(result)
 
     wrapped.cache = cache
     return wrapped
@@ -82,8 +77,8 @@ def find_prod(i, j, cfg=cfg):
 
     metric = {k: v for k, v in zip("0123", cfg.metric)}
     targets = {frozenset(a): a for a in cfg.allowed}
-    sign = i.sign * j.sign
-    components = i.index + j.index
+    sign = i._sign * j._sign
+    components = i._index + j._index
 
     # Multiplication by αp is idempotent
     if POINT in components:
@@ -91,7 +86,7 @@ def find_prod(i, j, cfg=cfg):
         return Alpha(index, sign, cfg=cfg)
 
     # Pop and cancel matching components
-    for repeated in set(i.index).intersection(set(j.index)):
+    for repeated in set(i._index).intersection(set(j._index)):
         first = components.find(repeated)
         second = components.find(repeated, first + 1)
         n_pops = second - first - 1
@@ -122,7 +117,7 @@ def find_prod(i, j, cfg=cfg):
 
 def inverse(a, cfg=cfg):
     """Find the inverse of an Alpha element"""
-    return Alpha(a.index, (find_prod(a, a, cfg).sign * a.sign), cfg=cfg)
+    return Alpha(a._index, (find_prod(a, a, cfg)._sign * a._sign), cfg=cfg)
 
 
 ##############################################################################
@@ -137,39 +132,28 @@ def _full_alpha_alpha(a, b, cfg=cfg):
     return find_prod(a, b, cfg)
 
 
-@full.add((Alpha, Pair))
+@full.add((Alpha, Term))
 def _full_alpha_pair(a, b, cfg=cfg):
     alpha = find_prod(a, b.alpha, cfg)
-    return Pair(alpha, b.xi, cfg=cfg)
+    return Term(alpha, b._components, cfg=cfg)
 
 
-@full.add((Pair, Alpha))
+@full.add((Term, Alpha))
 def _full_pair_alpha(a, b, cfg=cfg):
     alpha = find_prod(a.alpha, b, cfg)
-    return Pair(alpha, a.xi, cfg=cfg)
+    return Term(alpha, a._components, cfg=cfg)
 
 
-@full.add((Pair, Pair))
+@full.add((Term, Term))
 def _full_pair_pair(a, b, cfg=cfg):
-    a, b = deepcopy(a), deepcopy(b)
+    a, b = copy(a), copy(b)
     alpha = find_prod(a.alpha, b.alpha, cfg)
-    return Pair(alpha, XiProduct([a.xi, b.xi]), cfg=cfg)
-    # NOTE:: Not sure which method is correct as this is mixing
-    #        usign with magsign...
-
-    # if alpha.sign == -1:
-    #     a.xi.sign *= -1
-    #     b.xi.sign *= -1
-    #     alpha.sign = 1
-    #     return Pair(alpha, XiProduct([a.xi, b.xi]))
-    # else:
-    #     return Pair(alpha, XiProduct([a.xi, b.xi]))
+    return Term(alpha, a._components + b._components, cfg=cfg)
 
 
 @full.add((MultiVector, MultiVector))
 def _full_mvec_mvec(mv1, mv2, cfg=cfg):
     prod = MultiVector((full(i, j, cfg) for i in mv1 for j in mv2), cfg=cfg)
-    prod.replacements.extend(mv1.replacements + mv2.replacements)
     return prod
 
 
@@ -203,10 +187,10 @@ def _div_by_alpha_alpha(a, b, cfg=cfg):
     return find_prod(a, inverse(b, cfg), cfg)
 
 
-@div_by.add((Pair, Alpha))
+@div_by.add((Term, Alpha))
 def _div_by_pair_alpha(a, b, cfg=cfg):
     alpha = find_prod(a.alpha, inverse(b, cfg), cfg)
-    return Pair(alpha, a.xi, cfg=cfg)
+    return Term(alpha, a._components, cfg=cfg)
 
 
 ##############################################################################
@@ -221,10 +205,10 @@ def _div_into_Alpha_Alpha(a, b, cfg=cfg):
     return find_prod(inverse(a, cfg), b, cfg)
 
 
-@div_into.add((Alpha, Pair))
+@div_into.add((Alpha, Term))
 def _div_into_Alpha_Pair(a, b, cfg=cfg):
     alpha = find_prod(inverse(a, cfg), b.alpha, cfg)
-    return Pair(alpha, b.xi, cfg=cfg)
+    return Term(alpha, b._components, cfg=cfg)
 
 
 ##############################################################################
@@ -240,6 +224,19 @@ def project(element, grade, cfg=cfg):
 
 @project.add(Alpha)
 def _project_alpha(element, grade, cfg=cfg):
+    if element._index == POINT:
+        if grade == 0:
+            return element
+        else:
+            return None
+    elif len(element._index) == grade:
+        return element
+    else:
+        return None
+
+
+@project.add(Term)
+def _project_term(element, grade, cfg=cfg):
     if element.index == POINT:
         if grade == 0:
             return element
@@ -251,67 +248,20 @@ def _project_alpha(element, grade, cfg=cfg):
         return None
 
 
-@project.add(Pair)
-def _project_pair(element, grade, cfg=cfg):
-    if element.alpha.index == POINT:
-        if grade == 0:
-            return element
-        else:
-            return None
-    elif len(element.alpha.index) == grade:
-        return element
-    else:
-        return None
-
-
 @project.add(MultiVector)
 def _project_multivector(element, grade, cfg=cfg):
     correct_grade = []
     if grade == 0:
-        for component in element:
-            if component.alpha.index == POINT:
-                correct_grade.append(component)
+        for term in element:
+            if term.index == POINT:
+                correct_grade.append(term)
     else:
-        for component in element:
-            ix = component.alpha.index
+        for term in element:
+            ix = term.index
             if len(ix) == grade and ix != POINT:
-                correct_grade.append(component)
+                correct_grade.append(term)
     res = MultiVector(correct_grade, cfg=cfg)
-    res.replacements.extend(element.replacements)
     return res
-
-
-##############################################################################
-
-
-@dispatch_on((0, 1, 2))
-def prod_apply(arg1, arg2, arg3=None, cfg=cfg):
-    """
-    Apply a function to the cartesian product of two multivectors
-    NOTE:: The function must act on a single Multivector.
-    """
-    raise NotImplementedError
-
-
-@prod_apply.add((FunctionType, MultiVector, MultiVector))
-def _prod_apply_dmm(func, mv1, mv2, cfg=cfg):
-    if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
-        raise TypeError("Arguments must be a MultiVectors")
-    return MultiVector((full(i, j, cfg) for i in func(mv1, cfg=cfg) for j in mv2), cfg=cfg)
-
-
-@prod_apply.add((MultiVector, FunctionType, MultiVector))
-def _prod_apply_mdm(mv1, func, mv2, cfg=cfg):
-    if not isinstance(mv1, MultiVector) and isinstance(mv2, MultiVector):
-        raise TypeError("Arguments must be a MultiVectors")
-    return MultiVector((full(i, j, cfg) for i in mv1 for j in func(mv2, cfg=cfg)), cfg=cfg)
-
-
-@prod_apply.add((FunctionType, tuple, type(None)))
-def _prod_apply_d_mm(func, mvecs=(None, None), _=None, cfg=cfg):
-    if not isinstance(mvecs[0], MultiVector) and isinstance(mvecs[1], MultiVector):
-        raise TypeError("Arguments must be a MultiVectors")
-    return func(full(mvecs[0], mvecs[1], cfg))
 
 
 ##############################################################################
@@ -330,33 +280,33 @@ def _dagger_mvec(mvec, cfg=cfg):
     _neg = [
         Alpha(a, cfg=cfg)
         for a in cfg.allowed
-        if full(Alpha(a, cfg=cfg), Alpha(a, cfg=cfg), cfg).sign == -1
+        if full(Alpha(a, cfg=cfg), Alpha(a, cfg=cfg), cfg)._sign == -1
     ]
-    mvec = deepcopy(mvec)
+    mvec = copy(mvec)
     new_vec = []
-    for pair in mvec:
-        if pair.alpha in _neg:
-            pair.alpha.sign *= -1
-        new_vec.append(pair)
+    for term in mvec:
+        if term._alpha in _neg:
+            term._sign *= -1
+        new_vec.append(term)
     res = MultiVector(new_vec, cfg=cfg)
-    res.replacements.extend(mvec.replacements)
+
     return res
 
 
 @dagger.add(Alpha)
 def _dagger_alpha(alpha, cfg=cfg):
-    res = deepcopy(alpha)
-    if full(alpha, alpha, cfg).sign == -1:
-        res.sign *= -1
+    res = copy(alpha)
+    if full(alpha, alpha, cfg)._sign == -1:
+        res._sign *= -1
 
     return res
 
 
-@dagger.add(Pair)
-def _dagger_pair(pair, cfg=cfg):
-    res = deepcopy(pair)
-    if full(pair.extract_alpha(), pair.extract_alpha(), cfg).sign == -1:
-        res.xi.sign *= -1
+@dagger.add(Term)
+def _dagger_pair(term, cfg=cfg):
+    res = copy(term)
+    if full(term._alpha, term._alpha, cfg)._sign == -1:
+        res.sign *= -1
 
     return res
 
@@ -380,7 +330,7 @@ def _group_commutator(a, b, cfg=cfg):
     return product
 
 
-# @commutator.add((Pair, Pair))
+# @commutator.add((Term, Term))
 # def _ring_commutator(a, b):
 #     '''Computes the ring commutator [a, b] = ab - ba for Pairs'''
 #     return full(a, b) - full(b, a)

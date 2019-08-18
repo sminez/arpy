@@ -6,18 +6,16 @@ NOTE:: To avoid cyclic imports, the __invert__ method on multivectors (which
        returns the Hermitian conjugate) is written in the arpy __init__ file!
        (I am fully aware of how horrible this is...)
 """
-import re
 import collections.abc
+import re
+from collections import Counter, namedtuple
 from copy import deepcopy
 from itertools import groupby
-from collections import namedtuple, Counter
 
+from ..reductions.reducers import del_grouped, replace_all
 from ..utils.utils import Nat
 from .ar_types import Alpha, Pair, Xi, XiProduct
-from ..reductions.reducers import del_grouped
-from ..reductions.reducers import replace_all
 from .config import config as cfg
-
 
 MvecLabel = namedtuple("MvecLabel", "label originals")
 explicit_xi = r"[-p0123]*\[.*\]"

@@ -2,14 +2,13 @@
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 """
-from itertools import groupby
 from collections import namedtuple
+from itertools import groupby
 
-from .reducers import alpha_to_group
-from ..algebra.ar_types import Alpha, Xi, Pair
 from ..algebra.config import config as cfg
-from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS, Zet, Nat
-
+from ..algebra.data_types import Alpha, Term, Xi
+from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
+from .reducers import alpha_to_group
 
 term = namedtuple("term", ["d", "xi", "alpha", "sign", "pair"])
 
@@ -100,7 +99,7 @@ def replace_curl(pairs, cfg):
             tex_zet = "" if zet == "A" else "^" + zet
 
             replaced.append(
-                Pair(
+                Term(
                     Alpha(alpha, sign, cfg=cfg),
                     Xi(
                         "∇{}x{}".format(_zet, group),
@@ -147,7 +146,7 @@ def replace_grad(pairs, cfg):
                 _zet = "" if zet == "A" else SUPER_SCRIPTS[zet]
 
                 replaced.append(
-                    Pair(
+                    Term(
                         Alpha(alpha, sign, cfg=cfg),
                         Xi(
                             "∇{}Ξ{}".format(_zet, xi),
@@ -188,7 +187,7 @@ def replace_div(pairs, cfg):
             tex_zet = "" if zet == "A" else SUPER_SCRIPTS[zet]
 
             replaced.append(
-                Pair(
+                Term(
                     Alpha(alpha, sign, cfg=cfg),
                     Xi("∇{}•{}".format(_zet, xi), tex="\\nabla{}\\cdot {}".format(tex_zet, xi)),
                     cfg=cfg,
@@ -235,7 +234,7 @@ def replace_partials(pairs, cfg):
 
                     _blade = "".join(SUB_SCRIPTS[b] for b in blade)
                     replaced.append(
-                        Pair(
+                        Term(
                             Alpha(alpha, sign, cfg=cfg),
                             Xi(
                                 "∂{}{}".format(_blade, component_zet),
