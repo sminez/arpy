@@ -74,9 +74,13 @@ class Term:
 
     @alpha.setter
     def alpha(self, a):
-        self.sign = a._sign
+        self._sign = a._sign
         a._sign = 1
         self._alpha = a
+
+    @property
+    def sign(self):
+        return self._sign
 
     @property
     def index(self):

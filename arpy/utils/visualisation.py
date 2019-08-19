@@ -9,7 +9,7 @@ import tempfile
 import time
 import webbrowser
 
-from ..algebra.ar_types import Alpha, Pair
+from ..algebra.data_types import Alpha, Term
 from ..algebra.config import config
 from ..algebra.operations import full
 from .lexparse import ARContext
@@ -254,7 +254,7 @@ def js_cayley(op=full, cfg=config):
     # This strange format is the JSON structure required by the JS script
     # to parse the data points and generate the Cayley table
     json_comps = [
-        "[" + ",".join([tmp % (c.index, "+ve" if c.sign == 1 else "-ve") for c in row]) + "]"
+        "[" + ",".join([tmp % (c._index, "+ve" if c.sign == 1 else "-ve") for c in row]) + "]"
         for row in comps
     ]
     json_comps = "[" + ",\n".join(json_comps) + "];"
@@ -295,10 +295,10 @@ def op_block(rows, cols, op=full, cfg=config):
     def _alpha(x):
         if isinstance(x, Alpha):
             return x
-        elif isinstance(x, Pair):
-            return x.extract_alpha()
+        elif isinstance(x, Term):
+            return x.alpha
         else:
-            raise ValueError("Must pass a MultiVector or a list of Alphas/Pairs")
+            raise ValueError("Must pass a MultiVector or a list of Alphas/Terms")
 
     def _block_func(s):
         def func(i, j, cfg=config):
@@ -313,7 +313,7 @@ def op_block(rows, cols, op=full, cfg=config):
 
     block = ""
     for r in rows:
-        comps = [op(r.extract_alpha(), c.extract_alpha(), cfg).sign for c in cols]
+        comps = [op(r.alpha, c.alpha, cfg).sign for c in cols]
         block_row = " ".join(["□" if c == 1 else "■" for c in comps])
         block += "|" + block_row + "|\n"
     print(block)

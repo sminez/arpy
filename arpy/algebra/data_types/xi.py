@@ -27,6 +27,14 @@ class Xi:
         self._tex_val = tex
         self.cfg = cfg
 
+    @property
+    def val(self):
+        return self._val
+
+    @property
+    def sign(self):
+        return self._sign
+
     def __hash__(self):
         return hash((self._val, self._sign, tuple(self._partials)))
 

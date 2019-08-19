@@ -28,6 +28,10 @@ class Alpha:
         self.allowed = cfg.allowed
         self.allowed_groups = cfg.allowed_groups
 
+    @property
+    def sign(self):
+        return self._sign
+
     def __repr__(self):
         neg = "-" if self._sign == -1 else ""
         try:
