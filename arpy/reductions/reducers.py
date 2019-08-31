@@ -10,8 +10,6 @@ TODO:
     Second Derivatives
     Product and derivatives (F dF etc)
 """
-from itertools import groupby
-
 from ..algebra.config import config as cfg
 from ..algebra.data_types import Alpha, Term, Xi
 from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
@@ -56,14 +54,14 @@ class Replacement:
 
 
 class Template:
-    def __init__(self, terms=[], replacements=[], can_match=[]):
-        self.terms = terms
+    def __init__(self, match_terms=[], replacements=[], can_match=[]):
+        self.match_terms = match_terms
         self.replacements = replacements
         self.can_match = can_match
 
     def replace(self, terms, cfg):
         """Use a template to replace terms in a multivector"""
-        self.match_map = {t: [] for t in self.terms}
+        self.match_map = {t: [] for t in self.match_terms}
         self.non_matching = []
         self.bind(terms)
         return self.validate_and_substitute(cfg)
@@ -72,7 +70,7 @@ class Template:
         """
         Check to see if a given value matches on of the template terms.
         """
-        for term in self.terms:
+        for term in self.match_terms:
             # Check that we correctly have either a Xi or a
             # XiProduct with the correct number of components
             if term.xis not in [tuple("_"), None]:
@@ -136,7 +134,7 @@ class Template:
 
         # If there is only one term in the pattern then we are done. Just
         # substitute any matches and return.
-        if len(self.terms) == 1:
+        if len(self.match_terms) == 1:
             for term, matches in self.match_map.items():
                 for match in matches:
                     output.append(self.replace(match, term))
@@ -144,20 +142,20 @@ class Template:
 
         # Otherwise, take candidates from the first term template and try
         # to build complete matches of the template.
-        for t1_candidate in tuple(self.match_map.get(self.terms[0], [])):
-            matching_terms = {self.terms[0]: t1_candidate}
+        for t1_candidate in tuple(self.match_map.get(self.match_terms[0], [])):
+            matching_terms = {self.match_terms[0]: t1_candidate}
 
             # Get the initial requirements for this match
             try:
                 requirements = self.update_match_or_fail(
-                    self.terms[0], t1_candidate, {"+_sign": None}
+                    self.match_terms[0], t1_candidate, {"+_sign": None}
                 )
             except FailedMatch:
                 continue
 
             # Try to match each term in the template as we build up the
             # known requirements.
-            for term in self.terms[1:]:
+            for term in self.match_terms[1:]:
                 match = None
                 for candidate in self.match_map.get(term, []):
                     try:
@@ -182,7 +180,7 @@ class Template:
                     output.append(t1_candidate)
                     # reset the requirements
                     # requirements = self.update_match_or_fail(
-                    #         self.terms[0], t1_candidate, {'+_sign': None})
+                    #         self.match_terms[0], t1_candidate, {'+_sign': None})
                     break
             else:
                 # If there were no breaks then we should have a match for each
@@ -197,7 +195,7 @@ class Template:
                     self.match_map[k].remove(v)
 
         # Append all remaining terms to the output
-        for term in self.terms[1:]:
+        for term in self.match_terms[1:]:
             output.extend(self.match_map.get(term, []))
 
         return output
@@ -284,39 +282,6 @@ class Template:
 
             return r.termfunc(requirements, cfg)
         return None
-
-
-def cancel_like_terms(terms, cfg=None):
-    """
-    For each alpha in the multivector, cancel terms that match their
-    negative and return a new multivector of the remaining terms.
-    """
-    filtered_pairs = []
-    for g in groupby(terms, lambda p: p.alpha):
-        alpha, pairs = g
-        seen = {}
-
-        for p in pairs:
-            if -p.xi in seen:
-                # We already have this term's negative so cancel
-                if len(seen[-p.xi]) == 1:
-                    del seen[-p.xi]
-                else:
-                    # Cancel one term but leave the rest
-                    seen[-p.xi] = seen[-p.xi][1:]
-            elif p.xi in seen:
-                # We have more than one term the same so append it
-                seen[p.xi].append(p)
-            else:
-                # Store this term for now and use it to check for
-                # future cancelling terms
-                seen[p.xi] = [p]
-
-        # Add in all of the values we have left
-        for v in seen.values():
-            filtered_pairs.extend(v)
-
-    return filtered_pairs
 
 
 # MatchTermfuncs need to take a requirements dict and a config, and return
@@ -446,7 +411,7 @@ def dot_square_termfunc(reqs, cfg):
 # NOTE :: the sets that form the first and second elements of the
 #         replacements are the unallowed and required group matches.
 grad_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "xG", ("xH",), ("k",)),
         MatchTerm("+", "yG", ("yH",), ("k",)),
         MatchTerm("+", "zG", ("zH",), ("k",)),
@@ -455,7 +420,7 @@ grad_template = Template(
 )
 
 div_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "eF", ("xG",), ("xH",)),
         MatchTerm("+", "eF", ("yG",), ("yH",)),
         MatchTerm("+", "eF", ("zG",), ("zH",)),
@@ -464,7 +429,7 @@ div_template = Template(
 )
 
 curl_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "xF", ("yG",), ("zH",)),
         MatchTerm("-", "xF", ("zG",), ("yH",)),
         MatchTerm("+", "yF", ("zG",), ("xH",)),
@@ -476,7 +441,7 @@ curl_template = Template(
 )
 
 partial_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "xF", ("eG",), ("xH",)),
         MatchTerm("+", "yF", ("eG",), ("yH",)),
         MatchTerm("+", "zF", ("eG",), ("zH",)),
@@ -485,7 +450,7 @@ partial_template = Template(
 )
 
 dot_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "eF", tuple(), ("xG", "xH")),
         MatchTerm("+", "eF", tuple(), ("yG", "yH")),
         MatchTerm("+", "eF", tuple(), ("zG", "zH")),
@@ -497,7 +462,7 @@ dot_template = Template(
 )
 
 wedge_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "xF", tuple(), ("yG", "zH")),
         MatchTerm("-", "xF", tuple(), ("zG", "yH")),
         MatchTerm("+", "yF", tuple(), ("zG", "xH")),
@@ -509,7 +474,7 @@ wedge_template = Template(
 )
 
 blade_3vec_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "xF", tuple(), ("eG", "xH")),
         MatchTerm("+", "yF", tuple(), ("eG", "yH")),
         MatchTerm("+", "zF", tuple(), ("eG", "zH")),
@@ -520,7 +485,7 @@ blade_3vec_template = Template(
 # This is to allow for Sb as well as bS (which is caught by the
 # template above)
 blade_3vec_flipped_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "xF", tuple(), ("xH", "eG")),
         MatchTerm("+", "yF", tuple(), ("yH", "eG")),
         MatchTerm("+", "zF", tuple(), ("zH", "eG")),
@@ -529,7 +494,7 @@ blade_3vec_flipped_template = Template(
 )
 
 whole_3vec_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "k", tuple(), ("xG",)),
         MatchTerm("+", "k", tuple(), ("yG",)),
         MatchTerm("+", "k", tuple(), ("zG",)),
@@ -538,7 +503,7 @@ whole_3vec_template = Template(
 )
 
 whole_3vec_squared_template = Template(
-    terms=[
+    match_terms=[
         MatchTerm("+", "k", tuple(), ("xG", "xG")),
         MatchTerm("+", "k", tuple(), ("yG", "yG")),
         MatchTerm("+", "k", tuple(), ("zG", "zG")),
@@ -568,7 +533,6 @@ def chain_reducers(reducers):
 # Run all default reductions on a MultiVector
 replace_all = chain_reducers(
     [
-        cancel_like_terms,
         partial_template,
         grad_template,
         div_template,
@@ -583,6 +547,4 @@ replace_all = chain_reducers(
 )
 
 # Just run del grouping
-del_grouped = chain_reducers(
-    [cancel_like_terms, partial_template, grad_template, div_template, curl_template]
-)
+del_grouped = chain_reducers([partial_template, grad_template, div_template, curl_template])

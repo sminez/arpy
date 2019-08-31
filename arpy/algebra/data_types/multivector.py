@@ -104,6 +104,8 @@ class MultiVector:
         rep = []
         for alpha, terms in groupby(self._terms, lambda t: t._alpha):
             xis = " ".join(t._repr_no_alpha() for t in terms)
+            if xis.startswith("+ "):
+                xis = xis[2:]
             rep.append(f"  {repr(alpha).ljust(5)}( {xis} )")
 
         return "\n".join(["{"] + rep + ["}"])
@@ -151,10 +153,34 @@ class MultiVector:
         is defined to be the same as the order specified in the ARConfig used
         to create this MultiVector.
         """
-        groups = dict(groupby(self._terms, lambda t: t._alpha))
+        groups = {k: list(v) for k, v in groupby(self._terms, lambda t: t._alpha)}
 
         for alpha in self.cfg.allowed:
             key = Alpha(alpha, cfg=self.cfg)
             terms = groups.get(key)
             if terms:
                 yield key, terms
+
+    # =================================================== #
+    # Alternative string representations for MultiVectors
+    # =================================================== #
+
+    @property
+    def with_factored_terms(self):
+        rep = []
+
+        for alpha, terms in groupby(self._terms, lambda t: t._alpha):
+            rep.append(f"  {(repr(alpha) + ':').ljust(5)}")
+            for factor, others in groupby(terms, lambda t: t._components[0]):
+                factored = f"      {repr(factor).ljust(2)}"
+                xis = " ".join(t._repr_no_alpha(ix=1) for t in others)
+
+                if xis.startswith("+ "):
+                    xis = xis[2:]
+                if xis:
+                    factored += f".({xis})"
+
+                rep.append(factored)
+            rep.append("")
+
+        return "\n".join(["{"] + rep + ["}"])

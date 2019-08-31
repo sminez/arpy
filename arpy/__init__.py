@@ -11,13 +11,20 @@ from sys import _getframe
 from .algebra.config import ARConfig, config
 from .algebra.data_types import Alpha, MultiVector, Term, Xi
 from .algebra.differential import AR_differential
-from .algebra.operations import (commutator, dagger, div_by, div_into,
-                                 find_prod, full, inverse, project)
-from .reductions.reducers import cancel_like_terms, del_grouped, replace_all
+from .algebra.operations import (
+    commutator,
+    dagger,
+    div_by,
+    div_into,
+    find_prod,
+    full,
+    inverse,
+    project,
+)
+from .reductions.reducers import del_grouped, replace_all
 from .utils.lexparse import ARContext
 from .utils.utils import Nat, Tex, Zet, reorder_allowed
-from .utils.visualisation import (cayley, js_cayley, op_block, sign_cayley,
-                                  sign_distribution)
+from .utils.visualisation import cayley, js_cayley, op_block, sign_cayley, sign_distribution
 
 
 ##############################################################################
@@ -73,6 +80,7 @@ def update_env(self, lvl=2):
     self.zet_E = MultiVector([self._q] + self._E, cfg=self)
     self.Fp = MultiVector(["p"] + self._B + self._E, cfg=self)
     self.zet_F = MultiVector(["p", self._q] + self._B + self._E, cfg=self)
+    self.Fpq = self.zet_F
 
     # Differential operators
     self.Dmu = self.d = AR_differential(["0", "1", "2", "3"], cfg=self)
@@ -145,11 +153,8 @@ __all__ = [
     # Data structures
     "Alpha",
     "Xi",
-    # "Pair",
     "Term",
     "MultiVector",
-    # "DelMultiVector",
-    # "GroupedMultiVector",
     # Non differential operators
     "find_prod",
     "inverse",
@@ -198,7 +203,6 @@ __all__ = [
     "ARConfig",
     "ARContext",
     "reorder_allowed",
-    "cancel_like_terms",
     "Zet",
     "Nat",
     "replace_all",

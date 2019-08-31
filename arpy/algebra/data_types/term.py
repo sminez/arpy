@@ -105,21 +105,21 @@ class Term:
         sgn = "-" if self._sign == -1 else ""
         comps = ".".join(str(c) for c in self._components)
         partials = "".join(
-            "∂{}".format("".join(SUB_SCRIPTS[i] for i in p.index))
+            "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
             for p in reversed(self._component_partials)
         )
 
         return f"({sgn}{self._alpha}, {partials}{comps})"
 
-    def _repr_no_alpha(self):
-        sgn = "-" if self._sign == -1 else ""
-        comps = ".".join(str(c) for c in self._components)
+    def _repr_no_alpha(self, ix=0):
+        sgn = "-" if self._sign == -1 else "+"
+        comps = ".".join(str(c) for c in self._components[ix:])
         partials = "".join(
-            "∂{}".format("".join(SUB_SCRIPTS[i] for i in p.index))
+            "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
             for p in reversed(self._component_partials)
         )
 
-        return f"{sgn}{partials}{comps}"
+        return f"{sgn} {partials}{comps}"
 
     def __hash__(self):
         return hash((self._sign, self._alpha, tuple(self._components)))

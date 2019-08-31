@@ -133,21 +133,26 @@ def _full_alpha_alpha(a, b, cfg=cfg):
 
 
 @full.add((Alpha, Term))
-def _full_alpha_pair(a, b, cfg=cfg):
+def _full_alpha_term(a, b, cfg=cfg):
     alpha = find_prod(a, b.alpha, cfg)
     return Term(alpha, b._components, cfg=cfg)
 
 
 @full.add((Term, Alpha))
-def _full_pair_alpha(a, b, cfg=cfg):
+def _full_term_alpha(a, b, cfg=cfg):
     alpha = find_prod(a.alpha, b, cfg)
     return Term(alpha, a._components, cfg=cfg)
 
 
 @full.add((Term, Term))
-def _full_pair_pair(a, b, cfg=cfg):
+def _full_term_term(a, b, cfg=cfg):
     a, b = copy(a), copy(b)
     alpha = find_prod(a.alpha, b.alpha, cfg)
+
+    # TODO: This will be incorrect for products of terms that already contain
+    #       products of terms that have their own partials. We need to sort out
+    #       the correct behaviour in this case in order to be able to perform more
+    #       complicated products.
     return Term(alpha, a._components + b._components, cfg=cfg)
 
 
