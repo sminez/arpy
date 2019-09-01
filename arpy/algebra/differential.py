@@ -96,9 +96,9 @@ def term_partial(term, wrt, cfg, div):
     new_term.alpha = _div(new_term.alpha, wrt, cfg, div)
 
     if len(new_term._components) == 1:
-        new_term._components[0]._partials = [wrt] + new_term._components[0]._partials
+        new_term._components[0].partials = [wrt] + new_term._components[0]._partials
     else:
-        new_term._component_partials = [wrt] + new_term._component_partials
+        new_term.component_partials = [wrt] + new_term._component_partials
 
     return new_term
 

@@ -35,6 +35,17 @@ class Xi:
     def sign(self):
         return self._sign
 
+    @property
+    def partials(self):
+        return self._partials
+
+    @partials.setter
+    def partials(self, val):
+        if not isinstance(val, list) and all(isinstance(p, Alpha) for p in val):
+            raise ValueError(f"Invalid partials for Xi: {val}")
+
+        self._partials = sorted(val)
+
     def __hash__(self):
         return hash((self._val, self._sign, tuple(self._partials)))
 
@@ -42,9 +53,9 @@ class Xi:
         return all(
             [
                 isinstance(other, Xi),
-                (self._val == other._val),
-                (self._partials == other._partials),
-                (self._sign == other._sign),
+                self._val == other._val,
+                self._partials == other._partials,
+                self._sign == other._sign,
             ]
         )
 

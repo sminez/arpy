@@ -87,6 +87,17 @@ class Term:
         """The Alpha index for this Term. i.e. Alpha without sign"""
         return self._alpha._index
 
+    @property
+    def component_partials(self):
+        return self._component_partials
+
+    @component_partials.setter
+    def component_partials(self, val):
+        if not isinstance(val, list) and all(isinstance(p, Alpha) for p in val):
+            raise ValueError(f"Invalid partials for Term: {val}")
+
+        self._component_partials = sorted(val)
+
     def __eq__(self, other):
         if not isinstance(other, Term):
             return False
@@ -97,7 +108,7 @@ class Term:
                 self._alpha == other._alpha,
                 self._sign == other._sign,
                 sorted(self._components) == sorted(other._components),
-                self._component_partials == other._component_partials,
+                sorted(self._component_partials) == sorted(other._component_partials),
             ]
         )
 
@@ -106,7 +117,7 @@ class Term:
         comps = ".".join(str(c) for c in self._components)
         partials = "".join(
             "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
-            for p in reversed(self._component_partials)
+            for p in sorted(self._component_partials)
         )
 
         return f"({sgn}{self._alpha}, {partials}{comps})"

@@ -47,9 +47,8 @@ class MultiVector:
 
             _terms.append(t)
 
-        self._terms = _terms
+        self._terms = sorted(_terms)
         self.cfg = cfg
-        self.__ensure_standard_form()
 
     def __eq__(self, other):
         if not isinstance(other, MultiVector):
@@ -124,14 +123,11 @@ class MultiVector:
 
         return key
 
-    def __ensure_standard_form(self):
+    def cancel_terms(self):
         """
         Ensure that the ordering of the terms in this MultiVector are in standard
         form ordering and that all term cancellations have been carried out.
         """
-        if len(self._terms) == 0:
-            return
-
         seen = defaultdict(list)
 
         for term in sorted(self._terms):
@@ -144,7 +140,7 @@ class MultiVector:
             else:
                 seen[term].append(term)
 
-        self._terms = sum(seen.values(), [])
+        self._terms = sorted(sum(seen.values(), []))
 
     def iter_alphas(self):
         """
