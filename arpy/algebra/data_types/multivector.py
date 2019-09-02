@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, Counter
 from copy import deepcopy
 from itertools import groupby
 from typing import List, Union
@@ -102,10 +102,14 @@ class MultiVector:
     def __repr__(self):
         rep = []
         for alpha, terms in groupby(self._terms, lambda t: t._alpha):
-            xis = " ".join(t._repr_no_alpha() for t in terms)
-            if xis.startswith("+ "):
+            xis = " ".join(
+                [term._repr_no_alpha(count=count) for term, count in Counter(terms).items()]
+            )
+
+            if xis.startswith("+"):
                 xis = xis[2:]
-            rep.append(f"  {repr(alpha).ljust(5)}( {xis} )")
+
+            rep.append(f"  {repr(alpha).ljust(5)}(  {xis}  )")
 
         return "\n".join(["{"] + rep + ["}"])
 

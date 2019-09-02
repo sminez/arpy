@@ -1,5 +1,27 @@
 SUPER_SCRIPTS = {"B": "ᴮ", "A": "ᴬ", "T": "ᵀ", "E": "ᴱ"}
 SUB_SCRIPTS = {"0": "₀", "1": "₁", "2": "₂", "3": "₃", "p": "ₚ", "i": "ᵢ", "j": "ⱼ", "k": "ₖ"}
+ZET_MAP = {
+    # B: p 23 31 12
+    frozenset("p"): {"direction": "t", "zet": "B"},
+    frozenset("23"): {"direction": "x", "zet": "B"},
+    frozenset("31"): {"direction": "y", "zet": "B"},
+    frozenset("12"): {"direction": "z", "zet": "B"},
+    # T: 0 023 031 012
+    frozenset("0"): {"direction": "t", "zet": "T"},
+    frozenset("023"): {"direction": "x", "zet": "T"},
+    frozenset("031"): {"direction": "y", "zet": "T"},
+    frozenset("012"): {"direction": "z", "zet": "T"},
+    # A: 123 1 2 3
+    frozenset("123"): {"direction": "t", "zet": "A"},
+    frozenset("1"): {"direction": "x", "zet": "A"},
+    frozenset("2"): {"direction": "y", "zet": "A"},
+    frozenset("3"): {"direction": "z", "zet": "A"},
+    # E: 0123 01 02 03
+    frozenset("0123"): {"direction": "t", "zet": "E"},
+    frozenset("01"): {"direction": "x", "zet": "E"},
+    frozenset("02"): {"direction": "y", "zet": "E"},
+    frozenset("03"): {"direction": "z", "zet": "E"},
+}
 
 
 def Tex(obj):
@@ -10,32 +32,23 @@ def Tex(obj):
 
 
 def Zet(alpha):
-    """Return the Zet of a given alpha value."""
-    # Conditions for being a member of each Zet
-    zet_map = {
-        # `e` elements (NOTE: `p` is a special case)
-        # --> 0, 123, 0123 (ordering doesn't matter)
-        (1, True): "T",
-        (3, False): "A",
-        (4, True): "E",
-        # `x, y, z` elements: (len, has '0')
-        # --> jk, 0jk, i, 0i (ordering doesn't matter)
-        (2, False): "B",
-        (3, True): "T",
-        (1, False): "A",
-        (2, True): "E",
-    }
-
-    # Allow for raw string indices to be passed
+    """Return the Zet of a given alpha value or term"""
     if isinstance(alpha, str):
         ix = alpha
     else:
         ix = alpha.index
 
-    if ix == "p":
-        return "B"
+    return ZET_MAP[ix]["zet"]
+
+
+def Dir(alpha):
+    """Return the Space-Time 'direction' of a given alpha or term"""
+    if isinstance(alpha, str):
+        ix = alpha
     else:
-        return zet_map.get((len(ix), "0" in ix))
+        ix = alpha.index
+
+    return ZET_MAP[ix]["direction"]
 
 
 def Nat(alpha):

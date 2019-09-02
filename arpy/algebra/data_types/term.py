@@ -122,15 +122,23 @@ class Term:
 
         return f"({sgn}{self._alpha}, {partials}{comps})"
 
-    def _repr_no_alpha(self, ix=0):
+    def _repr_no_alpha(self, ix=0, count=1):
+        """
+        Provides a string representation of the Xi part of a Term, optionally
+        interpolating a count in the case of repeated terms in an iterable.
+
+        The 'ix' parameter allows for ignoring leading terms in Xi products if
+        they have been factored out elsewhere within a given string representation.
+        """
         sgn = "-" if self._sign == -1 else "+"
         comps = ".".join(str(c) for c in self._components[ix:])
+        count = "" if count == 1 else count
         partials = "".join(
             "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
             for p in reversed(self._component_partials)
         )
 
-        return f"{sgn} {partials}{comps}"
+        return f"{sgn} {count}{partials}{comps}"
 
     def __hash__(self):
         return hash((self._sign, self._alpha, tuple(self._components)))
