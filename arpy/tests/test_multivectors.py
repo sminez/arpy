@@ -23,16 +23,19 @@ def test_multivector_construction():
         MultiVector("foo")
 
 
-def test_simplification():
-    """MultiVector auto simplification works"""
+def test_cancellation():
+    """MultiVector term cancellation works"""
     # Like MultiVectors cancel entirely
     res1 = m1 - m1
+    res1.cancel_terms()
     assert res1 == MultiVector()
     # Unmatched terms are unaffected
     res2 = m1 - m2
+    res2.cancel_terms()
     assert res2 == MultiVector("3")
     # Subtraction works along with simplification
     res3 = m1 - m3
+    res3.cancel_terms()
     assert res3 == MultiVector([Alpha("3"), Alpha("-12")])
 
 
