@@ -13,4 +13,6 @@ def diamond(mvec):
         raise ValueError("Can only compute the diamond of a MultiVector")
 
     scalar = project(mvec, 0) * 2
-    return scalar - mvec
+    res = scalar - mvec
+    res.cancel_terms()
+    return res
