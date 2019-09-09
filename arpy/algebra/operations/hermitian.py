@@ -58,12 +58,14 @@ def _hermitian_mvec(mvec, cfg=cfg):
         for a in cfg.allowed
         if full(Alpha(a, cfg=cfg), Alpha(a, cfg=cfg), cfg)._sign == -1
     ]
-    mvec = copy(mvec)
     new_vec = []
+
     for term in mvec:
-        if term._alpha in _neg:
-            term._sign *= -1
-        new_vec.append(term)
+        new_term = copy(term)
+        if new_term._alpha in _neg:
+            new_term._sign *= -1
+        new_vec.append(new_term)
+
     res = MultiVector(new_vec, cfg=cfg)
 
     return res
