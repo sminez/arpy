@@ -85,12 +85,15 @@ class MultiVector:
         if not isinstance(other, int):
             raise ValueError("Use 'full' for form products between MultiVectors")
 
+        terms = deepcopy(self._terms)
+
         if other < 0:
             other *= -1
-            for t in self._terms:
+            for t in terms:
                 t._sign *= -1
 
-        self._terms *= other
+        terms = sorted(terms * other)
+        return MultiVector(terms)
 
     def __contains__(self, other):
         if isinstance(other, Term):
