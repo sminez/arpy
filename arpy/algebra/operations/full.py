@@ -34,9 +34,9 @@ we are done.
 from copy import copy
 from functools import wraps
 
-from ..utils.concepts.dispatch import dispatch_on
-from .config import config as cfg
-from .data_types import Alpha, MultiVector, Term
+from ...utils.concepts.dispatch import dispatch_on
+from ..config import config as cfg
+from ..data_types import Alpha, MultiVector, Term
 
 POINT = "p"
 
@@ -120,7 +120,6 @@ def inverse(a, cfg=cfg):
     return Alpha(a._index, (find_prod(a, a, cfg)._sign * a._sign), cfg=cfg)
 
 
-##############################################################################
 @dispatch_on((0, 1))
 def full(a, b, cfg=cfg):
     """Compute the Full product of two elements"""
@@ -165,177 +164,14 @@ def _full_mvec_mvec(mv1, mv2, cfg=cfg):
 @full.add((Alpha, MultiVector))
 def _full_alpha_mvec(a, m, cfg=cfg):
     prod = MultiVector((full(a, comp, cfg) for comp in m), cfg=cfg)
-    prod.replacements = m.replacements
     return prod
 
 
 @full.add((MultiVector, Alpha))
 def _full_mvec_alpha(m, a, cfg=cfg):
     prod = MultiVector((full(comp, a, cfg) for comp in m), cfg=cfg)
-    prod.replacements = m.replacements
     return prod
 
 
 # NOTE:: Definitions of the full product involving differnetials are found in
 #        differential.py due to import conflicts.
-
-
-##############################################################################
-@dispatch_on((0, 1))
-def div_by(a, b, cfg=cfg):
-    """Divide one element by another"""
-    raise NotImplementedError
-
-
-@div_by.add((Alpha, Alpha))
-def _div_by_alpha_alpha(a, b, cfg=cfg):
-    return find_prod(a, inverse(b, cfg), cfg)
-
-
-@div_by.add((Term, Alpha))
-def _div_by_pair_alpha(a, b, cfg=cfg):
-    alpha = find_prod(a.alpha, inverse(b, cfg), cfg)
-    return Term(alpha, a._components, cfg=cfg)
-
-
-##############################################################################
-@dispatch_on((0, 1))
-def div_into(a, b, cfg=cfg):
-    """Divide one element into another"""
-    raise NotImplementedError
-
-
-@div_into.add((Alpha, Alpha))
-def _div_into_Alpha_Alpha(a, b, cfg=cfg):
-    return find_prod(inverse(a, cfg), b, cfg)
-
-
-@div_into.add((Alpha, Term))
-def _div_into_Alpha_Pair(a, b, cfg=cfg):
-    alpha = find_prod(inverse(a, cfg), b.alpha, cfg)
-    return Term(alpha, b._components, cfg=cfg)
-
-
-##############################################################################
-@dispatch_on(index=0)
-def project(element, grade, cfg=cfg):
-    """
-    Implementation of the grade-projection operator <A>n.
-    Return only the elements of A that are of grade n.
-    NOTE:: αp is a grade-0 scalar element.
-    """
-    raise NotImplementedError
-
-
-@project.add(Alpha)
-def _project_alpha(element, grade, cfg=cfg):
-    if element._index == POINT:
-        if grade == 0:
-            return element
-        else:
-            return None
-    elif len(element._index) == grade:
-        return element
-    else:
-        return None
-
-
-@project.add(Term)
-def _project_term(element, grade, cfg=cfg):
-    if element.index == POINT:
-        if grade == 0:
-            return element
-        else:
-            return None
-    elif len(element.index) == grade:
-        return element
-    else:
-        return None
-
-
-@project.add(MultiVector)
-def _project_multivector(element, grade, cfg=cfg):
-    correct_grade = []
-    if grade == 0:
-        for term in element:
-            if term.index == POINT:
-                correct_grade.append(term)
-    else:
-        for term in element:
-            ix = term.index
-            if len(ix) == grade and ix != POINT:
-                correct_grade.append(term)
-    res = MultiVector(correct_grade, cfg=cfg)
-    return res
-
-
-##############################################################################
-
-
-@dispatch_on(index=0)
-def dagger(obj, cfg=cfg):
-    """
-    Compute the Hermitian conjugate of the argument.
-    """
-    raise NotImplementedError
-
-
-@dagger.add(MultiVector)
-def _dagger_mvec(mvec, cfg=cfg):
-    _neg = [
-        Alpha(a, cfg=cfg)
-        for a in cfg.allowed
-        if full(Alpha(a, cfg=cfg), Alpha(a, cfg=cfg), cfg)._sign == -1
-    ]
-    mvec = copy(mvec)
-    new_vec = []
-    for term in mvec:
-        if term._alpha in _neg:
-            term._sign *= -1
-        new_vec.append(term)
-    res = MultiVector(new_vec, cfg=cfg)
-
-    return res
-
-
-@dagger.add(Alpha)
-def _dagger_alpha(alpha, cfg=cfg):
-    res = copy(alpha)
-    if full(alpha, alpha, cfg)._sign == -1:
-        res._sign *= -1
-
-    return res
-
-
-@dagger.add(Term)
-def _dagger_pair(term, cfg=cfg):
-    res = copy(term)
-    if full(term._alpha, term._alpha, cfg)._sign == -1:
-        res.sign *= -1
-
-    return res
-
-
-##############################################################################
-
-
-@dispatch_on((0, 1))
-def commutator(a, b, cfg=cfg):
-    """
-    Computes the group commutator [a, b] = (a . b . a^-1 . b^-1) for Alphas.
-    """
-    raise NotImplementedError
-
-
-@commutator.add((Alpha, Alpha))
-def _group_commutator(a, b, cfg=cfg):
-    product = full(a, b, cfg)
-    product = full(product, inverse(a, cfg=cfg), cfg)
-    product = full(product, inverse(b, cfg=cfg), cfg)
-    return product
-
-
-# @commutator.add((Term, Term))
-# def _ring_commutator(a, b):
-#     '''Computes the ring commutator [a, b] = ab - ba for Pairs'''
-#     return full(a, b) - full(b, a)

@@ -114,7 +114,7 @@ class Term:
 
     def __repr__(self):
         sgn = "-" if self._sign == -1 else ""
-        comps = ".".join(str(c) for c in self._components)
+        comps = ".".join(str(c) for c in sorted(self._components))
         partials = "".join(
             "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
             for p in sorted(self._component_partials)
@@ -131,7 +131,7 @@ class Term:
         they have been factored out elsewhere within a given string representation.
         """
         sgn = "-" if self._sign == -1 else "+"
-        comps = ".".join(str(c) for c in self._components[ix:])
+        comps = ".".join(str(c) for c in sorted(self._components)[ix:])
         count = "" if count == 1 else count
         partials = "".join(
             "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
@@ -141,7 +141,7 @@ class Term:
         return f"{sgn} {count}{partials}{comps}"
 
     def __hash__(self):
-        return hash((self._sign, self._alpha, tuple(self._components)))
+        return hash((self._sign, self._alpha, tuple(sorted(self._components))))
 
     def __neg__(self):
         neg = copy(self)
@@ -155,4 +155,4 @@ class Term:
         if self._alpha != other._alpha:
             return self._alpha < other._alpha
 
-        return self._components < other._components
+        return sorted(self._components) < sorted(other._components)

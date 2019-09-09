@@ -1,4 +1,4 @@
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from copy import deepcopy
 from itertools import groupby
 from typing import List, Union

@@ -19,6 +19,18 @@ def test_inverse():
             assert find_prod(alpha, inverse_alpha, cfg=new_config) == ap
 
 
+def test_dagger_alpha():
+    """dagger works correctly for alphas"""
+    for metric in metrics:
+        new_config = ARConfig(config.allowed, metric, config.division_type)
+
+        for ix in new_config.allowed:
+            sign = find_prod(Alpha(ix), Alpha(ix), cfg=new_config)._sign
+            a1 = Alpha(index=ix, sign=sign, cfg=new_config)
+            a2 = dagger(Alpha(ix, cfg=new_config), cfg=new_config)
+            assert a1 == a2
+
+
 def test_dagger():
     """Dagger negates elements that square to -1"""
     for metric in metrics:
