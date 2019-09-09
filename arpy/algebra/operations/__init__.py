@@ -2,6 +2,7 @@
 Low level mathematical operations for arpy
 """
 from .commutator import commutator
+from .diamond import diamond
 from .div import div_by, div_into
 from .dual import MM_bar, dual
 from .full import find_prod, full, inverse
@@ -22,4 +23,5 @@ __all__ = [
     "dual",
     "MM_bar",
     "rev",
+    "diamond",
 ]
