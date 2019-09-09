@@ -79,6 +79,19 @@ class MultiVector:
 
         return MultiVector(terms, cfg=self.cfg)
 
+    def __mul__(self, other):
+        """Scalar multiplication of a multivector"""
+        # TODO: Need to be able to handle fractions as well
+        if not isinstance(other, int):
+            raise ValueError("Use 'full' for form products between MultiVectors")
+
+        if other < 0:
+            other *= -1
+            for t in self._terms:
+                t._sign *= -1
+
+        self._terms *= other
+
     def __contains__(self, other):
         if isinstance(other, Term):
             return other in self._terms
