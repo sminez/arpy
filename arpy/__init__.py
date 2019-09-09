@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 import types
 from copy import copy
@@ -11,8 +11,9 @@ from sys import _getframe
 from .algebra.config import ARConfig, config
 from .algebra.data_types import Alpha, MultiVector, Term, Xi
 from .algebra.differential import AR_differential
-from .algebra.operations import (commutator, dagger, diamond, div_by, div_into,
-                                 find_prod, full, hermitian, inverse, project)
+from .algebra.operations import (MM_bar, commutator, dagger, diamond, div_by,
+                                 div_into, dual, find_prod, full, hermitian,
+                                 inverse, project, rev)
 from .reductions.reducers import del_grouped, replace_all
 from .utils.lexparse import ARContext
 from .utils.utils import Nat, Tex, Zet, reorder_allowed
@@ -159,6 +160,9 @@ __all__ = [
     "hermitian",
     "commutator",
     "diamond",
+    "rev",
+    "dual",
+    "MM_bar",
     # Differential operators
     "Dmu",
     "d",
