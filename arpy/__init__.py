@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
 import types
 from copy import copy

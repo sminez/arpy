@@ -2,7 +2,7 @@ import re
 from copy import copy
 from typing import List, Union
 
-from ...utils.utils import SUB_SCRIPTS
+from ...utils.utils import SUB_SCRIPTS, power_notation
 from ..config import ARConfig
 from ..config import config as cfg
 from .alpha import Alpha
@@ -114,11 +114,12 @@ class Term:
 
     def __repr__(self):
         sgn = "-" if self._sign == -1 else ""
-        comps = ".".join(str(c) for c in sorted(self._components))
-        partials = "".join(
+        comps = ".".join(power_notation(sorted(self._components)))
+        partial_strs = [
             "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
             for p in sorted(self._component_partials)
-        )
+        ]
+        partials = "".join(power_notation(partial_strs))
 
         return f"({sgn}{self._alpha}, {partials}{comps})"
 
@@ -131,12 +132,13 @@ class Term:
         they have been factored out elsewhere within a given string representation.
         """
         sgn = "-" if self._sign == -1 else "+"
-        comps = ".".join(str(c) for c in sorted(self._components)[ix:])
+        comps = ".".join(power_notation(sorted(self._components[ix:])))
         count = "" if count == 1 else count
-        partials = "".join(
+        partial_strs = [
             "∂{}".format("".join(SUB_SCRIPTS[i] for i in p._index))
-            for p in reversed(self._component_partials)
-        )
+            for p in sorted(self._component_partials)
+        ]
+        partials = "".join(power_notation(partial_strs))
 
         return f"{sgn} {count}{partials}{comps}"
 

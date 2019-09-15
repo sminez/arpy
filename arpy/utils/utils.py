@@ -1,3 +1,5 @@
+from collections import Counter
+
 SUPER_SCRIPTS = {"B": "ᴮ", "A": "ᴬ", "T": "ᵀ", "E": "ᴱ"}
 SUB_SCRIPTS = {"0": "₀", "1": "₁", "2": "₂", "3": "₃", "p": "ₚ", "i": "ᵢ", "j": "ⱼ", "k": "ₖ"}
 ZET_MAP = {
@@ -101,3 +103,20 @@ def reorder_allowed(allowed, order="pBtThAqE"):
     for group in order:
         new += groups[group]
     return new
+
+
+def power_notation(lst):
+    """
+    Given a list of elements (typically representing values of some sort,
+    relating to a string representation of the result of a computation)
+    express repeated elements in a^b power notation.
+    """
+    result = []
+
+    for item, power in Counter(lst).items():
+        if power == 1:
+            result.append(str(item))
+        else:
+            result.append(f"{item}^{power}")
+
+    return result
