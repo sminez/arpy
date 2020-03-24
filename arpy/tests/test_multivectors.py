@@ -1,4 +1,5 @@
 import pytest
+
 from arpy import Alpha, MultiVector, Term
 
 m1 = MultiVector("1 2 3")

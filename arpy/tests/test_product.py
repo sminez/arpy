@@ -1,5 +1,4 @@
 from arpy import Alpha, ARConfig, Term, config, find_prod, full
-
 from utils import ij_pairs, ijk_triplets, metrics
 
 ap = Alpha("p")

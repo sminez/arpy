@@ -9,8 +9,8 @@ import tempfile
 import time
 import webbrowser
 
-from ..algebra.data_types import Alpha, Term
 from ..algebra.config import config
+from ..algebra.data_types import Alpha, Term
 from ..algebra.operations import full
 from .lexparse import ARContext
 

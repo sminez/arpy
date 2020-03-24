@@ -1,6 +1,6 @@
 import pytest
-from arpy import config, ARConfig
 
+from arpy import ARConfig, config
 
 original_allowed = set(config.allowed)
 new_allowed = [

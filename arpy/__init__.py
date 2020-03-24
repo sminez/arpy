@@ -11,14 +11,25 @@ from sys import _getframe
 from .algebra.config import ARConfig, config
 from .algebra.data_types import Alpha, MultiVector, Term, Xi
 from .algebra.differential import AR_differential
-from .algebra.operations import (MM_bar, commutator, dagger, diamond, div_by,
-                                 div_into, dual, find_prod, full, hermitian,
-                                 inverse, project, rev)
+from .algebra.operations import (
+    MM_bar,
+    commutator,
+    dagger,
+    diamond,
+    div_by,
+    div_into,
+    dual,
+    find_prod,
+    full,
+    hermitian,
+    inverse,
+    project,
+    rev,
+)
 from .reductions.reducers import del_grouped, replace_all
 from .utils.lexparse import ARContext
 from .utils.utils import Nat, Tex, Zet, reorder_allowed
-from .utils.visualisation import (cayley, js_cayley, op_block, sign_cayley,
-                                  sign_distribution)
+from .utils.visualisation import cayley, js_cayley, op_block, sign_cayley, sign_distribution
 
 
 ##############################################################################

@@ -1,6 +1,15 @@
-from arpy import (Alpha, ARConfig, MultiVector, Term, commutator, config,
-                  dagger, find_prod, inverse, project)
-
+from arpy import (
+    Alpha,
+    ARConfig,
+    MultiVector,
+    Term,
+    commutator,
+    config,
+    dagger,
+    find_prod,
+    inverse,
+    project,
+)
 from utils import metrics
 
 ap = Alpha("p")

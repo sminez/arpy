@@ -15,8 +15,7 @@ from ..algebra.config import ARConfig
 from ..algebra.config import config as cfg
 from ..algebra.data_types import Alpha, MultiVector, Term
 from ..algebra.differential import AR_differential
-from ..algebra.operations import (commutator, dagger, div_by, div_into, full,
-                                  project)
+from ..algebra.operations import commutator, dagger, div_by, div_into, full, project
 
 tags = [
     ("MVEC", r"\{(.*)\}$"),

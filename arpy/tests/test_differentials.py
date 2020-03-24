@@ -1,8 +1,8 @@
 import pytest
+
 from arpy import Alpha, Term, Xi, config
 from arpy.algebra.differential import term_partial
-from arpy.reductions.del_grouping import (replace_curl, replace_div,
-                                          replace_grad, replace_partials)
+from arpy.reductions.del_grouping import replace_curl, replace_div, replace_grad, replace_partials
 
 
 def test_new_component_partial():

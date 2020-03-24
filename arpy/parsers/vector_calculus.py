@@ -1,6 +1,7 @@
 from itertools import groupby
-from ..utils.utils import Zet, Nat
+
 from ..algebra.data_types import Term
+from ..utils.utils import Nat, Zet
 
 
 def replace_grad(mvec):

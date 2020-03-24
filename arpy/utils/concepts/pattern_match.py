@@ -1,12 +1,12 @@
-from copy import copy
-from sys import _getframe
-from functools import wraps
 from collections import Container
-from inspect import getfullargspec
 from contextlib import contextmanager
+from copy import copy
+from ctypes import c_int, py_object, pythonapi
+from functools import wraps
+from inspect import getfullargspec
+from itertools import chain, takewhile, zip_longest
+from sys import _getframe
 from types import CodeType, FunctionType
-from ctypes import c_int, pythonapi, py_object
-from itertools import chain, zip_longest, takewhile
 
 
 @contextmanager

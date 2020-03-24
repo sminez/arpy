@@ -1,4 +1,5 @@
 import pytest
+
 from arpy import Alpha, Term, ar, full
 
 
