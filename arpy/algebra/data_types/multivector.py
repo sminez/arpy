@@ -65,7 +65,7 @@ class MultiVector:
         elif isinstance(other, MultiVector):
             terms = self._terms + other._terms
         else:
-            raise TypeError()
+            raise TypeError("MultiVector addition is only defined for Terms and MultiVectors")
 
         return MultiVector(terms, cfg=self.cfg)
 
@@ -110,7 +110,7 @@ class MultiVector:
 
     def __delitem__(self, key):
         key = self.__ensure_key_is_alpha(key)
-        self._terms = list(filter(lambda t: t._alpha != key, self._terms))
+        self._terms = [t for t in self._terms if t._alpha != key]
 
     def __iter__(self):
         yield from self._terms

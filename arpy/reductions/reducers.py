@@ -120,7 +120,7 @@ class Template:
                     self.match_map[matching_template].append(v)
                 else:
                     self.non_matching.append(v)
-            except:
+            except Exception:
                 # If we get any errors then keep the terms as provided
                 self.non_matching.append(v)
 

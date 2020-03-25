@@ -1,6 +1,6 @@
 .PHONY: clean
-clean: # get rid of all build artifacts
-	@rm -rf arpy.egg-info build dist
+clean: # get rid of all build artifacts and caches
+	@rm -rf arpy.egg-info build dist **/__pycache__ .pytest_cache
 
 .PHONY: get-poetry
 get-poetry: # locally install poetry
