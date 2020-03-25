@@ -4,7 +4,7 @@ from io import StringIO
 
 from arpy import *
 
-from ..algebra.config import config
+from ..config import config
 from .lexparse import ARContext
 
 mvec_pattern = r"([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{(.*)\}$"

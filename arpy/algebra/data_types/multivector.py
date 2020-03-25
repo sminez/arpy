@@ -3,8 +3,8 @@ from copy import deepcopy
 from itertools import groupby
 from typing import List, Union
 
-from ..config import ARConfig
-from ..config import config as cfg
+from ...config import ARConfig
+from ...config import config as cfg
 from .alpha import Alpha
 from .term import Term
 

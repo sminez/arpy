@@ -8,7 +8,7 @@ from copy import copy
 from ctypes import c_int, py_object, pythonapi
 from sys import _getframe
 
-from .algebra.config import ARConfig, config
+from .config import ARConfig, config
 from .algebra.data_types import Alpha, MultiVector, Term, Xi
 from .algebra.differential import AR_differential
 from .algebra.operations import (

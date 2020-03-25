@@ -3,8 +3,8 @@ from copy import copy
 from typing import List, Union
 
 from ...utils.utils import SUB_SCRIPTS, power_notation
-from ..config import ARConfig
-from ..config import config as cfg
+from ...config import ARConfig
+from ...config import config as cfg
 from .alpha import Alpha
 from .xi import Xi
 

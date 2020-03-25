@@ -11,8 +11,8 @@ from itertools import permutations
 from operator import add
 from sys import _getframe, stderr
 
-from ..algebra.config import ARConfig
-from ..algebra.config import config as cfg
+from ..config import ARConfig
+from ..config import config as cfg
 from ..algebra.data_types import Alpha, MultiVector, Term
 from ..algebra.differential import AR_differential
 from ..algebra.operations import commutator, dagger, div_by, div_into, full, project

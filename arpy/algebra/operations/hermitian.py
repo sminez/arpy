@@ -1,7 +1,7 @@
 from copy import copy
 
 from ...utils.concepts.dispatch import dispatch_on
-from ..config import config as cfg
+from ...config import config as cfg
 from ..data_types import Alpha, MultiVector, Term
 from .full import full
 from .rev import rev
