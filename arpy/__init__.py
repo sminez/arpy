@@ -8,7 +8,6 @@ from copy import copy
 from ctypes import c_int, py_object, pythonapi
 from sys import _getframe
 
-from .config import ARConfig, config
 from .algebra.data_types import Alpha, MultiVector, Term, Xi
 from .algebra.differential import AR_differential
 from .algebra.operations import (
@@ -26,6 +25,7 @@ from .algebra.operations import (
     project,
     rev,
 )
+from .config import ARConfig, config
 from .reductions.reducers import del_grouped, replace_all
 from .utils.lexparse import ARContext
 from .utils.utils import Nat, Tex, Zet, reorder_allowed

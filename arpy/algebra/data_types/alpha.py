@@ -1,8 +1,8 @@
 from copy import copy
 
-from ...utils.utils import SUB_SCRIPTS
 from ...config import ARConfig
 from ...config import config as cfg
+from ...utils.utils import SUB_SCRIPTS
 
 
 class Alpha:

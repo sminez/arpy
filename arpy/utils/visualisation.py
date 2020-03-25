@@ -9,9 +9,9 @@ import tempfile
 import time
 import webbrowser
 
-from ..config import config
 from ..algebra.data_types import Alpha, Term
 from ..algebra.operations import full
+from ..config import config
 from .lexparse import ARContext
 
 # HTML/JS for js_cayley visualisation

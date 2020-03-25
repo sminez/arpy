@@ -34,8 +34,8 @@ we are done.
 from copy import copy
 from functools import wraps
 
-from ...utils.concepts.dispatch import dispatch_on
 from ...config import config as cfg
+from ...utils.concepts.dispatch import dispatch_on
 from ..data_types import Alpha, MultiVector, Term
 
 POINT = "p"

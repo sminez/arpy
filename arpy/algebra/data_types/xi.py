@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from ...utils.utils import SUB_SCRIPTS
 from ...config import config as cfg
+from ...utils.utils import SUB_SCRIPTS
 from .alpha import Alpha
 
 

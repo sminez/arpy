@@ -5,8 +5,8 @@ Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 from collections import namedtuple
 from itertools import groupby
 
-from ..config import config as cfg
 from ..algebra.data_types import Alpha, Term, Xi
+from ..config import config as cfg
 from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
 from .reducers import alpha_to_group
 

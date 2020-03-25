@@ -10,8 +10,8 @@ TODO:
     Second Derivatives
     Product and derivatives (F dF etc)
 """
-from ..config import config as cfg
 from ..algebra.data_types import Alpha, Term, Xi
+from ..config import config as cfg
 from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
 
 

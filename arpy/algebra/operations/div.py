@@ -1,5 +1,5 @@
-from ...utils.concepts.dispatch import dispatch_on
 from ...config import config as cfg
+from ...utils.concepts.dispatch import dispatch_on
 from ..data_types import Alpha, Term
 from .full import find_prod, inverse
 

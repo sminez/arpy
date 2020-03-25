@@ -12,8 +12,8 @@ NOTE:: Specific operators (such as Dmu) are defined in the __init__ file.
 """
 from copy import deepcopy
 
-from ..utils.utils import SUB_SCRIPTS
 from ..config import config as cfg
+from ..utils.utils import SUB_SCRIPTS
 from .data_types import Alpha, MultiVector
 from .operations import div_by, div_into, full, inverse
 
