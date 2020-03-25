@@ -1,4 +1,5 @@
-from collections import ChainMap, Counter, Iterator, OrderedDict, defaultdict, deque
+from collections import ChainMap, Counter, OrderedDict, defaultdict, deque
+from collections.abc import Iterator
 from types import GeneratorType
 
 from .dispatch import dispatch_on

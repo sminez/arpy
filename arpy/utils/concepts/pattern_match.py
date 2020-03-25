@@ -1,4 +1,4 @@
-from collections import Container
+from collections.abc import Container
 from contextlib import contextmanager
 from copy import copy
 from ctypes import c_int, py_object, pythonapi

@@ -8,7 +8,7 @@ iterator and <func_name> returning a collection.
 import functools as ftools
 import itertools as itools
 import operator as op
-from collections import Container
+from collections.abc import Container
 from copy import deepcopy
 
 # Bring in functionality from the other modules
