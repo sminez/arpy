@@ -1,4 +1,4 @@
-from arpy import (
+from .. import (
     Alpha,
     ARConfig,
     MultiVector,
@@ -10,7 +10,7 @@ from arpy import (
     inverse,
     project,
 )
-from utils import metrics
+from .utils import metrics
 
 ap = Alpha("p")
 neg_ap = Alpha("-p")

@@ -1,6 +1,6 @@
 import pytest
 
-from arpy import ARContext
+from .. import ARContext
 
 oi_allowed = [
     "p",

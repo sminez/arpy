@@ -15,6 +15,10 @@ format: # format the code base using isort and black
 	@poetry run isort -y
 	@poetry run black $(PWD)
 
+.PHONY: test
+test: # run the test suite
+	@poetry run pytest --disable-warnings -v --black --cov=arpy --cov-config .coveragerc --cov-report term-missing:skip-covered
+
 .PHONY: wheel
 wheel: # build a wheel using poetry
 	@poetry build --format wheel

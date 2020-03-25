@@ -1,4 +1,4 @@
-from arpy import reorder_allowed
+from .. import reorder_allowed
 
 allowed = [
     "p",
