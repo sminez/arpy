@@ -8,11 +8,12 @@ authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
 python = "^3.6"
 
 [tool.poetry.dev-dependencies]
+black = "^19.10b0"
+isort = "^4.3.21"
+flake8 = "^3.7.9"
 pytest = "^5.4.1"
-pytest-black = "^0.3.8"
-pytest-isort = "^0.3.1"
-pytest-flake8 = "^1.0.4"
 pytest-cov = "^2.8.1"
+pytest-black = "^0.3.8"
 
 [tool.isort]
 multi_line_output = 3
