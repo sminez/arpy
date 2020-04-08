@@ -6,6 +6,7 @@ authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
+neovim = "^0.3.1"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
