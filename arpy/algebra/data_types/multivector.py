@@ -31,7 +31,7 @@ class MultiVector:
 
     def __init__(self, terms: TermsOrStrings = [], cfg: ARConfig = cfg):
         if isinstance(terms, str):
-            terms = [Term(t) for t in terms.split()]
+            terms = [Term(t, cfg=cfg) for t in terms.split()]
 
         _terms = []
 
