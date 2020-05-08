@@ -4,10 +4,11 @@ terms. This is intended to be a generic engine that is extensible as we identify
 further patterns and groupings with higher order meaning.
 """
 from dataclasses import dataclass
-from typing import List, Callable
+from typing import Callable, List
+
 from ..algebra.data_types import Alpha, Term, Xi
-from ..consts import Zet, Orientation
 from ..config import config as cfg
+from ..consts import Orientation, Zet
 
 
 class FailedMatch(Exception):

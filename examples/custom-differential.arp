@@ -1,9 +1,0 @@
-# Define a new operator using `<ALPHAS>`
-# Here we differentiate wrt the trivector Zet
-D_t = <0 023 031 012>
-
-# Define Ξμ
-xi_mu = {0 1 2 3}
-
-# Compute the result in the same way as before
-result = D_t xi_mu
