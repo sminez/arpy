@@ -1,0 +1,21 @@
+// ALLOWED: p 23 31 12 0 023 031 012 123 1 2 3 0123 01 02 03
+// METRIC: +---
+
+# Define a new operator using `<ALPHAS>`
+D_03 = <0 3>
+
+# Define a version of ΞG with explict values for ξ
+xi_odd = {031[CosR(kz-ωt)] 1[CosR(kz-ωt)] 023[SinR(kz-ωt)] -2[SinR(kz-ωt)]}
+
+xi_even = {31[CosR(kz-ωt)] 01[CosR(kz-ωt)] 23[SinR(kz-ωt)] -02[SinR(kz-ωt)]}
+
+# Compute the results in the same way as before
+result = D_03 xi_odd
+result2 = D_03 xi_even
+
+
+// ALLOWED: p 23 31 12 0 023 031 012 123 1 2 3 0123 01 02 03
+// METRIC: -+++
+
+result = D_03 xi_odd
+result2 = D_03 xi_even

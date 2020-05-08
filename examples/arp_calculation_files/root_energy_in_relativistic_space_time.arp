@@ -1,0 +1,114 @@
+// ALLOWED: p 23 31 12 0 023 031 012 123 1 2 3 0123 01 02 03
+// METRIC: +---
+
+
+# NOTE: Due to the way the program is written, every step in a
+#       calculation file must assign to a variable name. As such,
+#       there are a lot of redundant variables being defined in
+#       order to display built in values!
+
+
+# Define Xi_mu (1)
+# ----------------
+Xi_mu = { 0 1 2 3 }
+
+
+# Xi_G is in the correct form (2)
+# -------------------------------
+G
+
+
+# Check that D_mu is correct (3)
+# ------------------------------
+Dmu
+
+
+# Check D_mu Xi_G (4)
+# -------------------
+Dmu_G = Dmu G
+
+// DEL NOTATION
+Dmu_G = Dmu G
+
+
+# Dmu of Xi_mu and Xi_munu should give Maxwell if we
+# set p, q and the trivectors to 0 (5)
+# --------------------------------------------------
+Xi_munu = { 0 1 2 3 23 31 12 01 02 03 }
+
+// DEL NOTATION
+Dmu_munu = Dmu Xi_munu
+
+
+# Defining the 4-vector potential (6)
+# This is verified in (1)
+# -----------------------------------
+
+
+# Dmu Xi_mu in vector notation (7)
+# --------------------------------
+// DEL NOTATION
+Dmu_mu = Dmu Xi_mu
+
+
+# Dmu F = 0 should give Maxwell (8)
+# This one is covered by the output from (5)
+# ------------------------------------------
+
+
+# I'm not too sure if there is anything I can check yet
+# for section VI (9-12) as these are Physical definitions
+# without any terms to check (!)
+# -------------------------------------------------------
+
+
+# Defining D_G (13)
+# NOTE: The signs of the terms aren't stated in the paper
+# -------------------------------------------------------
+DG
+
+
+# Looking at D_G(G)....! (14)
+# This one is fun in vector notation
+# ----------------------------------
+// DEL NOTATION
+DgG = DG G
+
+
+# Dg(Dg(G)) has 4096 terms. I need to parse second differentials
+# as well as first differentials then I guess...! (15)
+# --------------------------------------------------------------
+
+
+# (16-18) are actual solutions using the equations from before.
+# Not sure if this is something we want to do explicitly in arpy...
+# My original plan was to use arpy as a calculator for the alpha
+# calculations while doing the rest of the mathematics by hand.
+# -----------------------------------------------------------------
+
+
+# DEven in vector notation (19)
+Xi_Even = { p 0123 -01 -02 -03 -23 -31 -12 }
+
+// DEL NOTATION
+Deven = Dmu Xi_Even
+
+
+# 1/2GGdagger: I haven't got a full parser for this kind of thing
+# yet but we should be able to eyeball it from the output.
+#
+# I've been using G to describe XiG...so I assume that's wrong? (This
+# Is why I'm calling it 'g' here.)
+#
+# (NOTE: there is a formatting error in the paper with the (20)
+# overlapping the end of the equation)
+# -------------------------------------------------------------------
+g = { 23 31 12 01 02 03 p }
+
+g_dagger = g!
+
+em_density = g g!
+
+em_density2 = g g_dagger
+
+em_density3 = g (g!)
