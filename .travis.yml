@@ -1,13 +1,15 @@
 language: python
 python:
-- '3.5'
+  - '3.6'
+  - '3.7'
+  - '3.8'
 install:
-- python setup.py install
-- pip install coveralls[yaml]
+  - pip install coveralls[yaml] poetry
+  - poetry install
 script:
-- python3 setup.py test
+  - make test
 after_success:
-- coveralls
+  - coveralls
 notifications:
   slack:
     secure: rC1Bo9iElfwFpzAR9VCI0rRH0NaWnqx8yV46esg1DDCiW4iC8uJ1b8k6ldbPDsNs51BA9Bc5PBU6JlpKNJoBCJk4snddsmPrlS5xqSxZBjcI/vjoY8daHm91dGnbY3AD8Pk/h9LbDZpKZ2iqBw7yY0a7rrmNoDFaQ29ahnuK2CGU9sdAzSRbS7KZxYRDS4UczrERPTR3poex48XObFDH0+g75jqDU3UJWBneXofirWExjNsi8wjFlYAoJwBE+yxuSLCqr4cDGjwi+iIvo52IR6IfPO/d0ycmUpkIjPFIfu7NyVuFnPxvQ5DlHwMdF86cKUrfeIeV1nKLiNFbzIUza5Kk6W5Vu0pwIvyhpMarBKL9ivcN2JUnceh6oSfA3ttS0kKd1BbfVpSEXYBWjruSi26gKiLiW/qQxLMG3tBB6zRk56J4zASx/FNWxopVZ4YDgoMgAe+VBsc9D9d6seCaHLC9uiHZK6462Q3JWSq2dLPI3egJua2xB53bdMRIF2wQSqv/bMK7mFaFBOeX53pnMMplwN5n5/dVcjNdZiGP8+GCeKdN7q5psAIBvOa1LIEebBR1aI99bsYiTwj9+vULEBtsz93zoGZrTOdFQG7s6aLT3Ao9EtFK+nREAd4Alh2+Yy4VsmwnXE38Z705LyB66xy/3+twMo8Ek9kKQOlPmG0=
