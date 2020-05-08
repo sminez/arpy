@@ -2,11 +2,12 @@ language: python
 python:
   - '3.6'
   - '3.7'
+  - '3.8'
 install:
-  - python setup.py install
-  - pip install coveralls[yaml]
+  - pip install coveralls[yaml] poetry
+  - poetry install
 script:
-  - python3 setup.py test_cov
+  - make test
 after_success:
   - coveralls
 notifications:
