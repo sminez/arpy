@@ -1,6 +1,6 @@
 from itertools import combinations
-from arpy import Alpha
 
+from arpy import Alpha
 
 # Data used in multiple tests
 metrics = [  # All possible +- metrics

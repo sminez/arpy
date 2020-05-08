@@ -1,6 +1,6 @@
 import pytest
-from arpy import MultiVector, Alpha, Pair
 
+from arpy import Alpha, MultiVector, Pair
 
 m1 = MultiVector("1 2 3")
 m2 = MultiVector("1 2")

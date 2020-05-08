@@ -6,18 +6,17 @@ Lexing and Parsing of a more mathematical syntax for performing calculations
 with the arpy Absolute Relativity library.
 """
 import re
-from operator import add
-from sys import _getframe, stderr
 from collections import namedtuple
 from itertools import permutations
+from operator import add
+from sys import _getframe, stderr
 
 from ..algebra.ar_types import Alpha, Pair
 from ..algebra.config import ARConfig
 from ..algebra.config import config as cfg
-from ..algebra.multivector import MultiVector
 from ..algebra.differential import differential_operator
-from ..algebra.operations import full, div_by, div_into, project, dagger, commutator
-
+from ..algebra.multivector import MultiVector
+from ..algebra.operations import commutator, dagger, div_by, div_into, full, project
 
 tags = [
     ("MVEC", r"\{(.*)\}$"),

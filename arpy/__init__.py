@@ -4,32 +4,32 @@
 __version__ = "0.2.11"
 
 import types
-from sys import _getframe
 from copy import deepcopy
-from ctypes import c_int, pythonapi, py_object
+from ctypes import c_int, py_object, pythonapi
+from sys import _getframe
 
-from .algebra.config import config, ARConfig
-from .algebra.ar_types import Alpha, Xi, Pair
-from .algebra.multivector import MultiVector, DelMultiVector, GroupedMultiVector
+from .algebra.ar_types import Alpha, Pair, Xi
+from .algebra.config import ARConfig, config
+from .algebra.differential import AR_differential, differential_operator
+from .algebra.multivector import DelMultiVector, GroupedMultiVector, MultiVector
 from .algebra.operations import (
-    find_prod,
-    inverse,
-    full,
+    commutator,
+    dagger,
     div_by,
     div_into,
-    project,
+    find_prod,
+    full,
+    inverse,
     prod_apply,
-    dagger,
-    commutator,
+    project,
 )
-from .algebra.differential import AR_differential, differential_operator
 
 # NOTE: Now replaced by the generic functionality in reducers.py
 # from .reductions.del_grouping import del_grouped
 from .reductions.reducers import cancel_like_terms, del_grouped, replace_all
 from .utils.lexparse import ARContext
-from .utils.utils import Tex, reorder_allowed, Zet, Nat
-from .utils.visualisation import cayley, sign_cayley, sign_distribution, js_cayley, op_block
+from .utils.utils import Nat, Tex, Zet, reorder_allowed
+from .utils.visualisation import cayley, js_cayley, op_block, sign_cayley, sign_distribution
 
 
 ##############################################################################

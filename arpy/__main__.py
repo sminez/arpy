@@ -8,8 +8,8 @@ order to deal with assignment and paramater setting. All Variables are printed
 when at the head of the output and calculations are labelled.
 """
 import argparse
-from .utils.calc_file import run_calculation
 
+from .utils.calc_file import run_calculation
 
 description = """\
 .: arpy :: Absolute Relativity and the Algebra of Reality :.

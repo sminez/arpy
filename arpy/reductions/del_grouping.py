@@ -2,14 +2,13 @@
 arpy (Absolute Relativity in Python)
 Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 """
-from itertools import groupby
 from collections import namedtuple
+from itertools import groupby
 
-from .reducers import alpha_to_group
-from ..algebra.ar_types import Alpha, Xi, Pair
+from ..algebra.ar_types import Alpha, Pair, Xi
 from ..algebra.config import config as cfg
-from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS, Zet, Nat
-
+from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
+from .reducers import alpha_to_group
 
 term = namedtuple("term", ["d", "xi", "alpha", "sign", "pair"])
 

@@ -37,11 +37,11 @@ we are done.
 from copy import deepcopy
 from functools import wraps
 from types import FunctionType
-from .config import config as cfg
-from .multivector import MultiVector
+
 from ..utils.concepts.dispatch import dispatch_on
 from .ar_types import Alpha, Pair, XiProduct
-
+from .config import config as cfg
+from .multivector import MultiVector
 
 POINT = "p"
 

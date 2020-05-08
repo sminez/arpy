@@ -1,16 +1,16 @@
-from utils import metrics
 from arpy import (
     Alpha,
-    Pair,
+    ARConfig,
     MultiVector,
+    Pair,
+    commutator,
+    config,
+    dagger,
     find_prod,
     inverse,
-    dagger,
-    commutator,
     project,
-    config,
-    ARConfig,
 )
+from utils import metrics
 
 ap = Alpha("p")
 neg_ap = Alpha("-p")

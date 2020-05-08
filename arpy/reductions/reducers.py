@@ -15,9 +15,9 @@ TODO:
 """
 from itertools import groupby
 
-from ..algebra.ar_types import Xi, Pair, Alpha
+from ..algebra.ar_types import Alpha, Pair, Xi
 from ..algebra.config import config as cfg
-from ..utils.utils import SUPER_SCRIPTS, SUB_SCRIPTS, Nat, Zet
+from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
 
 
 class FailedMatch(Exception):
@@ -125,7 +125,7 @@ class Template:
                     self.match_map[matching_template].append(v)
                 else:
                     self.non_matching.append(v)
-            except:
+            except Exception:
                 # If we get any errors then keep the terms as provided
                 self.non_matching.append(v)
 
@@ -242,10 +242,10 @@ class Template:
         # of partials and xi components and that the sign is correct.
         # All we need to do now is confirm that the match groups (capital
         # letters in the patterns) are consistent.
-        if term.alpha_group is not "_":
+        if term.alpha_group != "_":
             reqs = check_group(term.alpha_group, candidate.alpha.index, reqs)
 
-        if term.alpha_exyz is not "_":
+        if term.alpha_exyz != "_":
             if term.alpha_exyz not in "exyz":
                 required = reqs.get(term.alpha_exyz)
                 if required is None:

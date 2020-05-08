@@ -1,5 +1,6 @@
 import pytest
-from arpy import ar, Alpha, Pair, full
+
+from arpy import Alpha, Pair, ar, full
 
 
 def test_creation():

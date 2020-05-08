@@ -1,5 +1,5 @@
+from arpy import Alpha, ARConfig, Pair, config, find_prod, full
 from utils import ij_pairs, ijk_triplets, metrics
-from arpy import Alpha, Pair, find_prod, full, config, ARConfig
 
 ap = Alpha("p")
 neg_ap = Alpha("-p")

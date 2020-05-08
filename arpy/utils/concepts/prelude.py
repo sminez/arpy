@@ -5,16 +5,15 @@ inspired by the likes of Clojure, Haskell and LISP.
 NOTE: There is a naming convension of i<func_name> returning an
 iterator and <func_name> returning a collection.
 """
-from collections import Container
-import itertools as itools
 import functools as ftools
-from copy import deepcopy
+import itertools as itools
 import operator as op
+from collections import Container
+from copy import deepcopy
 
 # Bring in functionality from the other modules
 from .dispatch import dispatch_on
 from .fmap import fmap
-
 
 #############################################################
 # Make some library functions available without namespacing #

@@ -1,11 +1,11 @@
 import re
-from io import StringIO
 from collections import namedtuple
+from io import StringIO
+
+from arpy import *
 
 from ..algebra.config import config
 from .lexparse import ARContext
-from arpy import *
-
 
 mvec_pattern = r"([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\{(.*)\}$"
 operator_pattern = r"([a-zA-Z_][a-zA-Z_0-9]*)\s?=\s?\<([p0213, -]*)\>$"

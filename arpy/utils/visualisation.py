@@ -5,15 +5,14 @@ Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 Tools for visualising results from calculations and investigations.
 """
 import os
-import time
 import tempfile
+import time
 import webbrowser
 
-from .lexparse import ARContext
+from ..algebra.ar_types import Alpha, Pair
 from ..algebra.config import config
 from ..algebra.operations import full
-from ..algebra.ar_types import Alpha, Pair
-
+from .lexparse import ARContext
 
 # HTML/JS for js_cayley visualisation
 HTML = """\

@@ -1,13 +1,14 @@
 """
 Some toy examples of composing pure functions involving primes.
 """
-import numpy as np
-import pandas as pd
+from collections import defaultdict
 from math import sqrt
 from sys import getsizeof
+
 import matplotlib.pyplot as plt
-from collections import defaultdict
-from concepts import takewhile, itakewhile, foldl, mul, itake, scanl
+import numpy as np
+import pandas as pd
+from concepts import foldl, itake, itakewhile, mul, scanl, takewhile
 
 
 def primes():

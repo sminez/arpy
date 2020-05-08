@@ -14,11 +14,12 @@ Absolute Relativity and should only operate on MultiVectors.
 NOTE:: Specific operators (such as Dmu) are defined in the __init__ file.
 """
 from copy import deepcopy
-from .config import config as cfg
+
 from ..utils.utils import SUB_SCRIPTS
 from .ar_types import Alpha
-from .multivector import MultiVector, DelMultiVector
-from .operations import div_by, div_into, inverse, full
+from .config import config as cfg
+from .multivector import DelMultiVector, MultiVector
+from .operations import div_by, div_into, full, inverse
 
 
 class AR_differential:
