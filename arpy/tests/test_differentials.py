@@ -2,7 +2,8 @@ import pytest
 
 from .. import Alpha, Term, Xi, config
 from ..algebra.differential import term_partial
-from ..reductions.del_grouping import replace_curl, replace_div, replace_grad, replace_partials
+
+# from ..reductions.del_grouping import replace_curl, replace_div, replace_grad, replace_partials
 
 
 def test_new_component_partial():
