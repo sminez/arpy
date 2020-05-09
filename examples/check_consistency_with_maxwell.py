@@ -3,6 +3,11 @@ This program uses the arpy library to verify whether or not AR candidate algebra
 consistent with Maxwell's laws of Electromagnetism. Algebras are rejected if they do
 not give a superset of the Maxwell Equations as the result of Dmu(G) and they are
 accepted if they give Maxwell in either the conventional sign or entirely negated.
+
+There are some Algebras that can be _made_ to work by mapping the αjk bivectors as the
+negative of the magnetic field as opposed to mapping them to the magnetic field
+directly. To include checking such candidates, pass the '--allow-neg-B' flag on the
+command line.
 """
 from argparse import ArgumentParser
 from collections import namedtuple
@@ -12,7 +17,7 @@ from arpy import ARContext
 from arpy.utils.utils import SUB_SCRIPTS
 
 Candidate = namedtuple("candidate", "allowed div metric for_maxwell")
-Result = namedtuple("result", "sign metric division allowed pivot_terms")
+Result = namedtuple("result", "sign negate_B metric division allowed pivot_terms")
 
 
 def allowed_repr(allowed):
@@ -78,16 +83,8 @@ def compact_term_repr(t):
     return f"{sign}{t.alpha}{partials}{comps}"
 
 
-def check_candidate(candidate):
-    maxwell = ["---", "+-+", "-++", "+-+", "---", "+-+", "++-", "+-+"]
-    negated_maxwell = ["+++", "-+-", "+--", "-+-", "+++", "-+-", "--+", "-+-"]
-
-    context = ARContext(allowed=candidate.allowed, div=candidate.div, metric=candidate.metric,)
-
-    with context as ar:
-        XiG = "{%s}" % " ".join(ar.allowed)
-        Dg = ar("<0 1 2 3> %s" % XiG)
-
+def check_candidate(candidate, allow_neg_B):
+    def _check(Dg, negated_B=False):
         maxwell_signs = [
             "".join(
                 "+" if t.sign == 1 else "-"
@@ -119,11 +116,33 @@ def check_candidate(candidate):
 
         return Result(
             sign=sign,
+            negate_B=negated_B,
             metric=candidate.metric,
             division=candidate.div,
             allowed=candidate.allowed,
             pivot_terms=" ".join(sum(pivot_terms, [])),
         )
+
+    def _is_B(s):
+        return len(s) == 2 and "0" not in s
+
+    maxwell = ["---", "+-+", "-++", "+-+", "---", "+-+", "++-", "+-+"]
+    negated_maxwell = ["+++", "-+-", "+--", "-+-", "+++", "-+-", "--+", "-+-"]
+
+    context = ARContext(allowed=candidate.allowed, div=candidate.div, metric=candidate.metric,)
+
+    with context as ar:
+        XiG = "{%s}" % " ".join(ar.allowed)
+        Dg = ar("<0 1 2 3> %s" % XiG)
+
+        res = _check(Dg)
+        if res is not None:
+            return res
+
+        if allow_neg_B:
+            XiG = "{%s}" % " ".join(f"-{a}" if _is_B(a) else a for a in ar.allowed)
+            Dg = ar("<0 1 2 3> %s" % XiG)
+            return _check(Dg, negated_B=True)
 
 
 if __name__ == "__main__":
@@ -138,16 +157,29 @@ if __name__ == "__main__":
         action="store_true",
         help="construct all possible algebras including those that are isomorphisms",
     )
+    parser.add_argument(
+        "--allow-neg-B",
+        action="store_true",
+        help="also check for candidates that produce Maxwell with negated jk bivectors",
+    )
     args = parser.parse_args()
 
     candidates = all_candidates(args.include_redundant)
 
     print(f"Checking {len(candidates)} candidate Algebras for consistency with Maxwell")
-    results = [check_candidate(c) for c in candidates]
+    if args.allow_neg_B:
+        print(f"Allowing negated jk bivectors: up to {len(candidates) * 2} cases will be checked")
+
+    results = [check_candidate(c, args.allow_neg_B) for c in candidates]
 
     hits = sorted([r for r in results if r is not None])
     print(f"\n\nFound {len(hits)} candidate Algebras that support Maxwell")
 
-    for hit in hits:
-        p = f"  [{hit.pivot_terms}]" if args.show_pivot_signs else ""
-        print(f"[{hit.sign}] {hit.metric} {hit.division.ljust(4)} {allowed_repr(hit.allowed)} {p}")
+    for h in hits:
+        p = f"  [{h.pivot_terms}]" if args.show_pivot_signs else ""
+        if args.allow_neg_B:
+            neg_B = " -B " if h.negate_B else "  B "
+        else:
+            neg_B = ""
+
+        print(f"[{h.sign}]{neg_B}{h.metric} {h.division.ljust(4)} {allowed_repr(h.allowed)} {p}")
