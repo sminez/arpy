@@ -1,5 +1,22 @@
+from dataclasses import dataclass
 from enum import Enum
-from functools import lru_cache
+
+from .config import ARConfig
+
+
+@dataclass
+class ZetElements:
+    e: str
+    x: str
+    y: str
+    z: str
+
+    @property
+    def all(self):
+        return [self.e, self.x, self.y, self.z]
+
+    def __iter__(self):
+        yield from self.all
 
 
 class DivisionType(Enum):
@@ -30,23 +47,42 @@ class Zet(Enum):
     A = "A"
     E = "E"
 
-    def superscript(self) -> str:
-        _superscripts = {"B": "ᴮ", "A": "ᴬ", "T": "ᵀ", "E": "ᴱ"}
-        return _superscripts[self.name]
-
     @classmethod
-    @lru_cache(maxsize=16)
-    def from_index(self, ix: str) -> "Zet":
-        if ix in map(frozenset, "p 23 31 12".split()):
+    def from_index(self, ix_str: str) -> "Zet":
+        ix = frozenset(ix_str)
+        if ix in [frozenset(s) for s in "p 23 31 12".split()]:
             return Zet.B
-        elif ix in map(frozenset, "0 023 031 012".split()):
+        elif ix in [frozenset(s) for s in "0 023 031 012".split()]:
             return Zet.T
-        elif ix in map(frozenset, "123 1 2 3".split()):
+        elif ix in [frozenset(s) for s in "123 1 2 3".split()]:
             return Zet.A
-        elif ix in map(frozenset, "0123 01 02 03".split()):
+        elif ix in [frozenset(s) for s in "0123 01 02 03".split()]:
             return Zet.E
 
         raise ValueError(f"{ix} is an invalid index")
+
+    def elements(self, config: ARConfig) -> ZetElements:
+        comps = config.zet_comps[self.name]
+        return ZetElements(**comps)
+
+    @property
+    def superscript(self) -> str:
+        # _superscripts = {"B": "ᴮ", "A": "ᴬ", "T": "ᵀ", "E": "ᴱ"}
+        _superscripts = {"B": "ᴮ", "A": "", "T": "ᵀ", "E": "ᴱ"}
+        return _superscripts[self.name]
+
+    @property
+    def time_like(self) -> str:
+        if self.name == "B":
+            return "p"
+        elif self.name == "T":
+            return "t"
+        elif self.name == "A":
+            return "h"
+        elif self.name == "E":
+            return "q"
+
+        raise ValueError("Invalid zet")
 
 
 class Orientation(Enum):
@@ -61,15 +97,15 @@ class Orientation(Enum):
     Z = "space-z"
 
     @classmethod
-    @lru_cache(maxsize=16)
-    def from_index(self, ix: str) -> "Orientation":
-        if ix in map(frozenset, "p 0 123 0123".split()):
+    def from_index(self, ix_str: str) -> "Orientation":
+        ix = frozenset(ix_str)
+        if ix in [frozenset(s) for s in "p 0 123 0123".split()]:
             return Orientation.T
-        elif ix in map(frozenset, "23 023 1 01".split()):
+        elif ix in [frozenset(s) for s in "23 023 1 01".split()]:
             return Orientation.X
-        elif ix in map(frozenset, "31 031 2 02".split()):
+        elif ix in [frozenset(s) for s in "31 031 2 02".split()]:
             return Orientation.Y
-        elif ix in map(frozenset, "12 012 3 03".split()):
+        elif ix in [frozenset(s) for s in "12 012 3 03".split()]:
             return Orientation.Z
 
         raise ValueError(f"{ix} is an invalid index")

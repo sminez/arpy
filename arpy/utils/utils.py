@@ -1,33 +1,15 @@
 from collections import Counter
-from typing import Any, Union
+from typing import Any
 
-from ..consts import Orientation, Zet
-
-SUPER_SCRIPTS = {"B": "ᴮ", "A": "ᴬ", "T": "ᵀ", "E": "ᴱ"}
+SUPER_SCRIPTS = {"B": "ᴮ", "A": "", "T": "ᵀ", "E": "ᴱ"}
 SUB_SCRIPTS = {"0": "₀", "1": "₁", "2": "₂", "3": "₃", "p": "ₚ", "i": "ᵢ", "j": "ⱼ", "k": "ₖ"}
 
 
-def tex(obj: Any) -> str:
+def tex(obj: Any):
     """
     Convert the string representation of an object to TeX and print.
     """
     print(obj.__tex__())
-
-
-def zet(alpha: Union[str, "Alpha"]) -> Zet:
-    ix = alpha.index if isinstance(alpha, "Alpha") else alpha
-    if not isinstance(ix, str):
-        raise ValueError("argument must be a string or Alpha")
-
-    return Zet.from_index(ix)
-
-
-def orientation(alpha: Union[str, "Alpha"]) -> Orientation:
-    ix = alpha.index if isinstance(alpha, "Alpha") else alpha
-    if not isinstance(ix, str):
-        raise ValueError("argument must be a string or Alpha")
-
-    return Orientation.from_index(ix)
 
 
 def reorder_allowed(allowed, order="pBtThAqE"):

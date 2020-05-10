@@ -1,246 +1,244 @@
-from collections import namedtuple
+from collections import Counter
+from copy import copy
+from dataclasses import dataclass
 from itertools import groupby
+from typing import Callable, List, Optional, Set, Tuple
 
-from ..algebra.ar_types import Alpha, Pair, Xi
-from ..algebra.config import config as cfg
-from ..utils.utils import SUB_SCRIPTS, SUPER_SCRIPTS, Nat, Zet
-from .reducers import alpha_to_group
-
-term = namedtuple("term", ["d", "xi", "alpha", "sign", "pair"])
-
-# (α, ξ, ∂) -> component sign
-CURL_SIGN = {
-    ("x", "z", "y"): 1,
-    ("x", "y", "z"): -1,
-    ("y", "x", "z"): 1,
-    ("y", "z", "x"): -1,
-    ("z", "y", "x"): 1,
-    ("z", "x", "y"): -1,
-}
-
-
-def _filter_on_partials(terms, partials, cfg, n=0):
-    """n is the index for xi.partials"""
-    filtered_terms = [
-        term(t.xi.partials[n].index, t.xi.val, t.alpha.index, t.xi.sign, t)
-        for t in terms
-        if t.xi.partials and t.xi.partials[n].index in partials and not isinstance(t.xi.val, tuple)
-    ]
-    return sorted(filtered_terms, key=lambda t: alpha_to_group(t.xi))
+from ..algebra.data_types import Alpha, MultiVector, Term, Xi
+from ..config import ARConfig
+from ..consts import Orientation, Zet
+from ..utils.utils import SUB_SCRIPTS
+from .helpers import (
+    PartialReplacement,
+    alpha_to_group,
+    by_alpha_group,
+    by_xi,
+    by_xi_group,
+    filter_by_partials,
+    first_partial_str,
+    for_all_zets,
+    partial_in,
+    partial_is,
+)
 
 
-def _present_zets(pairs, cfg):
+@dataclass
+class TaggedCurlTerm:
+    term: Term
+    xi: str
+    is_positive_curl: bool
+
+
+def as_curl_term(term: Term) -> Optional[TaggedCurlTerm]:
+    """(α, ξ, ∂) -> component sign"""
+
+    alpha = Orientation.from_index(term.index).name
+    xi = Orientation.from_index(term._components[0].val).name
+    partial = Orientation.from_index(first_partial_str(term)).name
+    key = f"{alpha}{xi}{partial}"
+
+    if key in ["XYZ", "YZX", "ZXY"]:
+        sign = -1
+    elif key in ["XZY", "YXZ", "ZYX"]:
+        sign = 1
+    else:
+        return None
+
+    return TaggedCurlTerm(term, term._components[0].val, term.sign == sign)
+
+
+def del_grouped_terms(mvec: MultiVector) -> List[Term]:
     """
-    Return all four sets with at least one partial derivative component
-    in `pairs`
+    Group the components of a MultiVector into vector calculus del notation as
+    a flat list of Terms using zet grouped Alpha values.
     """
-    return set([Zet(p.xi.partials[0]) for p in pairs if p.xi.partials])
-
-
-def del_grouped(mvec, cfg=cfg):
-    """
-    Group the components of a multivector into del notation
-    """
+    alpha_grouped = groupby(mvec, lambda t: alpha_to_group(t.index, mvec.cfg))
     output = []
-    alpha_grouped = groupby(mvec, lambda p: alpha_to_group(p.alpha.index))
-    for group, components in alpha_grouped:
-        components = [c for c in components]
-        replaced, components = replace_partials(components, cfg)
-        output.extend(replaced)
-        replaced, components = replace_grad(components, cfg)
-        output.extend(replaced)
-        replaced, components = replace_div(components, cfg)
-        output.extend(replaced)
-        replaced, components = replace_curl(components, cfg)
-        output.extend(replaced)
+
+    for group, iter_components in alpha_grouped:
+        components = list(iter_components)
+        rep_partials, components = for_all_zets(replace_partials, components)
+        rep_grad, components = for_all_zets(replace_grad, components)
+        rep_div, components = for_all_zets(replace_div, components)
+        rep_curl, components = for_all_zets(replace_curl, components)
+
+        output.extend(rep_partials + rep_div + rep_grad + rep_curl)
 
         for component in components:
-            component.alpha.index = alpha_to_group(component.alpha.index)
-        output.extend(components)
+            c = copy(component)
+            c.alpha.index = alpha_to_group(c.index, mvec.cfg)
+            output.append(c)
+
     return output
 
 
-def replace_curl(pairs, cfg):
-    """Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]"""
+def del_grouped(mvec: MultiVector):
+    """Print a MultiVector using vector calculus del notation"""
+    print("{")
+
+    for alpha, terms in groupby(del_grouped_terms(mvec), lambda t: t._alpha):
+        xis = " ".join([term._repr_no_alpha(count=count) for term, count in Counter(terms).items()])
+        if xis.startswith("+"):
+            xis = xis[2:]
+
+        print(f"  {repr(alpha).ljust(5)}( {xis} )")
+
+    print("}")
+
+
+def replace_partials(terms: List[Term], zet: Zet) -> PartialReplacement:
+    """Partial F = d<comp>F"""
+    if len(terms) == 0:
+        return [], []
+
+    cfg = terms[0].cfg
+    elements = zet.elements(cfg).all
     replaced = []
 
-    for zet in _present_zets(pairs, cfg):
-        comps = [cfg.zet_comps[zet][k] for k in ["x", "y", "z"]]
-        candidates = []
+    for alpha_group, group_terms in groupby(sorted(terms, key=by_alpha_group), by_alpha_group):
+        for blade in elements:
+            candidates = [t for t in group_terms if partial_is(t, blade)]
 
-        for t in _filter_on_partials(pairs, comps, cfg):
-            aix, xix, dix = [Nat(k) for k in [t.alpha, t.xi, t.d]]
-            curl_sign = CURL_SIGN.get((aix, xix, dix))
-            if curl_sign:
-                candidates.append({"term": t, "curl_sign": curl_sign})
-
-        grouped_cands = groupby(candidates, lambda t: alpha_to_group(t["term"].xi))
-
-        for group, cands in grouped_cands:
-            cands = [c for c in cands]
-            if len(cands) != 6:
+            if len(candidates) != 3 or len(set(c.sign for c in candidates)) > 1:
                 continue
 
-            if all([c["curl_sign"] == c["term"].sign for c in cands]):
-                sign = 1
-            elif all([c["curl_sign"] == -c["term"].sign for c in cands]):
-                sign = -1
-            else:
+            have = sorted([c._components[0].val for c in candidates])
+            comp_zet = Zet.from_index(have[0])
+            needed = sorted(comp_zet.elements(cfg).all[1:])
+
+            if have != needed:
                 continue
 
-            alpha = alpha_to_group(cands[0]["term"].alpha)
-            group = cfg.group_to_zet[group]
-
-            _zet = "" if zet == "A" else SUPER_SCRIPTS[zet]
-            tex_zet = "" if zet == "A" else "^" + zet
+            sign = candidates[0].sign
+            blade = "".join(SUB_SCRIPTS[b] for b in blade)
 
             replaced.append(
-                Pair(
-                    Alpha(alpha, sign, cfg=cfg),
-                    Xi(
-                        "∇{}x{}".format(_zet, group),
-                        tex="\\nabla{}\\times {}".format(tex_zet, group),
-                    ),
-                    cfg=cfg,
-                )
-            )
-
-            for candidate in [c["term"].pair for c in cands]:
-                pairs.remove(candidate)
-
-    return replaced, pairs
-
-
-def replace_grad(pairs, cfg):
-    """Grad f = αx[df/dx] + αy[df/dy] + αz[df/dz]"""
-    replaced = []
-    for zet in _present_zets(pairs, cfg):
-        comps = [cfg.zet_comps[zet][k] for k in ["x", "y", "z"]]
-
-        candidates = _filter_on_partials(pairs, comps, cfg)
-        sorted_candidates = sorted(candidates, key=lambda t: t.xi)
-        grouped = groupby(sorted_candidates, lambda t: t.xi)
-
-        for xi, candidates in grouped:
-            candidates = [c for c in candidates]
-            if len(candidates) != 3:
-                continue
-
-            if set(c.d for c in candidates) == set(comps):
-                if all(c.sign == 1 for c in candidates):
-                    sign = 1
-                elif all(c.sign == -1 for c in candidates):
-                    sign = -1
-                else:
-                    continue
-
-                xi = "".join(SUB_SCRIPTS[x] for x in candidates[0].xi)
-                tex_xi = candidates[0].xi
-                alpha = alpha_to_group(candidates[0].alpha)
-
-                tex_zet = "" if zet == "A" else "^" + zet
-                _zet = "" if zet == "A" else SUPER_SCRIPTS[zet]
-
-                replaced.append(
-                    Pair(
-                        Alpha(alpha, sign, cfg=cfg),
-                        Xi(
-                            "∇{}Ξ{}".format(_zet, xi),
-                            tex="\\nabla" + tex_zet + "\\Xi_{" + tex_xi + "}",
-                        ),
-                        cfg=cfg,
-                    )
-                )
-
-                for candidate in candidates:
-                    pairs.remove(candidate.pair)
-
-    return replaced, pairs
-
-
-def replace_div(pairs, cfg):
-    """Div F = dFx/dx + dFy/dy + dFz/dz"""
-    replaced = []
-    for zet in _present_zets(pairs, cfg):
-        comps = [cfg.zet_comps[zet][k] for k in ["x", "y", "z"]]
-
-        # partial from this zet and x-partial with x-3vec component, etc
-        candidates = [c for c in _filter_on_partials(pairs, comps, cfg) if Nat(c.xi) == Nat(c.d)]
-
-        if len(candidates) == 3:
-            alpha = candidates[0].alpha
-            xi = Zet(candidates[0].xi)
-
-            if all(c.sign == 1 for c in candidates):
-                sign = 1
-            elif all(c.sign == -1 for c in candidates):
-                sign = -1
-            else:
-                continue
-
-            # The 'A' 3Vector calculus operators are the standard ones
-            _zet = "" if zet == "A" else SUPER_SCRIPTS[zet]
-            tex_zet = "" if zet == "A" else SUPER_SCRIPTS[zet]
-
-            replaced.append(
-                Pair(
-                    Alpha(alpha, sign, cfg=cfg),
-                    Xi("∇{}•{}".format(_zet, xi), tex="\\nabla{}\\cdot {}".format(tex_zet, xi)),
+                Term(
+                    Alpha(alpha_group, sign, cfg=cfg),
+                    [Xi(f"∂{blade}{comp_zet.name}", tex=f"\\partial_{blade}{comp_zet.name}")],
                     cfg=cfg,
                 )
             )
 
             for candidate in candidates:
-                pairs.remove(candidate.pair)
+                terms.remove(candidate)
 
-    return replaced, pairs
+    return replaced, terms
 
 
-def replace_partials(pairs, cfg):
-    """ Partial F = d{comp}F"""
+def replace_div(terms: List[Term], zet: Zet) -> PartialReplacement:
+    """Div F = dFx/dx + dFy/dy + dFz/dz"""
+    if len(terms) == 0:
+        return [], []
 
-    def key(p):
-        return alpha_to_group(p.alpha.index)
+    cfg = terms[0].cfg
+    elements = zet.elements(cfg).all[1:]
+    replaced: List[Term] = []
+    candidates = []
 
+    for c in filter_by_partials(terms, elements):
+        val_orientation = Orientation.from_index(c._components[0].val)
+        partial_orientation = Orientation.from_index(first_partial_str(c))
+        if val_orientation == partial_orientation:
+            candidates.append(c)
+
+    if len(candidates) != 3 or len(set(c.sign for c in candidates)) > 1:
+        return replaced, terms
+
+    sign = candidates[0].sign
+    alpha_group = alpha_to_group(candidates[0].index, cfg)
+    xi = Zet.from_index(candidates[0]._components[0].val).name
+
+    # The 'A' 3Vector calculus operators are the standard ones
+    _zet = zet.superscript
+    tex_zet = zet.name if zet != Zet.A else ""
+
+    replaced.append(
+        Term(
+            Alpha(alpha_group, sign, cfg=cfg),
+            [Xi(f"∇{_zet}•{xi}", tex=f"\\nabla_{tex_zet}\\cdot {xi}")],
+            cfg=cfg,
+        )
+    )
+
+    for candidate in candidates:
+        terms.remove(candidate)
+
+    return replaced, terms
+
+
+def replace_grad(terms: List[Term], zet: Zet) -> PartialReplacement:
+    """Grad f = αx[df/dx] + αy[df/dy] + αz[df/dz]"""
+    if len(terms) == 0:
+        return [], []
+
+    cfg = terms[0].cfg
+    elements = zet.elements(cfg).all[1:]
     replaced = []
 
-    for zet in _present_zets(pairs, cfg):
-        for _, grouped_pairs in groupby(sorted(pairs, key=key), key):
-            grouped_pairs = [p for p in grouped_pairs]
-            for blade in cfg.zet_comps[zet].values():
-                candidates = [
-                    p for p in grouped_pairs if p.xi.partials and p.xi.partials[0].index == blade
-                ]
-                if len(candidates) == 3:
-                    ix = candidates[0].xi.val
-                    component_zet = Zet(ix)
-                    needed = {cfg.zet_comps[component_zet][k] for k in ["x", "y", "z"]}
-                    have = {c.xi.val for c in candidates}
-                    if have != needed:
-                        continue
+    for xi, group_terms in groupby(sorted(filter_by_partials(terms, elements), key=by_xi), by_xi):
+        candidates = [t for t in group_terms]
+        consistent_sign = len(set(c.sign for c in candidates)) == 1
+        correct_partials = sorted(first_partial_str(c) for c in candidates) == sorted(elements)
 
-                    if all([c.xi.sign == 1 for c in candidates]):
-                        sign = 1
-                    elif all([c.xi.sign == -1 for c in candidates]):
-                        sign = -1
-                    else:
-                        continue
+        if not (len(candidates) == 3 and consistent_sign and correct_partials):
+            continue
 
-                    alpha = alpha_to_group(candidates[0].alpha.index)
+        sign = candidates[0].sign
+        alpha_group = alpha_to_group(candidates[0].index, cfg)
+        xi = Zet.from_index(candidates[0]._components[0].val).time_like
 
-                    _blade = "".join(SUB_SCRIPTS[b] for b in blade)
-                    replaced.append(
-                        Pair(
-                            Alpha(alpha, sign, cfg=cfg),
-                            Xi(
-                                "∂{}{}".format(_blade, component_zet),
-                                tex="\\partial_{}{}".format(blade, component_zet),
-                            ),
-                            cfg=cfg,
-                        )
-                    )
+        tex_zet = "" if zet == Zet.A else f"_{{{zet.name}}}"
+        _zet = zet.superscript
 
-                    for candidate in candidates:
-                        pairs.remove(candidate)
+        replaced.append(
+            Term(
+                Alpha(alpha_group, sign, cfg=cfg),
+                [Xi(f"∇Ξ{_zet}{xi}", tex=f"\\nabla{tex_zet}\\{xi}")],
+                cfg=cfg,
+            )
+        )
 
-    return replaced, pairs
+        for candidate in candidates:
+            terms.remove(candidate)
+
+    return replaced, terms
+
+
+def replace_curl(terms: List[Term], zet: Zet) -> PartialReplacement:
+    """Curl F = αx[dFz/dy-dFy/dz] + αy[dFx/dz-dFz/dx] + αz[dFy/dx-dFx/dy]"""
+    if len(terms) == 0:
+        return [], []
+
+    cfg = terms[0].cfg
+    elements = zet.elements(cfg).all[1:]
+    curl_like = [
+        c for t in filter_by_partials(terms, elements) if (c := as_curl_term(t)) is not None
+    ]
+    replaced = []
+
+    for group, group_terms in groupby(curl_like, lambda c: alpha_to_group(c.xi, cfg)):
+        candidates = [t for t in group_terms]
+
+        if len(candidates) != 6 or len(set(c.is_positive_curl for c in candidates)) > 1:
+            continue
+
+        sign = 1 if candidates[0].is_positive_curl else -1
+        alpha_group = alpha_to_group(candidates[0].term.index, cfg)
+        xi = Zet.from_index(candidates[0].term._components[0].val).name
+
+        _zet = zet.superscript
+        tex_zet = "" if zet == "A" else f"^{zet.name}"
+
+        replaced.append(
+            Term(
+                Alpha(alpha_group, sign, cfg=cfg),
+                [Xi(f"∇{_zet}x{xi}", tex=f"\\nabla{tex_zet}\\times {group}")],
+                cfg=cfg,
+            )
+        )
+
+        for term in [c.term for c in candidates]:
+            terms.remove(term)
+
+    return replaced, terms

@@ -32,3 +32,7 @@ wheel: ensure-poetry # build a wheel using poetry
 .PHONY: install
 install: wheel # install arpy locally
 	python3 -m pip install dist/arpy-*-py3-none-any.whl
+
+.PHONY: force-reinstall
+force-reinstall: wheel # install arpy locally, forcing reinstallation while developing arpy itself
+	python3 -m pip install dist/arpy-*-py3-none-any.whl --force-reinstall

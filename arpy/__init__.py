@@ -1,7 +1,7 @@
 # arpy (Absolute Relativity in Python)
 # Copyright (C) 2016-2018 Innes D. Anderson-Morrison All rights reserved.
 
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 
 import types
 from copy import copy
@@ -26,9 +26,10 @@ from .algebra.operations import (
     rev,
 )
 from .config import ARConfig, config
-from .reductions.reducers import del_grouped, replace_all
+from .consts import Orientation, Zet, ZetElements
+from .reductions.del_grouping import del_grouped
 from .utils.lexparse import ARContext
-from .utils.utils import Nat, Tex, Zet, reorder_allowed
+from .utils.utils import power_notation, reorder_allowed
 from .utils.visualisation import cayley, js_cayley, op_block, sign_cayley, sign_distribution
 
 
@@ -205,15 +206,15 @@ __all__ = [
     "zet_A",
     "zet_E",
     "zet_F",
-    # Util functions
+    # Utilities
     "ar",
-    "Tex",
     "arpy_info",
     "config",
     "ARConfig",
     "ARContext",
-    "reorder_allowed",
     "Zet",
-    "Nat",
-    "replace_all",
+    "ZetElements",
+    "Orientation",
+    "power_notation",
+    "reorder_allowed",
 ]
