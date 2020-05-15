@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "arpy"
-version = "0.3.6"
+version = "0.3.7"
 description = "A library for computing with Absolute Relativity"
 authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
 

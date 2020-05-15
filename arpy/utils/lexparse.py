@@ -348,7 +348,8 @@ class ARContext:
         self.cfg.update_env()
 
         # Define the additional components required
-        quedgehog = "a{}".format([p for p in self.cfg.q][0].alpha.index)
+        quedgehog = "a{}".format([p for p in self.cfg.q][0].index)
+        hedgehog = "a{}".format([p for p in self.cfg.h][0].index)
         bases = (
             ("zet_{}", "ζ"),
             ("(zet_{}!)", "ζ†"),
@@ -366,12 +367,12 @@ class ARContext:
                 base = tmp.format(base_zet)
                 # Try all versions but try to float a0 to the front and the
                 # quedgehog to the back if possible.
-                all_comps = [["a0", base], [base, quedgehog], ["a0", base, quedgehog]]
+                all_comps = [["a0", base], [base, quedgehog], [base, hedgehog]]
                 for components in all_comps:
                     for permutation in permutations(components):
                         expr = " ^ ".join(permutation)
                         res = self(expr)
-                        signs = [p.xi.sign for p in res]
+                        signs = [t.sign for t in res]
                         if all(map(lambda s: s == 1, signs)):
                             candidate = {z[0] for z in res.iter_alphas()}
                             if candidate == target:
@@ -383,15 +384,16 @@ class ARContext:
         print(self)
         print("-" * 20)
 
-        for base_zet in zets:
-            decompositions = []
-            for zet in filter(lambda z: z != base_zet, zets):
-                decompositions.append(_decompose_zet(base_zet, zet))
+        # for base_zet in zets:
+        base_zet = "B"
+        decompositions = []
+        for zet in filter(lambda z: z != base_zet, zets):
+            decompositions.append(_decompose_zet(base_zet, zet))
 
-            print("zet_{} = ζ".format(base_zet))
-            for decomp in decompositions:
-                print(decomp)
-            print("-" * 20)
+        print("zet_{} = ζ".format(base_zet))
+        for decomp in decompositions:
+            print(decomp)
+        print("-" * 20)
 
     def __call__(self, text, *, cancel_terms=False):
         # NOTE:: The following is a horrible hack that allows you to
