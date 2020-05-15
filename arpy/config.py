@@ -26,7 +26,7 @@ class ARConfig:
     def __repr__(self):
         metric = "".join("+" if m == 1 else "-" for m in self.metric)
         allowed = ",".join(self.allowed)
-        return f"ARConfig({metric}: {allowed})"
+        return f"[{metric} / {self.division_type}] {allowed}"
 
     def __details(self):
         metric = "".join("+" if m == 1 else "-" for m in self.metric)
