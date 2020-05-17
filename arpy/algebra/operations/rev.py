@@ -49,7 +49,7 @@ def _rev_alpha(alpha):
 @rev.add(Term)
 def _rev_term(term):
     res = copy(term)
-    if len(res.index) in [1, 4] and res.index[0] != "p":
+    if len(res.index) in [1, 4]:
         return res
     return -res
 
