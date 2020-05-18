@@ -213,7 +213,7 @@ def replace_curl(terms: List[Term], zet: Zet) -> PartialReplacement:
     cfg = terms[0].cfg
     elements = zet.elements(cfg).all[1:]
     curl_like = [
-        c for t in filter_by_partials(terms, elements) if (c := as_curl_term(t)) is not None
+        c for c in [as_curl_term(t) for t in filter_by_partials(terms, elements)] if c is not None
     ]
     replaced = []
 
